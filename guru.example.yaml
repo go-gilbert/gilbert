@@ -1,0 +1,68 @@
+version: 1.0
+imports:
+  - revel-cli # Import revel-cli preset with tasks and vars
+vars:
+  foo: bar
+tasks:
+  build:
+    # Install dependencies
+    - run: dep
+
+    # Run test cases
+    - run: test
+
+    # Task args sample
+    - run: hello
+      params:
+        message: hello
+
+    # Build artifacts
+    - plugin: build
+      vars:
+        output: $(BUILD)/main
+      params:
+        files:
+          'main.go':
+            output: $(output)
+            params:
+              stripDebugInfo: true
+            variables:
+              'main.Version': '1.0'
+              'main.BuildNumber': '1'
+            flags:
+              "-X main.foo": "bar"
+    # Compress artifacts
+    - plugin: upx
+      params:
+        files:
+          - 'main'
+
+    # Copy additional args
+    - plugin: copy
+      params:
+        '$(PROJECT)/schemas': '$(BUILD)/schemas'
+
+    - plugin: zip
+      params:
+        '$(BUILD)': 'build-$(DATE).zip'
+  lint:
+    - plugin: lint
+      params:
+        linter: gometalinter
+        vendor: true
+        deadline: 2m
+        config: $(PROJECT)/.gometalinter.json
+
+  test:
+    - plugin: test
+      params:
+        '*':
+          coverage: 80.0
+          ignoreUncovered: false
+          exclude:
+            - cli
+
+  hello:
+    - plugin: bash
+      params:
+        - "Hello @(message)"
