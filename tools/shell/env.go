@@ -9,7 +9,7 @@ func (e Environment) Empty() bool {
 }
 
 func (e Environment) ToArray(defaults ...string) (arr []string) {
-	arr = make([]string, len(defaults)+len(e))
+	arr = make([]string, 0, len(defaults)+len(e))
 	for k, v := range e {
 		arr = append(arr, k+"="+v)
 	}

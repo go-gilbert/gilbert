@@ -7,6 +7,7 @@ import (
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
+	"github.com/x1unix/gilbert/tools/shell"
 	"os"
 	"os/exec"
 )
@@ -33,7 +34,7 @@ type Params struct {
 	WorkDir string
 
 	// Env is set of environment variables
-	Env Environment
+	Env shell.Environment
 }
 
 func (p *Params) createProcess(ctx *scope.Context) (*exec.Cmd, error) {

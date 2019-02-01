@@ -5,9 +5,11 @@ tasks:
     description: "Building project"
     vars:
       version: '1.0.0'
+      commit: '{% git log --format=%H -n 1 %}'
     params:
       variables:
-        'main.Version': '{{version}}'
+        'main.Version': '{{ version }}'
+        'main.Commit': '{{ commit }}'
 
   build-windows:
   - plugin: build
