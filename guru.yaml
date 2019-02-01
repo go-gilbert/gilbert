@@ -7,7 +7,7 @@ tasks:
       version: '1.0.0'
     params:
       variables:
-        'main.Version': '$(version)'
+        'main.Version': '{{version}}'
 
   build-windows:
   - plugin: build
@@ -16,14 +16,14 @@ tasks:
       output: ./build
       version: '1.0.0'
     params:
-      outputPath: $(output)/guru-win32
+      outputPath: '{{ output }}/guru-win32'
       params:
         stripDebugInfo: true
       target:
         os: windows
         arch: '386'
       variables:
-        'main.Version': '$(version)'
+        'main.Version': '{{version}}'
 
   bash-test:
     - plugin: shell

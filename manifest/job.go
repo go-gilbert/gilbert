@@ -1,6 +1,6 @@
 package manifest
 
-import "github.com/x1unix/guru/env"
+import "github.com/x1unix/guru/scope"
 
 // Job is a single job in task
 type Job struct {
@@ -14,7 +14,7 @@ type Job struct {
 	Plugin string `yaml:"plugin"`
 
 	// Vars is a set of variables defined for this job.
-	Vars env.Vars `yaml:"vars"`
+	Vars scope.Vars `yaml:"vars"`
 
 	// Params is a set of arguments for the job.
 	Params map[string]interface{} `yaml:"params"`

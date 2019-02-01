@@ -1,3 +1,3 @@
-package env
+package scope
 
 var Debug = false

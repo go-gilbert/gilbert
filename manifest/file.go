@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	"github.com/x1unix/guru/env"
+	"github.com/x1unix/guru/scope"
 	"gopkg.in/yaml.v2"
 )
 
@@ -20,7 +20,7 @@ type Manifest struct {
 	Imports []string `yaml:"imports"`
 
 	// Vars is a set of global variables
-	Vars env.Vars `yaml:"vars"`
+	Vars scope.Vars `yaml:"vars"`
 
 	// Tasks is a set of tasks
 	Tasks map[string]Task `yaml:"tasks"`

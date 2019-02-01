@@ -8,10 +8,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/logging"
 	"github.com/x1unix/guru/manifest"
 	"github.com/x1unix/guru/runner"
+	"github.com/x1unix/guru/scope"
 )
 
 var (
@@ -27,14 +27,16 @@ func main() {
 	app.Version = Version
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
-			Name:  "debug",
-			Usage: "creates a debug log",
+			Name:  "verbose",
+			Usage: "shows debug information, useful for troubleshooting",
 		},
 	}
 
 	app.Commands = []cli.Command{
 		{
-			Name: "version",
+			Name:        "version",
+			Description: "shows application version",
+			Usage:       "Shows application version",
 			Action: func(c *cli.Context) error {
 				version()
 				return nil
@@ -42,12 +44,13 @@ func main() {
 		},
 		{
 			Name:        "run",
-			Description: "Runs a task declared in gurufile",
+			Description: "Runs a task declared in manifest file",
+			Usage:       "Runs a task declared in manifest file",
 			Action:      evalTask,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "debug",
-					Usage: "creates a debug log",
+					Name:  "verbose",
+					Usage: "shows debug information, useful for troubleshooting",
 				},
 			},
 		},
@@ -60,8 +63,8 @@ func main() {
 }
 
 func evalTask(c *cli.Context) (err error) {
-	if c.Bool("debug") {
-		env.Debug = true
+	if c.Bool("verbose") {
+		scope.Debug = true
 	}
 
 	if c.NArg() == 0 {
@@ -69,7 +72,7 @@ func evalTask(c *cli.Context) (err error) {
 	}
 
 	task := c.Args()[0]
-	logging.Log = logging.NewConsoleLogger(logging.DefaultPadding, env.Debug)
+	logging.Log = logging.NewConsoleLogger(logging.DefaultPadding, scope.Debug)
 	subLogger = logging.Log.SubLogger()
 
 	r, err = getRunner()

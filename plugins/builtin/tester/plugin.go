@@ -2,8 +2,8 @@ package tester
 
 import (
 	"fmt"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/manifest"
+	"github.com/x1unix/guru/scope"
 	"os"
 	"strings"
 
@@ -15,7 +15,7 @@ import (
 const allFiles = "*"
 
 type Plugin struct {
-	context *env.Context
+	context *scope.Context
 	params  *Params
 	console logging.Logger
 	tempDir string
@@ -55,7 +55,7 @@ func (p *Plugin) Call() (err error) {
 	return nil
 }
 
-func NewPlugin(context *env.Context, rawParams manifest.RawParams, out logging.Logger) (plugins.Plugin, error) {
+func NewPlugin(context *scope.Context, rawParams manifest.RawParams, out logging.Logger) (plugins.Plugin, error) {
 	p := &Plugin{
 		console: out,
 		context: context,

@@ -2,15 +2,15 @@ package shell
 
 import (
 	"fmt"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/logging"
+	"github.com/x1unix/guru/scope"
 	"os"
 	"os/exec"
 	"strings"
 )
 
 type Plugin struct {
-	context *env.Context
+	context *scope.Context
 	params  Params
 	log     logging.Logger
 }

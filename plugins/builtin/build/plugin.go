@@ -2,16 +2,16 @@ package build
 
 import (
 	"fmt"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/logging"
+	"github.com/x1unix/guru/scope"
 	"github.com/x1unix/guru/tools"
 	"strings"
 )
 
 type Plugin struct {
-	context *env.Context
-	params Params
-	log logging.Logger
+	context *scope.Context
+	params  Params
+	log     logging.Logger
 }
 
 func (p *Plugin) Call() error {
@@ -20,7 +20,7 @@ func (p *Plugin) Call() error {
 		return err
 	}
 
-	p.log.Debug("Command: '%s'", strings.Join(cmd.Args," "))
+	p.log.Debug("Command: '%s'", strings.Join(cmd.Args, " "))
 	cmd.Stdout = p.log
 	cmd.Stderr = p.log.ErrorWriter()
 
@@ -31,6 +31,6 @@ func (p *Plugin) Call() error {
 	if err = cmd.Wait(); err != nil {
 		return tools.FormatExitError(err)
 	}
-	
+
 	return nil
 }

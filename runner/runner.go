@@ -2,8 +2,8 @@ package runner
 
 import (
 	"fmt"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/manifest"
+	"github.com/x1unix/guru/scope"
 
 	"github.com/x1unix/guru/logging"
 	"github.com/x1unix/guru/plugins"
@@ -29,7 +29,7 @@ func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, e
 }
 
 func (t *TaskRunner) RunJob(job *manifest.Job) error {
-	ctx := env.CreateContext(t.CurrentDirectory, job.Vars).
+	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
 		AppendGlobals(t.Manifest.Vars)
 
 	if job.InvokesPlugin() {
