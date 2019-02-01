@@ -16,7 +16,7 @@ tasks:
       output: ./build
       version: '1.0.0'
     params:
-      outputPath: {{ output }}/guru-win32
+      outputPath: '{{ output }}/guru-win32'
       params:
         stripDebugInfo: true
       target:
