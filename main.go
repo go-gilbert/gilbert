@@ -34,7 +34,9 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name: "version",
+			Name:        "version",
+			Description: "shows application version",
+			Usage:       "Shows application version",
 			Action: func(c *cli.Context) error {
 				version()
 				return nil
@@ -43,6 +45,7 @@ func main() {
 		{
 			Name:        "run",
 			Description: "Runs a task declared in manifest file",
+			Usage:       "Runs a task declared in manifest file",
 			Action:      evalTask,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
