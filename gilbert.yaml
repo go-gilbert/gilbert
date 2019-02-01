@@ -10,63 +10,12 @@ tasks:
       variables:
         'main.Version': '{{ version }}'
         'main.Commit': '{{ commit }}'
-
-  build-windows:
-  - plugin: build
-    description: "Building project for Windows"
-    vars:
-      output: ./build
-      version: '1.0.0'
+  - plugin: shell
+    description: "Show artifact build info"
     params:
-      outputPath: '{{ output }}/gilbert-win32'
-      params:
-        stripDebugInfo: true
-      target:
-        os: windows
-        arch: '386'
-      variables:
-        'main.Version': '{{version}}'
-
-  bash-test:
-    - plugin: shell
-      params:
-        command: git status
-    - plugin: shell
-      params:
-        command: cat x
-  win-cmd:
-    - plugin: shell
-      description: "windows check - command"
-      params:
-        command: whoami
-
-    - plugin: shell
-      description: "windows check - error handle"
-      params:
-        command: type foo
-
-  # start bash on windows
-  wsl:
-    - plugin: shell
-      description: "Command 2"
-      params:
-        rawOutput: true
-        command: bash.exe
-
-  # Run command in bash on windows
-  wsl-task:
-    - plugin: shell
-      params:
-        rawOutput: true
-        shell: bash.exe
-        shellExecParam: -c
-        command: screenfetch
-  test:
-  - plugin: test
+      command: gilbert version
+  - if: 'uname -a'
+    description: "Show a message only if job runs on UNIX"
+    plugin: shell
     params:
-      items:
-        - path: '*'
-          coverage:
-            threshold: 80.0
-            exclude:
-              - cli
+      command: 'echo This is UNIX machine'
