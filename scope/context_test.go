@@ -7,16 +7,18 @@ import (
 )
 
 func TestVarsExtract(t *testing.T) {
-	c := Context{
+	c := &Context{
 		Globals: Vars{
 			"GOROOT": "/usr/local/go",
 			"GOPATH": "/home/root/go",
 		},
 		Variables: Vars{
 			"package": "github.com/x1unix/gorn",
-			"nested":  "$(GOPATH)/foo",
+			"nested":  "{{GOPATH}}/foo",
 		},
 	}
+
+	c.processor = NewExpressionProcessor(c)
 
 	cases := map[string]struct {
 		input       string
@@ -24,26 +26,26 @@ func TestVarsExtract(t *testing.T) {
 		expString   string
 	}{
 		"should extract valid variables": {
-			input:     "$(GOROOT)/src/$(package)",
+			input:     "{{GOROOT}}/src/{{ package }}",
 			expString: fmt.Sprintf("%s/src/%s", c.Globals["GOROOT"], c.Variables["package"]),
 		},
 		"another extract test": {
-			input:     "/var/lib/$(GOPATH)/foo",
+			input:     "/var/lib/{{GOPATH}}/foo",
 			expString: fmt.Sprintf("/var/lib/%s/foo", c.Globals["GOPATH"]),
 		},
 		"should include nested variables in local variable": {
-			input:     "/var/$(nested)/bar",
+			input:     "/var/{{nested}}/bar",
 			expString: fmt.Sprintf("/var/%s/foo/bar", c.Globals["GOPATH"]),
 		},
 		"should fail on undefined variable": {
-			input:       "/foo/$(bar)/baz",
+			input:       "/foo/{{ bar }}/baz",
 			shouldError: true,
 			expString:   "variable 'bar' is undefined",
 		},
-		"should fail on unterminated statement": {
-			input:       "/f$(boobaabeer",
+		"should fail on shell expression": {
+			input:       "/f{% whoami %}",
 			shouldError: true,
-			expString:   "expression is not finished",
+			expString:   "failed to parse string '/f{% whoami %}', shell execution expression is not supported now (at '{% whoami %}')",
 		},
 		"should ignore non-complete statement": {
 			input:     "/a$b",
