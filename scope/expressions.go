@@ -24,7 +24,7 @@ const (
 	// - Variable value
 	//		{{ foo }}
 	//
-	templateRegEx = `(?m){%([^%}]+)%}|{{([\s\S]+)}}`
+	templateRegEx = `(?m){%([^%}]+)%}|{{([\s\d\w]+)}}`
 )
 
 // expressionMatch is template expression found by expression processor
@@ -61,7 +61,7 @@ func NewExpressionProcessor(ctx *Context) ExpressionProcessor {
 func (p *ExpressionProcessor) ReadString(input string) (result string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to parse string '%s', %s", input, err)
+			err = fmt.Errorf("failed to parse string '%s', %s", input, r)
 		}
 	}()
 
@@ -69,7 +69,7 @@ func (p *ExpressionProcessor) ReadString(input string) (result string, err error
 		val, err := p.ReadExpression(exp)
 		if err != nil {
 			// TODO: find a better way to pass error from the callback
-			panic(fmt.Errorf("%s (at %s)", err, string(exp)))
+			panic(fmt.Errorf("%s (at '%s')", err, string(exp)))
 		}
 
 		return val
@@ -85,8 +85,12 @@ func (p *ExpressionProcessor) ContainsExpression(str string) bool {
 
 // expandVariable expands variable value
 func (p *ExpressionProcessor) expandVariable(varName string) (val string, err error) {
+	if p.ctx == nil {
+		panic("processor context is undefined")
+	}
+
 	// trim everything for safety
-	varName = strings.TrimSpace(val)
+	varName = strings.TrimSpace(varName)
 	if varName == "" {
 		return val, fmt.Errorf("expression cannot be empty")
 	}
@@ -112,7 +116,7 @@ func (p *ExpressionProcessor) expandVariable(varName string) (val string, err er
 func (p *ExpressionProcessor) ReadExpression(exp []byte) (result []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic occured: %v", err)
+			err = fmt.Errorf("panic occured: %v", r)
 		}
 	}()
 
@@ -128,7 +132,7 @@ func (p *ExpressionProcessor) ReadExpression(exp []byte) (result []byte, err err
 	}
 
 	if _, ok := match.expression(); ok {
-		return nil, errors.New("shell execution expression is not supported now :(")
+		return nil, errors.New("shell execution expression is not supported now")
 	}
 
 	return exp, nil
