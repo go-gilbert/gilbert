@@ -10,10 +10,6 @@ tasks:
       variables:
         'main.Version': '{{ version }}'
         'main.Commit': '{{ commit }}'
-  - plugin: shell
-    description: "Show artifact build info"
-    params:
-      command: gilbert version
   - if: 'uname -a'
     description: "Show a message only if job runs on UNIX"
     plugin: shell
