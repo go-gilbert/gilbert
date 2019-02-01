@@ -24,9 +24,9 @@ func CreateContext(projectDirectory string, vars Vars) (c *Context) {
 			"GOPATH":  os.Getenv("GOPATH"),
 		},
 		Variables: vars,
-		processor: ExpressionProcessor{ctx: c},
 	}
 
+	c.processor = ExpressionProcessor{ctx: c}
 	c.Environment.ProjectDirectory = projectDirectory
 	return
 }
