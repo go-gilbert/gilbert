@@ -24,6 +24,7 @@ func TestVarsExtract(t *testing.T) {
 		input       string
 		shouldError bool
 		expString   string
+		trimResult  bool
 	}{
 		"should extract valid variables": {
 			input:     "{{GOROOT}}/src/{{ package }}",
@@ -42,10 +43,10 @@ func TestVarsExtract(t *testing.T) {
 			shouldError: true,
 			expString:   "variable 'bar' is undefined",
 		},
-		"should fail on shell expression": {
-			input:       "/f{% whoami %}",
-			shouldError: true,
-			expString:   "failed to parse string '/f{% whoami %}', shell execution expression is not supported now (at '{% whoami %}')",
+		"should expand shell expression": {
+			trimResult: true,
+			input:      "foo {% echo bar %}",
+			expString:  "foo bar",
 		},
 		"should ignore non-complete statement": {
 			input:     "/a$b",
@@ -68,6 +69,9 @@ func TestVarsExtract(t *testing.T) {
 				return
 			}
 
+			if test.trimResult {
+				got = strings.TrimSpace(got)
+			}
 			if got != test.expString {
 				tt.Fatalf("result mismatch\n\nWant: %s\nGot: %s", test.expString, got)
 			}

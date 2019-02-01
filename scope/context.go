@@ -26,7 +26,7 @@ func CreateContext(projectDirectory string, vars Vars) (c *Context) {
 		Variables: vars,
 	}
 
-	c.processor = ExpressionProcessor{ctx: c}
+	c.processor = NewExpressionProcessor(c)
 	c.Environment.ProjectDirectory = projectDirectory
 	return
 }

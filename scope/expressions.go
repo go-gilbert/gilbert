@@ -1,7 +1,6 @@
 package scope
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,12 +23,8 @@ const (
 	// - Variable value
 	//		{{ foo }}
 	//
-	templateRegEx = `(?m){%([^%}]+)%}|{{([\s\d\w]+)}}`
+	templateRegEx = `(?m){%(.*)%}|{{([\s\d\w]*)}}`
 )
-
-type CommandEvaluator interface {
-	Eval(string) (string, error)
-}
 
 // expressionMatch is template expression found by expression processor
 type expressionMatch []string
@@ -59,7 +54,10 @@ type ExpressionProcessor struct {
 
 // NewExpressionProcessor creates a new processor instance
 func NewExpressionProcessor(ctx *Context) ExpressionProcessor {
-	return ExpressionProcessor{ctx: ctx}
+	return ExpressionProcessor{
+		ctx:           ctx,
+		commandRunner: newShellCommandEvaluator(ctx),
+	}
 }
 
 // ReadString parses and evaluates expressions inside the string
@@ -136,15 +134,23 @@ func (p *ExpressionProcessor) ReadExpression(exp []byte) (result []byte, err err
 		return []byte(r), err
 	}
 
-	if _, ok := match.expression(); ok {
-		return nil, errors.New("shell execution expression is not supported now")
+	if cmd, ok := match.expression(); ok {
+		return p.evalExpression(cmd)
 	}
 
 	return exp, nil
 }
 
-func (p *ExpressionProcessor) evaluateCommandExpression(cmd string) string {
-	//proc := shell.PrepareCommand(cmd)
-	result, _ := p.commandRunner.Eval(cmd)
-	return result
+func (p *ExpressionProcessor) evalExpression(cmd string) ([]byte, error) {
+	cmd = strings.TrimSpace(cmd)
+	if cmd == "" {
+		return nil, nil
+	}
+
+	result, err := p.commandRunner.Call(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to eval inline script: %s", err)
+	}
+
+	return result, err
 }
