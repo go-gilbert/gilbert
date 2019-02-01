@@ -3,10 +3,10 @@ package shell
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/logging"
 	"github.com/x1unix/guru/manifest"
 	"github.com/x1unix/guru/plugins"
+	"github.com/x1unix/guru/scope"
 	"os"
 	"os/exec"
 )
@@ -36,7 +36,7 @@ type Params struct {
 	Env Environment
 }
 
-func (p *Params) createProcess(ctx *env.Context) (*exec.Cmd, error) {
+func (p *Params) createProcess(ctx *scope.Context) (*exec.Cmd, error) {
 	// TODO: check if Shell or ShellExecParam are empty
 	cmdstr, err := ctx.ExpandVariables(p.preparedCommand())
 	if err != nil {
@@ -56,14 +56,14 @@ func (p *Params) createProcess(ctx *env.Context) (*exec.Cmd, error) {
 	return cmd, nil
 }
 
-func newParams(ctx *env.Context) Params {
+func newParams(ctx *scope.Context) Params {
 	p := defaultParams()
 	p.WorkDir = ctx.Environment.ProjectDirectory
 
 	return p
 }
 
-func NewShellPlugin(context *env.Context, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+func NewShellPlugin(context *scope.Context, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	p := newParams(context)
 
 	if err := mapstructure.Decode(params, &p); err != nil {

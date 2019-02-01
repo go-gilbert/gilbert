@@ -8,10 +8,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
-	"github.com/x1unix/guru/env"
 	"github.com/x1unix/guru/logging"
 	"github.com/x1unix/guru/manifest"
 	"github.com/x1unix/guru/runner"
+	"github.com/x1unix/guru/scope"
 )
 
 var (
@@ -61,7 +61,7 @@ func main() {
 
 func evalTask(c *cli.Context) (err error) {
 	if c.Bool("debug") {
-		env.Debug = true
+		scope.Debug = true
 	}
 
 	if c.NArg() == 0 {
@@ -69,7 +69,7 @@ func evalTask(c *cli.Context) (err error) {
 	}
 
 	task := c.Args()[0]
-	logging.Log = logging.NewConsoleLogger(logging.DefaultPadding, env.Debug)
+	logging.Log = logging.NewConsoleLogger(logging.DefaultPadding, scope.Debug)
 	subLogger = logging.Log.SubLogger()
 
 	r, err = getRunner()
