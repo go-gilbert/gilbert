@@ -27,6 +27,10 @@ const (
 	templateRegEx = `(?m){%([^%}]+)%}|{{([\s\d\w]+)}}`
 )
 
+type CommandEvaluator interface {
+	Eval(string) (string, error)
+}
+
 // expressionMatch is template expression found by expression processor
 type expressionMatch []string
 
@@ -49,7 +53,8 @@ func (ex expressionMatch) expression() (string, bool) {
 
 // ExpressionProcessor evaluates template literals inside the string
 type ExpressionProcessor struct {
-	ctx *Context
+	ctx           *Context
+	commandRunner CommandEvaluator
 }
 
 // NewExpressionProcessor creates a new processor instance
@@ -136,4 +141,10 @@ func (p *ExpressionProcessor) ReadExpression(exp []byte) (result []byte, err err
 	}
 
 	return exp, nil
+}
+
+func (p *ExpressionProcessor) evaluateCommandExpression(cmd string) string {
+	//proc := shell.PrepareCommand(cmd)
+	result, _ := p.commandRunner.Eval(cmd)
+	return result
 }
