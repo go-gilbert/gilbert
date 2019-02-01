@@ -18,7 +18,7 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 ## Usage
 
-Run `gilbert init` to create a sample `gilbert.yaml` file with basic build task.
+Run `gilbert init` to create a sample `gilbert.yaml` file in your project's directory with basic build task.
 
 To run specific task, use `gilbert run [taskname]`
 
