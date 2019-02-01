@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/gilbert.png" width="360"></p>
+<p align="center"><img src="docs/assets/gilbert.png" width="256"></p>
 
 # Gilbert
 
