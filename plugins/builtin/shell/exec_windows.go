@@ -5,7 +5,7 @@ import "strings"
 const (
 	shellWin             = "cmd.exe"
 	winExecParam         = "/C"
-	winCodePageFixPrefix = "chcp 65001 > nil" // Force use UTF-8 to provide correct output to stdout
+	winCodePageFixPrefix = "chcp 65001 > nul" // Force use UTF-8 to provide correct output to stdout
 )
 
 func defaultParams() Params {

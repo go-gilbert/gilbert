@@ -4,6 +4,9 @@ import "github.com/x1unix/gilbert/scope"
 
 // Job is a single job in task
 type Job struct {
+	// Condition is shell command that should be successful to run specified job
+	Condition string `yaml:"if"`
+
 	// Description is job description
 	Description string `yaml:"description"`
 

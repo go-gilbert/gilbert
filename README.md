@@ -2,13 +2,18 @@
 
 > Build toolchain and task runner for Go
 
-This project is currently in early development stage. Bugs and pull requests are welcome.
+This project is currently in early development stage. Bug reports and pull requests are welcome.
 
 ## Roadmap
 
-- [x] Build declaration
-- [ ] Built-in features
-  - [x] Compilation
+- [x] Core 
+  - [x] Task runner
+  - [x] Logging formatting
+  - [x] String and shell expressions
+  - [x] Variables
+- [ ] Built-in plugins
+  - [x] Build
+  - [x] Shell command eval
   - [ ] Tests
   - [ ] Dependency installation
   - [ ] Linter integration
@@ -22,7 +27,7 @@ This project is currently in early development stage. Bugs and pull requests are
 
 ## Features
 
-**Gilbert** aims to provide declarative way to define and run tasks as it was implemented in other projects like _Gradle_, _Maven_ and etc.
+**Gilbert** is task runner that aims to provide declarative way to define and run tasks like in other projects like _Gradle_, _Maven_ and etc.
 
 All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file you can find [here](https://github.com/x1unix/gilbert/blob/master/gilbert.yaml).
 
