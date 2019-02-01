@@ -2,9 +2,9 @@ package build
 
 import (
 	"fmt"
-	"github.com/x1unix/guru/logging"
-	"github.com/x1unix/guru/scope"
-	"github.com/x1unix/guru/tools"
+	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/scope"
+	"github.com/x1unix/gilbert/tools"
 	"strings"
 )
 

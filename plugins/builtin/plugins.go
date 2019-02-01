@@ -1,9 +1,9 @@
 package builtin
 
 import (
-	"github.com/x1unix/guru/plugins"
-	"github.com/x1unix/guru/plugins/builtin/build"
-	"github.com/x1unix/guru/plugins/builtin/shell"
+	"github.com/x1unix/gilbert/plugins"
+	"github.com/x1unix/gilbert/plugins/builtin/build"
+	"github.com/x1unix/gilbert/plugins/builtin/shell"
 )
 
 // DefaultPlugins is list of default plugins

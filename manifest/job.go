@@ -1,6 +1,6 @@
 package manifest
 
-import "github.com/x1unix/guru/scope"
+import "github.com/x1unix/gilbert/scope"
 
 // Job is a single job in task
 type Job struct {

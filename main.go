@@ -8,10 +8,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
-	"github.com/x1unix/guru/logging"
-	"github.com/x1unix/guru/manifest"
-	"github.com/x1unix/guru/runner"
-	"github.com/x1unix/guru/scope"
+	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/manifest"
+	"github.com/x1unix/gilbert/runner"
+	"github.com/x1unix/gilbert/scope"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "guru"
+	app.Name = "gilbert"
 	app.Usage = "Build automation tool for Go"
 	app.Version = Version
 	app.Flags = []cli.Flag{

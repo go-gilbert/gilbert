@@ -1,19 +1,19 @@
 package manifest
 
 import (
-	"github.com/x1unix/guru/scope"
+	"github.com/x1unix/gilbert/scope"
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	FileName = "guru.yaml"
+	FileName = "gilbert.yaml"
 )
 
 type Task []Job
 type RawParams map[string]interface{}
 
 type Manifest struct {
-	// Version is guru file format version
+	// Version is gilbert file format version
 	Version string `yaml:"version"`
 
 	// Imports is list of imported presets

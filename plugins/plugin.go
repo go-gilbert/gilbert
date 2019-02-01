@@ -1,9 +1,9 @@
 package plugins
 
 import (
-	"github.com/x1unix/guru/logging"
-	"github.com/x1unix/guru/manifest"
-	"github.com/x1unix/guru/scope"
+	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/manifest"
+	"github.com/x1unix/gilbert/scope"
 )
 
 type Jar map[string]Plugin

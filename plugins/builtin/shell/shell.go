@@ -3,10 +3,10 @@ package shell
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/guru/logging"
-	"github.com/x1unix/guru/manifest"
-	"github.com/x1unix/guru/plugins"
-	"github.com/x1unix/guru/scope"
+	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/manifest"
+	"github.com/x1unix/gilbert/plugins"
+	"github.com/x1unix/gilbert/scope"
 	"os"
 	"os/exec"
 )

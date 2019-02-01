@@ -15,7 +15,7 @@ func tempCoverFile(dir, pkgPath string) string {
 }
 
 func tempDir() (string, error) {
-	dir, err := ioutil.TempDir("guru-testrunner", "")
+	dir, err := ioutil.TempDir("gilbert-testrunner", "")
 	if err != nil {
 		err = fmt.Errorf("failed to create temp dir: %v", err)
 	}
