@@ -27,8 +27,8 @@ func main() {
 	app.Version = Version
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
-			Name:  "debug",
-			Usage: "creates a debug log",
+			Name:  "verbose",
+			Usage: "shows debug information, useful for troubleshooting",
 		},
 	}
 
@@ -42,12 +42,12 @@ func main() {
 		},
 		{
 			Name:        "run",
-			Description: "Runs a task declared in gurufile",
+			Description: "Runs a task declared in manifest file",
 			Action:      evalTask,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "debug",
-					Usage: "creates a debug log",
+					Name:  "verbose",
+					Usage: "shows debug information, useful for troubleshooting",
 				},
 			},
 		},
@@ -60,7 +60,7 @@ func main() {
 }
 
 func evalTask(c *cli.Context) (err error) {
-	if c.Bool("debug") {
+	if c.Bool("verbose") {
 		scope.Debug = true
 	}
 
