@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	Version   = "0.0.1-alpha"
+	Version   = "dev"
+	Commit    = "null"
 	r         *runner.TaskRunner
 	subLogger logging.Logger
 )
@@ -25,6 +26,7 @@ func main() {
 	app.Name = "gilbert"
 	app.Usage = "Build automation tool for Go"
 	app.Version = Version
+	app.HideVersion = true
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose",
@@ -85,7 +87,7 @@ func evalTask(c *cli.Context) (err error) {
 }
 
 func version() {
-	fmt.Println(Version)
+	fmt.Printf("Gilbert version %s (%s)", Version, Commit)
 }
 
 func getRunner() (*runner.TaskRunner, error) {
