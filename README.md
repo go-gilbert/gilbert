@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/gilbert.png" width="360"></p>
+
 # Gilbert
 
 > Build toolchain and task runner for Go
