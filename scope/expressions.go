@@ -152,5 +152,7 @@ func (p *ExpressionProcessor) evalExpression(cmd string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to eval inline script: %s", err)
 	}
 
+	// Trim \r\n and \n from command output
+	result = []byte(strings.TrimSpace(string(result)))
 	return result, err
 }
