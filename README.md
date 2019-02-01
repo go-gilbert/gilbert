@@ -6,6 +6,22 @@
 
 This project is currently in early development stage. Bug reports and pull requests are welcome.
 
+## Features
+
+**Gilbert** is task runner that aims to provide declarative way to define and run tasks like in other projects like _Gradle_, _Maven_ and etc.
+
+All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file you can find [here](https://github.com/x1unix/gilbert/blob/master/gilbert.yaml).
+
+## Installation
+
+`go get -u github.com/x1unix/gilbert`
+
+## Usage
+
+Run `gilbert init` to create a sample `gilbert.yaml` file with basic build task.
+
+To run specific task, use `gilbert run [taskname]`
+
 ## Roadmap
 
 - [x] Core 
@@ -17,24 +33,9 @@ This project is currently in early development stage. Bug reports and pull reque
   - [x] Build
   - [x] Shell command eval
   - [ ] Tests
-  - [ ] Dependency installation
-  - [ ] Linter integration
+  - [ ] Package managers integration
 - [ ] Advanced
-  - [ ] Manifest presets
-  - [ ] Caching
   - [ ] Scaffolding
   - [ ] Third-party plugins
     - [ ] Plugin support
     - [ ] Windows support
-
-## Features
-
-**Gilbert** is task runner that aims to provide declarative way to define and run tasks like in other projects like _Gradle_, _Maven_ and etc.
-
-All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file you can find [here](https://github.com/x1unix/gilbert/blob/master/gilbert.yaml).
-
-## Usage
-
-To run specific task, use `gilbert run [taskname]`
-
-
