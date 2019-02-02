@@ -34,3 +34,6 @@ vendor/
 
 # system files
 *DS_Store
+
+# local builds
+./build
