@@ -35,7 +35,7 @@ To run specific task, use `gilbert run [taskname]`
   - [ ] Tests
   - [ ] Package managers integration
 - [ ] Advanced
-  - [ ] Scaffolding
+  - [x] Scaffolding
   - [ ] Third-party plugins
     - [ ] Plugin support
     - [ ] Windows support
