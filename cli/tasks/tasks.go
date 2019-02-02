@@ -74,6 +74,6 @@ func runTask(taskName string, args cli.Args) error {
 		}
 	}
 
-	logging.Log.Success("Task '%s' ran successfully", taskName)
+	logging.Log.Success("Task '%s' ran successfully\n", taskName)
 	return nil
 }
