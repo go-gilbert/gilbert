@@ -10,6 +10,7 @@ const (
 )
 
 type Task []Job
+type TaskSet map[string]Task
 type RawParams map[string]interface{}
 
 type Manifest struct {
@@ -17,13 +18,13 @@ type Manifest struct {
 	Version string `yaml:"version"`
 
 	// Imports is list of imported presets
-	Imports []string `yaml:"imports"`
+	Imports []string `yaml:"imports,omitempty"`
 
 	// Vars is a set of global variables
-	Vars scope.Vars `yaml:"vars"`
+	Vars scope.Vars `yaml:"vars,omitempty"`
 
 	// Tasks is a set of tasks
-	Tasks map[string]Task `yaml:"tasks"`
+	Tasks TaskSet `yaml:"tasks,omitempty"`
 }
 
 func UnmarshalManifest(data []byte) (m *Manifest, err error) {
