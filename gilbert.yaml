@@ -1,11 +1,12 @@
 version: 1.0
+vars:
+  buildDir: './build'
+  version: '0.1.0'
+  commit: '{% git log --format=%H -n 1 %}'
 tasks:
   build:
   - plugin: build
     description: "Building project"
-    vars:
-      version: '0.1.0'
-      commit: '{% git log --format=%H -n 1 %}'
     params:
       variables:
         'main.Version': '{{ version }}'
@@ -15,3 +16,49 @@ tasks:
     plugin: shell
     params:
       command: 'echo This is UNIX machine'
+
+  release:
+  - plugin: build
+    description: 'Windows - 32bit'
+    params:
+      outputPath: '{{buildDir}}/gilbert_i386.exe'
+      target:
+        os: windows
+        arch: '386'
+      variables:
+        'main.Version': '{{ version }}'
+        'main.Commit': '{{ commit }}'
+
+  - plugin: build
+    description: 'Windows - amd64'
+    params:
+      outputPath: '{{buildDir}}/gilbert_amd64.exe'
+      target:
+        os: windows
+        arch: amd64
+      variables:
+        'main.Version': '{{ version }}'
+        'main.Commit': '{{ commit }}'
+
+  - plugin: build
+    description: 'MacOS - amd64'
+    params:
+      outputPath: '{{buildDir}}/gilbert_osx'
+      target:
+        os: darwin
+        arch: amd64
+      variables:
+        'main.Version': '{{ version }}'
+        'main.Commit': '{{ commit }}'
+
+  - plugin: build
+    description: 'Linux - amd64'
+    params:
+      outputPath: '{{buildDir}}/gilbert_linux-amd64'
+      target:
+        os: linux
+        arch: amd64
+      variables:
+        'main.Version': '{{ version }}'
+        'main.Commit': '{{ commit }}'
+
