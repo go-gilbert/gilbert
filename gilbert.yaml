@@ -4,7 +4,7 @@ tasks:
   - plugin: build
     description: "Building project"
     vars:
-      version: '1.0.0'
+      version: '0.1.0'
       commit: '{% git log --format=%H -n 1 %}'
     params:
       variables:

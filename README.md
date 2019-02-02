@@ -14,7 +14,13 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 ## Installation
 
-`go get -u github.com/x1unix/gilbert`
+Release binaries are available on the [releases](https://github.com/x1unix/gilbert/releases) page.
+
+Also, you can install a development version using `go get`:
+
+```
+go get -u github.com/x1unix/gilbert
+```
 
 ## Usage
 
