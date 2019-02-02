@@ -71,6 +71,6 @@ func bootstrap(_ *cli.Context) error {
 }
 
 func printVersion(_ *cli.Context) error {
-	fmt.Printf("Gilbert version %s (%s)", Version, Commit)
+	fmt.Printf("Gilbert version %s (%s)\n", Version, Commit)
 	return nil
 }
