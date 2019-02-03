@@ -1,6 +1,7 @@
 package tester
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 )
@@ -25,18 +26,19 @@ func (e *TestEntry) ShouldCheckCoverage() bool {
 }
 
 func (e *TestEntry) getTestingCommand(rootDir string) (cmd *exec.Cmd, tempFile *os.File, err error) {
-	args := []string{"test", e.Path}
-
-	if e.ShouldCheckCoverage() {
-		tempFilePath := tempCoverFile(rootDir, e.Path)
-		tempFile, err := os.OpenFile(tempFilePath, os.O_RDWR|os.O_CREATE, 0755)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		args = append(args, "-coverprofile="+tempFilePath)
-	}
-
-	cmd = exec.Command("go", args...)
-	return cmd, tempFile, err
+	return nil, nil, errors.New("not implemented")
+	//args := []string{"test", e.Path}
+	//
+	//if e.ShouldCheckCoverage() {
+	//	tempFilePath := tempCoverFile(rootDir, e.Path)
+	//	tempFile, err := os.OpenFile(tempFilePath, os.O_RDWR|os.O_CREATE, 0755)
+	//	if err != nil {
+	//		return nil, nil, err
+	//	}
+	//
+	//	args = append(args, "-coverprofile="+tempFilePath)
+	//}
+	//
+	//cmd = exec.Command("go", args...)
+	//return cmd, tempFile, err
 }
