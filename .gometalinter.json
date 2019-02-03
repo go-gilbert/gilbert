@@ -34,11 +34,9 @@
     "ineffassign",
     "interfacer",
     "maligned",
-    "megacheck",
     "prealloc",
     "structcheck",
     "unconvert",
-    "unused",
     "varcheck",
     "vet"
   ]
