@@ -1,6 +1,7 @@
 <p align="center"><img src="docs/assets/gilbert.png" width="256"></p>
 <p align="center">
   <a href="https://travis-ci.org/x1unix/gilbert"><img src="https://travis-ci.org/x1unix/gilbert.svg?branch=master" alt="Build Status"></img></a>
+  <a href="https://ci.appveyor.com/project/x1unix/gilbert"><img src="https://ci.appveyor.com/api/projects/status/github/x1unix/gilbert?svg=true&branch=master&passingText=Windows%20-%20OK&failingText=Windows%20-%20failed&pendingText=Windows%20-%20pending" alt="Windows Build Status"></a>
   <a href="https://goreportcard.com/report/github.com/x1unix/gilbert"><img src="https://goreportcard.com/badge/github.com/x1unix/gilbert" /></a>
   <a href="https://opensource.org/licenses/gpl-license"><img src="https://img.shields.io/badge/license-GPL-brightgreen.svg" /></a>
 </p>
