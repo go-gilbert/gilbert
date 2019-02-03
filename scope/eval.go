@@ -6,7 +6,9 @@ import (
 	"os/exec"
 )
 
+// CommandEvaluator represents command runner and wraps shell calls
 type CommandEvaluator interface {
+	// Call executes a shell command
 	Call(string) ([]byte, error)
 }
 
@@ -27,6 +29,7 @@ func (e *shellEvaluator) prepareProcess(cmd string) (proc *exec.Cmd) {
 	return proc
 }
 
+// Call executes a shell command
 func (e *shellEvaluator) Call(cmd string) (result []byte, err error) {
 	proc := e.prepareProcess(cmd)
 

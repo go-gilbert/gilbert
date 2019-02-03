@@ -2,16 +2,18 @@ package shell
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
-	"os"
-	"os/exec"
 )
 
+// Params contains params for shell plugin
 type Params struct {
 	// Command is command to execute
 	Command string
@@ -64,6 +66,7 @@ func newParams(ctx *scope.Context) Params {
 	return p
 }
 
+// NewShellPlugin creates a new shell plugin instance
 func NewShellPlugin(context *scope.Context, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	p := newParams(context)
 

@@ -12,6 +12,7 @@ import (
 	"github.com/x1unix/gilbert/plugins/builtin"
 )
 
+// TaskRunner is task runner
 type TaskRunner struct {
 	Plugins          map[string]plugins.PluginFactory
 	Manifest         *manifest.Manifest
@@ -19,6 +20,7 @@ type TaskRunner struct {
 	Log              logging.Logger
 }
 
+// PluginByName gets plugin by name
 func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, err error) {
 	p, ok := t.Plugins[pluginName]
 
@@ -30,6 +32,7 @@ func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, e
 	return
 }
 
+// RunJob execute specified job
 func (t *TaskRunner) RunJob(job *manifest.Job) error {
 	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
 		AppendGlobals(t.Manifest.Vars)
@@ -85,6 +88,7 @@ func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
 	return true
 }
 
+// TaskByName returns a task by name
 func (t *TaskRunner) TaskByName(taskName string) (taskPtr *manifest.Task, ok bool) {
 	task, ok := t.Manifest.Tasks[taskName]
 	if !ok {
@@ -95,6 +99,7 @@ func (t *TaskRunner) TaskByName(taskName string) (taskPtr *manifest.Task, ok boo
 	return
 }
 
+// NewTaskRunner creates a new TaskRunner instance
 func NewTaskRunner(man *manifest.Manifest, cwd string, writer logging.Logger) *TaskRunner {
 	t := &TaskRunner{
 		Plugins:          builtin.DefaultPlugins,

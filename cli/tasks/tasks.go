@@ -16,6 +16,7 @@ var (
 	r         *runner.TaskRunner
 )
 
+// RunTask is a handler for 'run' command
 func RunTask(c *cli.Context) (err error) {
 	if c.NArg() == 0 {
 		return fmt.Errorf("no task specified")

@@ -38,7 +38,8 @@ var boilerplate = manifest.Manifest{
 	},
 }
 
-func ScaffoldManifest(c *cli.Context) (err error) {
+// RunScaffoldManifest handles 'init' command
+func RunScaffoldManifest(c *cli.Context) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("cannot get current working directory, %s", err)

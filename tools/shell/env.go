@@ -8,6 +8,7 @@ func (e Environment) Empty() bool {
 	return e == nil || (len(e) == 0)
 }
 
+// ToArray returns array of variables usable for exec.Cmd
 func (e Environment) ToArray(defaults ...string) (arr []string) {
 	arr = make([]string, 0, len(defaults)+len(e))
 	for k, v := range e {
