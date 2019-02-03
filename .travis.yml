@@ -21,9 +21,8 @@ install:
   - dep ensure
 
 script:
-  - 'Current dir: $(pwd)'
-  - go vet ./..
+  - go vet ./...
   - gometalinter ./...
-  - go test ./...
+  - go test ./..
   - go build -o ./gilbert-dev
   - ./gilbert-dev run release
