@@ -1,0 +1,27 @@
+language: go
+
+go:
+  - "1.10.x"
+  - "1.11.x"
+
+branches:
+  only:
+    - master
+    - stable
+    - dev
+
+before_install:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - curl -L https://git.io/vp6lP | sh
+
+install:
+  - dep ensure
+
+before_script:
+  - go vet ./..
+  - gometalinter ./...
+
+script:
+  - go test ./...
+  - go build -o ./gilbert-dev
+  - ./gilbert-dev run release
