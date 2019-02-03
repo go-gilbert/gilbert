@@ -20,11 +20,10 @@ before_install:
 install:
   - dep ensure
 
-before_script:
+script:
+  - 'Current dir: $(pwd)'
   - go vet ./..
   - gometalinter ./...
-
-script:
   - go test ./...
   - go build -o ./gilbert-dev
   - ./gilbert-dev run release
