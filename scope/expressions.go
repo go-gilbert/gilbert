@@ -119,7 +119,7 @@ func (p *ExpressionProcessor) expandVariable(varName string) (val string, err er
 func (p *ExpressionProcessor) ReadExpression(exp []byte) (result []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic occured: %v", r)
+			err = fmt.Errorf("panic occurred: %v", r)
 		}
 	}()
 
