@@ -16,6 +16,7 @@ before_install:
   - go get -u github.com/alexkohler/prealloc
   - go get -u github.com/hypnoglow/durcheck
   - go get -u github.com/m3db/build-tools/linters/badtime
+  - gometalinter --install
 
 install:
   - dep ensure
