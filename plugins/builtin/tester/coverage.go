@@ -139,7 +139,7 @@ func (c *CoverageChecker) checkCoverage(output []byte) error {
 
 	gotCoverage := float32(totalCoverage) / float32(resultsCount)
 	if gotCoverage < c.params.Threshold {
-		return fmt.Errorf("total code coverage is below minimum threshold of %d% (got %d%)", c.params.Threshold, gotCoverage)
+		return fmt.Errorf("total code coverage is below minimum threshold of %.2f%% (got %.2f%%)", c.params.Threshold, gotCoverage)
 	}
 
 	return nil
