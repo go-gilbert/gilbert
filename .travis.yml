@@ -10,6 +10,9 @@ branches:
     - stable
     - dev
 
+env:
+  - PATH=${PATH}:${GOPATH}/bin
+
 before_install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - curl -L https://git.io/vp6lP | sh
