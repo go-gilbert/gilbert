@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/x1unix/gilbert/scope"
-	. "github.com/x1unix/gilbert/tools"
+	"github.com/x1unix/gilbert/tools"
 )
 
 const (
@@ -79,7 +79,7 @@ func (p *Params) buildArgs(ctx *scope.Context) (args []string, err error) {
 	args = []string{"build"}
 
 	// Add output file param
-	if !StringEmpty(p.OutputPath) {
+	if !tools.StringEmpty(p.OutputPath) {
 		output, err := ctx.ExpandVariables(p.OutputPath)
 		if err != nil {
 			return nil, err
@@ -99,12 +99,12 @@ func (p *Params) buildArgs(ctx *scope.Context) (args []string, err error) {
 	}
 
 	// Add build mode
-	if !StringEmpty(p.BuildMode) {
+	if !tools.StringEmpty(p.BuildMode) {
 		args = append(args, "-buildmode", p.BuildMode)
 	}
 
 	// Add package/file name to command
-	if !StringEmpty(p.Source) {
+	if !tools.StringEmpty(p.Source) {
 		source, err := ctx.ExpandVariables(p.Source)
 		if err != nil {
 			return nil, err

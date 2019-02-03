@@ -1,0 +1,29 @@
+language: go
+
+go:
+  - "1.10.x"
+  - "1.11.x"
+
+branches:
+  only:
+    - master
+    - stable
+    - dev
+
+before_install:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - go get -u github.com/alecthomas/gometalinter
+  - go get -u github.com/alexkohler/prealloc
+  - go get -u github.com/hypnoglow/durcheck
+  - go get -u github.com/m3db/build-tools/linters/badtime
+  - gometalinter --install
+
+install:
+  - dep ensure
+
+script:
+  - go vet ./...
+  - gometalinter ./...
+  - go test ./...
+  - go build -o ./gilbert-dev
+  - ./gilbert-dev run release

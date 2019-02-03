@@ -9,12 +9,14 @@ import (
 	"strings"
 )
 
+// Plugin represents Gilbert's plugin
 type Plugin struct {
 	context *scope.Context
 	params  Params
 	log     logging.Logger
 }
 
+// Call calls a plugin
 func (p *Plugin) Call() error {
 	proc, err := p.params.createProcess(p.context)
 	if err != nil {
@@ -30,7 +32,7 @@ func (p *Plugin) Call() error {
 	}
 
 	if err = proc.Start(); err != nil {
-		err = fmt.Errorf(`failed to execute command "%s": %s`, strings.Join(proc.Args, " "), err)
+		return fmt.Errorf(`failed to execute command "%s": %s`, strings.Join(proc.Args, " "), err)
 	}
 
 	if err := proc.Wait(); err != nil {

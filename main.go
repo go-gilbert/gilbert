@@ -13,8 +13,11 @@ import (
 )
 
 var (
+	// Version stores app version, value set by linker
 	Version = "dev"
-	Commit  = "null"
+
+	// Commit stores app build commit, value set by linker
+	Commit = "null"
 )
 
 // unfortunately, urface/cli ignores '--verbose' global flag :(
@@ -51,7 +54,7 @@ func main() {
 			Name:        "init",
 			Description: "Scaffolds a new gilbert.yaml file",
 			Usage:       "Scaffolds a new gilbert.yaml file",
-			Action:      scaffold.ScaffoldManifest,
+			Action:      scaffold.RunScaffoldManifest,
 			Before:      bootstrap,
 			Flags: []cli.Flag{
 				verboseFlag,

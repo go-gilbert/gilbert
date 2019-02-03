@@ -63,7 +63,7 @@ func (c *Context) Var(varName string) (isLocal bool, out string, ok bool) {
 	return
 }
 
-// ExpandVariable expands an expression stored inside a passed string
+// ExpandVariables expands an expression stored inside a passed string
 func (c *Context) ExpandVariables(str string) (out string, err error) {
 	return c.processor.ReadString(str)
 }

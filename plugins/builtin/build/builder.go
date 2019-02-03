@@ -8,6 +8,7 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
+// NewBuildPlugin creates a new build plugin instance
 func NewBuildPlugin(context *scope.Context, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	p := newParams()
 	if err := mapstructure.Decode(params, &p); err != nil {
