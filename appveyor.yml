@@ -1,0 +1,35 @@
+version: "{build}"
+
+# Source Config
+
+clone_folder: c:\gopath\src\github.com\x1unix\gilbert
+
+# Build host
+
+environment:
+  GOPATH: c:\gopath
+  DEPTESTBYPASS501: 1
+  GOVERSION: 1.9
+
+init:
+  - git config --global core.autocrlf input
+
+# Build
+
+install:
+  # Install the specific Go version.
+  - rmdir c:\go /s /q
+  - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
+  - msiexec /i go%GOVERSION%.windows-amd64.msi /q
+  - set Path=c:\go\bin;c:\gopath\bin;%Path%
+  - go version
+  - go env
+  - choco install dep
+  - dep ensure
+
+build: false
+deploy: false
+
+test_script:
+  - go build github.com/x1unix/gilbert
+  - for /f "" %%G in ('go list github.com/x1unix/gilbert/...') do ( go test %%G & IF ERRORLEVEL == 1 EXIT 1)
