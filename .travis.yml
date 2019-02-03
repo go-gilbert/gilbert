@@ -13,6 +13,10 @@ branches:
 before_install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - curl -L https://git.io/vp6lP | sh
+  - go get -u github.com/alexkohler/prealloc
+  - go get -u github.com/hypnoglow/durcheck
+  - go get -u github.com/m3db/build-tools/linters/badtime
+  - go get -u https://github.com/kisielk/errcheck
 
 install:
   - dep ensure
