@@ -6,6 +6,7 @@ import (
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
 	"strings"
+	"time"
 
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
@@ -41,6 +42,12 @@ func (t *TaskRunner) RunJob(job *manifest.Job) error {
 	if !t.shouldRunJob(job, ctx) {
 		t.Log.SubLogger().Info("Step was skipped")
 		return nil
+	}
+
+	// Wait if necessary
+	if job.Delay > 0 {
+		t.Log.SubLogger().Debug("job delay defined, waiting %dms...", job.Delay)
+		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
 	}
 
 	if job.InvokesPlugin() {
