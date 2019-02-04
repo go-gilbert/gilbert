@@ -21,6 +21,7 @@ var (
 )
 
 // unfortunately, urface/cli ignores '--verbose' global flag :(
+// so it should be defined implicitly in each task
 var verboseFlag = cli.BoolFlag{
 	Name:        "verbose",
 	Usage:       "shows debug information, useful for troubleshooting",
@@ -45,6 +46,16 @@ func main() {
 			Description: "Runs a task declared in manifest file",
 			Usage:       "Runs a task declared in manifest file",
 			Action:      tasks.RunTask,
+			Before:      bootstrap,
+			Flags: []cli.Flag{
+				verboseFlag,
+			},
+		},
+		{
+			Name:        "ls",
+			Description: "Lists all tasks defiled in gilbert.yaml",
+			Usage:       "Lists all tasks defiled in gilbert.yaml",
+			Action:      tasks.ListTasksAction,
 			Before:      bootstrap,
 			Flags: []cli.Flag{
 				verboseFlag,
