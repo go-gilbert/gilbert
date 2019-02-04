@@ -1,0 +1,25 @@
+baseURL = "https://x1unix.github.io/gilbert/"
+languageCode = "en-us"
+title = "Gilbert"
+theme = "kube"
+description = "Task runner for Go projects"
+Paginate = 4
+[Params]
+  RSSLink = "/index.xml"
+  author = "x1unix" # add your company name
+  github = "https://github.com/x1unix/gilbert"
+  twitter = "" # add your twitter profile
+  email = "denis0051@gmail.com"
+
+[[menu.main]]
+    name = "Documentation"
+    weight = -100
+    url = "/docs/"
+# [[menu.main]]
+#     name = "Blog"
+#     weight = -100
+#     url = "/blog/"
+# [[menu.main]]
+#     name = "Faq"
+#     weight = -100
+#     url = "/faq/"
