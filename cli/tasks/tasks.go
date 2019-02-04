@@ -2,19 +2,25 @@ package tasks
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
 	"github.com/urfave/cli"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/runner"
+	"os"
 )
 
 var (
 	r *runner.TaskRunner
 )
+
+func getManifest(dir string) (*manifest.Manifest, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get current working directory, %v", err)
+	}
+
+	return manifest.FromDirectory(dir)
+}
 
 // RunTask is a handler for 'run' command
 func RunTask(c *cli.Context) (err error) {
@@ -38,14 +44,9 @@ func getRunner() (*runner.TaskRunner, error) {
 		return nil, fmt.Errorf("cannot get current working directory, %v", err)
 	}
 
-	data, err := ioutil.ReadFile(filepath.Join(dir, manifest.FileName))
+	m, err := getManifest(dir)
 	if err != nil {
-		return nil, fmt.Errorf("manifest file not found (%s) at %s", manifest.FileName, dir)
-	}
-
-	m, err := manifest.UnmarshalManifest(data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read manifest file:\n  %v", err)
+		return nil, err
 	}
 
 	return runner.NewTaskRunner(m, dir, logging.Log), nil
