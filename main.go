@@ -13,11 +13,9 @@ import (
 )
 
 var (
-	// Version stores app version, value set by linker
-	Version = "dev"
-
-	// Commit stores app build commit, value set by linker
-	Commit = "local build"
+	// These values will override by linker
+	version = "dev"
+	commit  = "local build"
 )
 
 // unfortunately, urface/cli ignores '--verbose' global flag :(
@@ -32,7 +30,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gilbert"
 	app.Usage = "Build automation tool for Go"
-	app.Version = Version
+	app.Version = version
 	app.HideVersion = true
 	app.Commands = []cli.Command{
 		{
@@ -85,6 +83,6 @@ func bootstrap(_ *cli.Context) error {
 }
 
 func printVersion(_ *cli.Context) error {
-	fmt.Printf("Gilbert version %s (%s)\n", Version, Commit)
+	fmt.Printf("Gilbert version %s (%s)\n", version, commit)
 	return nil
 }
