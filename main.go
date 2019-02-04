@@ -17,7 +17,7 @@ var (
 	Version = "dev"
 
 	// Commit stores app build commit, value set by linker
-	Commit = "null"
+	Commit = "local build"
 )
 
 // unfortunately, urface/cli ignores '--verbose' global flag :(
