@@ -2,11 +2,12 @@ package runner
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
-	"strings"
-	"time"
 
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
@@ -18,7 +19,8 @@ type TaskRunner struct {
 	Plugins          map[string]plugins.PluginFactory
 	Manifest         *manifest.Manifest
 	CurrentDirectory string
-	Log              logging.Logger
+	log              logging.Logger
+	subLogger        logging.Logger
 }
 
 // PluginByName gets plugin by name
@@ -33,20 +35,47 @@ func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, e
 	return
 }
 
-// RunJob execute specified job
-func (t *TaskRunner) RunJob(job *manifest.Job) error {
+// RunTask execute task by name
+func (t *TaskRunner) RunTask(taskName string) error {
+	task, ok := t.TaskByName(taskName)
+	if !ok {
+		return fmt.Errorf("task '%s' doesn't exists", taskName)
+	}
+
+	t.log.Log("Running task '%s'...", taskName)
+	steps := len(*task)
+
+	for jobIndex, job := range *task {
+		currentStep := jobIndex + 1
+		descr := ""
+		if job.HasDescription() {
+			descr = ": " + job.Description
+		}
+
+		logging.Log.SubLogger().Log("Step %d of %d%s", currentStep, steps, descr)
+		err := t.runJob(&job)
+		if err != nil {
+			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
+		}
+	}
+
+	return nil
+}
+
+// runJob execute specified job
+func (t *TaskRunner) runJob(job *manifest.Job) error {
 	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
 		AppendGlobals(t.Manifest.Vars)
 
 	// check if job should be run
 	if !t.shouldRunJob(job, ctx) {
-		t.Log.SubLogger().Info("Step was skipped")
+		t.subLogger.SubLogger().Info("Step was skipped")
 		return nil
 	}
 
 	// Wait if necessary
 	if job.Delay > 0 {
-		t.Log.SubLogger().Debug("job delay defined, waiting %dms...", job.Delay)
+		t.subLogger.SubLogger().Debug("Job delay defined, waiting %dms...", job.Delay)
 		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
 	}
 
@@ -56,14 +85,14 @@ func (t *TaskRunner) RunJob(job *manifest.Job) error {
 			return err
 		}
 
-		plugin, err := factory(ctx, job.Params, t.Log.SubLogger())
+		plugin, err := factory(ctx, job.Params, t.subLogger.SubLogger())
 		if err != nil {
 			return fmt.Errorf("failed to apply plugin '%s': %v", job.Plugin, err)
 		}
 		return plugin.Call()
 	}
 
-	return fmt.Errorf("nested task invocation support is not supported, please use plugins for jobs")
+	return fmt.Errorf("no task handler defined, please define task handler in 'plugin' parameter")
 }
 
 func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
@@ -72,7 +101,7 @@ func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
 		return true
 	}
 
-	l := t.Log.SubLogger()
+	l := t.subLogger.SubLogger()
 	condCmd, err := ctx.ExpandVariables(condCmd)
 	if err != nil {
 		l.Error(err.Error())
@@ -81,7 +110,7 @@ func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
 	}
 	cmd := shell.PrepareCommand(condCmd)
 
-	l.Debug("assert command: '%s'", condCmd)
+	l.Debug("Assert command: '%s'", condCmd)
 
 	// Return false if command failed to start or returned bad exit code
 	if err := cmd.Start(); err != nil {
@@ -112,7 +141,8 @@ func NewTaskRunner(man *manifest.Manifest, cwd string, writer logging.Logger) *T
 		Plugins:          builtin.DefaultPlugins,
 		Manifest:         man,
 		CurrentDirectory: cwd,
-		Log:              writer,
+		log:              writer,
+		subLogger:        writer.SubLogger(),
 	}
 
 	return t
