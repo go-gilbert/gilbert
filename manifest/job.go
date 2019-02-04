@@ -1,6 +1,8 @@
 package manifest
 
-import "github.com/x1unix/gilbert/scope"
+import (
+	"github.com/x1unix/gilbert/scope"
+)
 
 // Job is a single job in task
 type Job struct {
@@ -15,6 +17,9 @@ type Job struct {
 
 	// Plugin describes what plugin should handle this job.
 	Plugin string `yaml:"plugin,omitempty"`
+
+	// Delay before task start in milliseconds
+	Delay uint `yaml:"delay,omitempty"`
 
 	// Vars is a set of variables defined for this job.
 	Vars scope.Vars `yaml:"vars,omitempty"`

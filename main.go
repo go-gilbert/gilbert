@@ -13,14 +13,13 @@ import (
 )
 
 var (
-	// Version stores app version, value set by linker
-	Version = "dev"
-
-	// Commit stores app build commit, value set by linker
-	Commit = "null"
+	// These values will override by linker
+	version = "dev"
+	commit  = "local build"
 )
 
 // unfortunately, urface/cli ignores '--verbose' global flag :(
+// so it should be defined implicitly in each task
 var verboseFlag = cli.BoolFlag{
 	Name:        "verbose",
 	Usage:       "shows debug information, useful for troubleshooting",
@@ -31,7 +30,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gilbert"
 	app.Usage = "Build automation tool for Go"
-	app.Version = Version
+	app.Version = version
 	app.HideVersion = true
 	app.Commands = []cli.Command{
 		{
@@ -45,6 +44,16 @@ func main() {
 			Description: "Runs a task declared in manifest file",
 			Usage:       "Runs a task declared in manifest file",
 			Action:      tasks.RunTask,
+			Before:      bootstrap,
+			Flags: []cli.Flag{
+				verboseFlag,
+			},
+		},
+		{
+			Name:        "ls",
+			Description: "Lists all tasks defiled in gilbert.yaml",
+			Usage:       "Lists all tasks defiled in gilbert.yaml",
+			Action:      tasks.ListTasksAction,
 			Before:      bootstrap,
 			Flags: []cli.Flag{
 				verboseFlag,
@@ -74,6 +83,6 @@ func bootstrap(_ *cli.Context) error {
 }
 
 func printVersion(_ *cli.Context) error {
-	fmt.Printf("Gilbert version %s (%s)\n", Version, Commit)
+	fmt.Printf("Gilbert version %s (%s)\n", version, commit)
 	return nil
 }

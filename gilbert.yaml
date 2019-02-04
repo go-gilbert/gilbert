@@ -1,7 +1,7 @@
 version: 1.0
 vars:
   buildDir: './build'
-  version: '0.1.0'
+  version: '0.2.0'
   commit: '{% git log --format=%H -n 1 %}'
 tasks:
   build:
@@ -9,8 +9,8 @@ tasks:
     description: "Building project"
     params:
       variables:
-        'main.Version': '{{ version }}'
-        'main.Commit': '{{ commit }}'
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
   - if: 'uname -a'
     description: "Show a message only if job runs on UNIX"
     plugin: shell
@@ -26,8 +26,8 @@ tasks:
         os: windows
         arch: '386'
       variables:
-        'main.Version': '{{ version }}'
-        'main.Commit': '{{ commit }}'
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
 
   - plugin: build
     description: 'Windows - amd64'
@@ -37,8 +37,8 @@ tasks:
         os: windows
         arch: amd64
       variables:
-        'main.Version': '{{ version }}'
-        'main.Commit': '{{ commit }}'
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
 
   - plugin: build
     description: 'MacOS - amd64'
@@ -48,8 +48,8 @@ tasks:
         os: darwin
         arch: amd64
       variables:
-        'main.Version': '{{ version }}'
-        'main.Commit': '{{ commit }}'
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
 
   - plugin: build
     description: 'Linux - amd64'
@@ -59,6 +59,6 @@ tasks:
         os: linux
         arch: amd64
       variables:
-        'main.Version': '{{ version }}'
-        'main.Commit': '{{ commit }}'
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
 
