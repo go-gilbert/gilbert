@@ -35,6 +35,7 @@ func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, e
 	return
 }
 
+// RunTask execute task by name
 func (t *TaskRunner) RunTask(taskName string) error {
 	task, ok := t.TaskByName(taskName)
 	if !ok {
