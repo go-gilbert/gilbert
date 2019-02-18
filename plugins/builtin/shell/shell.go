@@ -47,7 +47,13 @@ func (p *Params) createProcess(ctx *scope.Context) (*exec.Cmd, error) {
 	}
 
 	cmd := exec.Command(p.Shell, p.ShellExecParam, cmdstr)
-	cmd.Dir = p.WorkDir
+
+	wd, err := ctx.ExpandVariables(p.WorkDir)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.Dir = wd
 
 	// TODO: inherit global vars
 	if !p.Env.Empty() {
