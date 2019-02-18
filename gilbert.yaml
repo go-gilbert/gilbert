@@ -1,7 +1,7 @@
 version: 1.0
 vars:
   buildDir: './build'
-  version: '0.2.0'
+  version: '0.2.1'
   commit: '{% git log --format=%H -n 1 %}'
 tasks:
   build:
