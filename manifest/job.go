@@ -12,11 +12,14 @@ type Job struct {
 	// Description is job description
 	Description string `yaml:"description,omitempty"`
 
-	// Task refers to task that should be run.
-	Task string `yaml:"run,omitempty"`
+	// TaskName refers to task that should be run.
+	TaskName *string `yaml:"run,omitempty"`
 
-	// Plugin describes what plugin should handle this job.
-	Plugin string `yaml:"plugin,omitempty"`
+	// PluginName describes what plugin should handle this job.
+	PluginName *string `yaml:"plugin,omitempty"`
+
+	// MixinName is mixin to be used by this job
+	MixinName *string `yaml:"mixin,omitempty"`
 
 	// Delay before task start in milliseconds
 	Delay uint `yaml:"delay,omitempty"`
@@ -26,16 +29,6 @@ type Job struct {
 
 	// Params is a set of arguments for the job.
 	Params map[string]interface{} `yaml:"params,omitempty"`
-}
-
-// InvokesTask checks if this job should call another task
-func (j *Job) InvokesTask() bool {
-	return j.Task != ""
-}
-
-// InvokesPlugin checks if this job should invoke plugin
-func (j *Job) InvokesPlugin() bool {
-	return j.Plugin != ""
 }
 
 // HasDescription checks if description is available
