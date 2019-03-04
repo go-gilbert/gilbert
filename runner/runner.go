@@ -14,6 +14,8 @@ import (
 	"github.com/x1unix/gilbert/plugins/builtin"
 )
 
+var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")
+
 // TaskRunner is task runner
 type TaskRunner struct {
 	Plugins          map[string]plugins.PluginFactory
@@ -83,8 +85,11 @@ func (t *TaskRunner) runJob(job *manifest.Job, ctx *scope.Context) error {
 		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
 	}
 
-	if job.PluginName != nil {
-		factory, err := t.PluginByName(*job.PluginName)
+	name, execType := job.ExecParams()
+
+	switch execType {
+	case manifest.ExecPlugin:
+		factory, err := t.PluginByName(name)
 		if err != nil {
 			return err
 		}
@@ -94,9 +99,9 @@ func (t *TaskRunner) runJob(job *manifest.Job, ctx *scope.Context) error {
 			return fmt.Errorf("failed to apply plugin '%s': %v", *job.PluginName, err)
 		}
 		return plugin.Call()
+	default:
+		return errNoTaskHandler
 	}
-
-	return fmt.Errorf("no task handler defined, please define task handler in 'plugin' parameter")
 }
 
 func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
