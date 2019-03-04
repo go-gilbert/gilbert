@@ -53,7 +53,7 @@ func (t *TaskRunner) RunTask(taskName string) error {
 		}
 
 		logging.Log.SubLogger().Log("Step %d of %d%s", currentStep, steps, descr)
-		err := t.runJob(&job)
+		err := t.runJob(&job, nil)
 		if err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
 		}
@@ -63,9 +63,13 @@ func (t *TaskRunner) RunTask(taskName string) error {
 }
 
 // runJob execute specified job
-func (t *TaskRunner) runJob(job *manifest.Job) error {
-	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
-		AppendGlobals(t.Manifest.Vars)
+//
+// if ctx is nil, default context will be created
+func (t *TaskRunner) runJob(job *manifest.Job, ctx *scope.Context) error {
+	if ctx == nil {
+		ctx = scope.CreateContext(t.CurrentDirectory, job.Vars).
+			AppendGlobals(t.Manifest.Vars)
+	}
 
 	// check if job should be run
 	if !t.shouldRunJob(job, ctx) {
@@ -79,15 +83,15 @@ func (t *TaskRunner) runJob(job *manifest.Job) error {
 		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
 	}
 
-	if job.InvokesPlugin() {
-		factory, err := t.PluginByName(job.Plugin)
+	if job.PluginName != nil {
+		factory, err := t.PluginByName(*job.PluginName)
 		if err != nil {
 			return err
 		}
 
 		plugin, err := factory(ctx, job.Params, t.subLogger.SubLogger())
 		if err != nil {
-			return fmt.Errorf("failed to apply plugin '%s': %v", job.Plugin, err)
+			return fmt.Errorf("failed to apply plugin '%s': %v", *job.PluginName, err)
 		}
 		return plugin.Call()
 	}
