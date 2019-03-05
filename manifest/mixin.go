@@ -9,6 +9,9 @@ type Mixin []Job
 func (m Mixin) ToTask(parentVars scope.Vars) (t Task) {
 	t = make(Task, 0, len(m))
 	for _, j := range m {
+		if j.Vars == nil {
+			j.Vars = make(scope.Vars)
+		}
 		j.Vars.Append(parentVars)
 		t = append(t, j)
 	}

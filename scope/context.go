@@ -14,8 +14,8 @@ func (v Vars) Append(newVars Vars) {
 		return
 	}
 
-	for k := range newVars {
-		v[k] = newVars[k]
+	for k, val := range newVars {
+		v[k] = val
 	}
 }
 
