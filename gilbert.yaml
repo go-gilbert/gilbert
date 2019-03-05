@@ -3,62 +3,60 @@ vars:
   buildDir: './build'
   version: '0.2.1'
   commit: '{% git log --format=%H -n 1 %}'
+
+mixins:
+  platform-build:
+    - plugin: build
+      description: 'build for {{os}} {{arch}}'
+      vars:
+        ext: ''
+      params:
+        outputPath: '{{buildDir}}/gilbert_{{os}}-{{arch}}{{ext}}'
+        target:
+          os: '{{os}}'
+          arch: '{{arch}}'
+        variables:
+          'main.version': '{{ version }}'
+          'main.commit': '{{ commit }}'
+
 tasks:
+  pre-install:
+  - plugin: go-get
+    params:
+      packages:
+        - github.com/stretchr/testify
   build:
   - plugin: build
-    description: "Building project"
     params:
       variables:
         'main.version': '{{ version }}'
         'main.commit': '{{ commit }}'
   - if: 'uname -a'
-    description: "Show a message only if job runs on UNIX"
+    description: "show a message only if job runs on UNIX"
     plugin: shell
     params:
       command: 'echo This is UNIX machine'
 
   release:
-  - plugin: build
-    description: 'Windows - 32bit'
-    params:
-      outputPath: '{{buildDir}}/gilbert_i386.exe'
-      target:
-        os: windows
-        arch: '386'
-      variables:
-        'main.version': '{{ version }}'
-        'main.commit': '{{ commit }}'
-
-  - plugin: build
-    description: 'Windows - amd64'
-    params:
-      outputPath: '{{buildDir}}/gilbert_amd64.exe'
-      target:
-        os: windows
-        arch: amd64
-      variables:
-        'main.version': '{{ version }}'
-        'main.commit': '{{ commit }}'
-
-  - plugin: build
-    description: 'MacOS - amd64'
-    params:
-      outputPath: '{{buildDir}}/gilbert_osx'
-      target:
-        os: darwin
-        arch: amd64
-      variables:
-        'main.version': '{{ version }}'
-        'main.commit': '{{ commit }}'
-
-  - plugin: build
-    description: 'Linux - amd64'
-    params:
-      outputPath: '{{buildDir}}/gilbert_linux-amd64'
-      target:
-        os: linux
-        arch: amd64
-      variables:
-        'main.version': '{{ version }}'
-        'main.commit': '{{ commit }}'
-
+  - mixin: platform-build
+    vars:
+      os: windows
+      arch: '386'
+      ext: '.exe'
+  - mixin: platform-build
+    vars:
+      os: windows
+      arch: 'amd64'
+      ext: .exe
+  - mixin: platform-build
+    vars:
+      os: darwin
+      arch: 'amd64'
+  - mixin: platform-build
+    vars:
+      os: linux
+      arch: 'amd64'
+  - mixin: platform-build
+    vars:
+      os: linux
+      arch: '386'

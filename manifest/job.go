@@ -4,6 +4,23 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
+// JobExecType represents job type
+type JobExecType uint8
+
+const (
+	// ExecEmpty means job has no execution type
+	ExecEmpty JobExecType = iota
+
+	// ExecPlugin means that job execute plugin
+	ExecPlugin
+
+	// ExecTask means that job runs other task
+	ExecTask
+
+	// ExecMixin means that job based on mixin
+	ExecMixin
+)
+
 // Job is a single job in task
 type Job struct {
 	// Condition is shell command that should be successful to run specified job
@@ -12,11 +29,14 @@ type Job struct {
 	// Description is job description
 	Description string `yaml:"description,omitempty"`
 
-	// Task refers to task that should be run.
-	Task string `yaml:"run,omitempty"`
+	// TaskName refers to task that should be run.
+	TaskName string `yaml:"run,omitempty"`
 
-	// Plugin describes what plugin should handle this job.
-	Plugin string `yaml:"plugin,omitempty"`
+	// PluginName describes what plugin should handle this job.
+	PluginName string `yaml:"plugin,omitempty"`
+
+	// MixinName is mixin to be used by this job
+	MixinName string `yaml:"mixin,omitempty"`
 
 	// Delay before task start in milliseconds
 	Delay uint `yaml:"delay,omitempty"`
@@ -28,17 +48,42 @@ type Job struct {
 	Params map[string]interface{} `yaml:"params,omitempty"`
 }
 
-// InvokesTask checks if this job should call another task
-func (j *Job) InvokesTask() bool {
-	return j.Task != ""
-}
-
-// InvokesPlugin checks if this job should invoke plugin
-func (j *Job) InvokesPlugin() bool {
-	return j.Plugin != ""
-}
-
 // HasDescription checks if description is available
 func (j *Job) HasDescription() bool {
 	return j.Description != ""
+}
+
+// FormatDescription returns formatted description string
+func (j *Job) FormatDescription() string {
+	if j.Description != "" {
+		return j.Description
+	}
+
+	// If description is empty, return used mixin or plugin name if available
+	for _, v := range []string{j.PluginName, j.TaskName, j.MixinName} {
+		if v != "" {
+			return v
+		}
+	}
+
+	return ""
+}
+
+// Type returns job execution type
+//
+// If job has no 'plugin', 'task' or 'plugin' declaration, ExecEmpty will be returned
+func (j *Job) Type() JobExecType {
+	if j.PluginName != "" {
+		return ExecPlugin
+	}
+
+	if j.TaskName != "" {
+		return ExecTask
+	}
+
+	if j.MixinName != "" {
+		return ExecMixin
+	}
+
+	return ExecEmpty
 }
