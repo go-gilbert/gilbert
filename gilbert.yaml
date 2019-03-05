@@ -22,13 +22,12 @@ mixins:
 tasks:
   build:
   - plugin: build
-    description: "Building project"
     params:
       variables:
         'main.version': '{{ version }}'
         'main.commit': '{{ commit }}'
   - if: 'uname -a'
-    description: "Show a message only if job runs on UNIX"
+    description: "show a message only if job runs on UNIX"
     plugin: shell
     params:
       command: 'echo This is UNIX machine'
