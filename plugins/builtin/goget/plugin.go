@@ -74,6 +74,7 @@ func (p *Plugin) getPackage(pkgName string) (err error) {
 	return err
 }
 
+// NewPlugin creates a new plugin instance
 func NewPlugin(context *scope.Context, rawParams manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	p := params{}
 	if err := mapstructure.Decode(rawParams, &p); err != nil {
