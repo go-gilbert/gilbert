@@ -53,21 +53,37 @@ func (j *Job) HasDescription() bool {
 	return j.Description != ""
 }
 
-// ExecParams returns params to execute the job
+// FormatDescription returns formatted description string
+func (j *Job) FormatDescription() string {
+	if j.Description != "" {
+		return j.Description
+	}
+
+	// If description is empty, return used mixin or plugin name if available
+	for _, v := range []*string{j.PluginName, j.TaskName, j.MixinName} {
+		if v != nil {
+			return *v
+		}
+	}
+
+	return ""
+}
+
+// Type returns job execution type
 //
 // If job has no 'plugin', 'task' or 'plugin' declaration, ExecEmpty will be returned
-func (j *Job) ExecParams() (name string, execType JobExecType) {
+func (j *Job) Type() JobExecType {
 	if j.PluginName != nil {
-		return *j.PluginName, ExecPlugin
+		return ExecPlugin
 	}
 
 	if j.TaskName != nil {
-		return *j.TaskName, ExecTask
+		return ExecTask
 	}
 
 	if j.MixinName != nil {
-		return *j.MixinName, ExecMixin
+		return ExecMixin
 	}
 
-	return "", ExecEmpty
+	return ExecEmpty
 }
