@@ -2,15 +2,16 @@ package scaffold
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/urfave/cli"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/scope"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"path"
-	"strings"
 )
 
 var boilerplate = manifest.Manifest{
@@ -22,14 +23,14 @@ var boilerplate = manifest.Manifest{
 		"build": manifest.Task{
 			{
 				Description: "Build project",
-				Plugin:      "build",
+				PluginName:  "build",
 			},
 		},
 		"clean": manifest.Task{
 			{
 				Description: "Remove vendor files",
 				Condition:   "file ./vendor",
-				Plugin:      "shell",
+				PluginName:  "shell",
 				Params: map[string]interface{}{
 					"command": "rm -rf ./vendor",
 				},

@@ -8,6 +8,17 @@ import (
 // Vars is a set of declared variables
 type Vars map[string]string
 
+// Append appends variables from vars list
+func (v Vars) Append(newVars Vars) {
+	if newVars == nil || len(newVars) == 0 {
+		return
+	}
+
+	for k := range newVars {
+		v[k] = newVars[k]
+	}
+}
+
 // Context contains a set of globals and variables related to specific job
 type Context struct {
 	Globals     Vars // Globals is set of global variables for all tasks
@@ -43,6 +54,15 @@ func (c *Context) AppendGlobals(globals Vars) *Context {
 	return c
 }
 
+// AppendVariables appends global variables to the context
+func (c *Context) AppendVariables(globals Vars) *Context {
+	for k, v := range globals {
+		c.Globals[k] = v
+	}
+
+	return c
+}
+
 // Global returns a global variable value by it's name
 func (c *Context) Global(varName string) (out string, ok bool) {
 	out, ok = c.Globals[varName]
@@ -66,6 +86,20 @@ func (c *Context) Var(varName string) (isLocal bool, out string, ok bool) {
 // ExpandVariables expands an expression stored inside a passed string
 func (c *Context) ExpandVariables(str string) (out string, err error) {
 	return c.processor.ReadString(str)
+}
+
+// Scan does the same as ExpandVariables but with multiple variables and updates the value in pointer with expanded value
+//
+// Useful for bulk mapping of struct fields
+func (c *Context) Scan(vals ...*string) (err error) {
+	for _, ptr := range vals {
+		*ptr, err = c.processor.ReadString(*ptr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Environ gets list of OS environment variables with globals

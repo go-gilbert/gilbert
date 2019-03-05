@@ -14,6 +14,8 @@ import (
 	"github.com/x1unix/gilbert/plugins/builtin"
 )
 
+var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")
+
 // TaskRunner is task runner
 type TaskRunner struct {
 	Plugins          map[string]plugins.PluginFactory
@@ -47,13 +49,9 @@ func (t *TaskRunner) RunTask(taskName string) error {
 
 	for jobIndex, job := range *task {
 		currentStep := jobIndex + 1
-		descr := ""
-		if job.HasDescription() {
-			descr = ": " + job.Description
-		}
-
-		logging.Log.SubLogger().Log("Step %d of %d%s", currentStep, steps, descr)
-		err := t.runJob(&job)
+		descr := job.FormatDescription()
+		logging.Log.SubLogger().Log("Step %d of %d: %s", currentStep, steps, descr)
+		err := t.runJob(&job, nil, t.subLogger.SubLogger())
 		if err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
 		}
@@ -62,37 +60,100 @@ func (t *TaskRunner) RunTask(taskName string) error {
 	return nil
 }
 
+// runSubTask used to run sub-tasks created by parent job
+//
+// parentCtx used to expand task base properties (like description, etc.)
+//
+// subLogger used to create stack of log lines
+func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, parentCtx *scope.Context) error {
+	steps := len(task)
+
+	for jobIndex, job := range task {
+		currentStep := jobIndex + 1
+
+		// sub task label can contain template expressions (e.g. mixin step description)
+		// so we should try to parse it
+		descr := job.FormatDescription()
+		if parsed, err := parentCtx.ExpandVariables(descr); err != nil {
+			subLogger.Error("description parse error: %s", err)
+		} else {
+			descr = parsed
+		}
+
+		if steps > 1 {
+			// show total steps count only if more than one step provided
+			subLogger.Info("- %s [%d/%d]", descr, currentStep, steps)
+		} else {
+			subLogger.Info("- %s", descr)
+		}
+
+		err := t.runJob(&job, nil, subLogger.SubLogger())
+		if err != nil {
+			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
+		}
+	}
+
+	return nil
+}
+
 // runJob execute specified job
-func (t *TaskRunner) runJob(job *manifest.Job) error {
-	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
-		AppendGlobals(t.Manifest.Vars)
+//
+// parentVars are optional but allows to override job variables (used for nested sub-tasks).
+//
+// requires subLogger instance to create cascade log output
+func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog logging.Logger) error {
+	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).AppendGlobals(t.Manifest.Vars)
+	ctx.Variables.Append(parentVars)
 
 	// check if job should be run
 	if !t.shouldRunJob(job, ctx) {
-		t.subLogger.SubLogger().Info("Step was skipped")
+		subLog.Info("Step was skipped")
 		return nil
 	}
 
 	// Wait if necessary
 	if job.Delay > 0 {
-		t.subLogger.SubLogger().Debug("Job delay defined, waiting %dms...", job.Delay)
+		subLog.Debug("Job delay defined, waiting %dms...", job.Delay)
 		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
 	}
 
-	if job.InvokesPlugin() {
-		factory, err := t.PluginByName(job.Plugin)
+	execType := job.Type()
+	switch execType {
+	case manifest.ExecPlugin:
+		factory, err := t.PluginByName(job.PluginName)
 		if err != nil {
 			return err
 		}
 
-		plugin, err := factory(ctx, job.Params, t.subLogger.SubLogger())
+		plugin, err := factory(ctx, job.Params, subLog)
 		if err != nil {
-			return fmt.Errorf("failed to apply plugin '%s': %v", job.Plugin, err)
+			return fmt.Errorf("failed to apply plugin '%s': %v", job.PluginName, err)
 		}
 		return plugin.Call()
+	case manifest.ExecMixin:
+		return t.execJobWithMixin(job, ctx, subLog)
+	default:
+		return errNoTaskHandler
+	}
+}
+
+// execJobWithMixin constructs a task from job with mixin and runs it
+//
+// requires subLogger instance to create cascade logging output
+func (t *TaskRunner) execJobWithMixin(j *manifest.Job, ctx *scope.Context, subLog logging.Logger) error {
+	mx, ok := t.Manifest.Mixins[j.MixinName]
+	if !ok {
+		return fmt.Errorf("mixin '%s' doesn't exists", j.MixinName)
 	}
 
-	return fmt.Errorf("no task handler defined, please define task handler in 'plugin' parameter")
+	// Create a task from mixin and job params
+	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
+	task := mx.ToTask(j.Vars)
+	if err := t.runSubTask(task, subLog, ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {

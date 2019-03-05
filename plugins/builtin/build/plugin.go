@@ -22,6 +22,7 @@ func (p *Plugin) Call() error {
 		return err
 	}
 
+	p.log.Debug("Target: %s %s", p.params.Target.Os, p.params.Target.Arch)
 	p.log.Debug("Command: '%s'", strings.Join(cmd.Args, " "))
 	cmd.Stdout = p.log
 	cmd.Stderr = p.log.ErrorWriter()
