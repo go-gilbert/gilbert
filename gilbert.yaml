@@ -7,7 +7,7 @@ vars:
 mixins:
   platform-build:
     - plugin: build
-      description: '{{os}} - {{arch}}'
+      description: 'build for {{os}} {{arch}}'
       vars:
         ext: ''
       params:

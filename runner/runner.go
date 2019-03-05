@@ -138,7 +138,7 @@ func (t *TaskRunner) execJobWithMixin(j *manifest.Job, ctx *scope.Context, subLo
 	// Create a task from mixin and job params
 	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
 	task := mx.ToTask(j.Vars)
-	if err := t.runSubTask(task, subLog.SubLogger(), ctx); err != nil {
+	if err := t.runSubTask(task, subLog, ctx); err != nil {
 		return err
 	}
 
