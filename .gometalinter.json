@@ -6,26 +6,12 @@
   "Deadline": "1500s",
   "Sort": ["linter", "severity"],
   "Linters": {
-    "badtime": {
-      "Command": "badtime",
-      "Pattern": "PATH:LINE:COL:MESSAGE"
-    },
-    "durcheck": {
-      "Command": "durcheck",
-      "Pattern": "PATH:LINE:COL:MESSAGE"
-    },
     "errcheck":{
       "Command":"errcheck -ignoretests"
-    },
-    "prealloc":{
-      "Command":"prealloc",
-      "Pattern":"^(?P<path>.*?\\.go):(?P<line>\\d+)\\s*(?P<message>.*)$"
     }
   },
   "Enable": [
-    "badtime",
     "deadcode",
-    "durcheck",
     "errcheck",
     "goconst",
     "gocyclo",
@@ -34,7 +20,6 @@
     "ineffassign",
     "interfacer",
     "maligned",
-    "prealloc",
     "structcheck",
     "unconvert",
     "varcheck",
