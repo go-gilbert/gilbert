@@ -8,6 +8,17 @@ import (
 // Vars is a set of declared variables
 type Vars map[string]string
 
+// Append appends variables from vars list
+func (v Vars) Append(newVars Vars) {
+	if newVars == nil || len(newVars) == 0 {
+		return
+	}
+
+	for k := range newVars {
+		v[k] = newVars[k]
+	}
+}
+
 // Context contains a set of globals and variables related to specific job
 type Context struct {
 	Globals     Vars // Globals is set of global variables for all tasks
@@ -36,6 +47,15 @@ func CreateContext(projectDirectory string, vars Vars) (c *Context) {
 
 // AppendGlobals appends global variables to the context
 func (c *Context) AppendGlobals(globals Vars) *Context {
+	for k, v := range globals {
+		c.Globals[k] = v
+	}
+
+	return c
+}
+
+// AppendGlobals appends global variables to the context
+func (c *Context) AppendVariables(globals Vars) *Context {
 	for k, v := range globals {
 		c.Globals[k] = v
 	}
