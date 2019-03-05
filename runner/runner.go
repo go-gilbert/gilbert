@@ -100,14 +100,14 @@ func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog log
 	execType := job.Type()
 	switch execType {
 	case manifest.ExecPlugin:
-		factory, err := t.PluginByName(*job.TaskName)
+		factory, err := t.PluginByName(job.TaskName)
 		if err != nil {
 			return err
 		}
 
 		plugin, err := factory(ctx, job.Params, subLog)
 		if err != nil {
-			return fmt.Errorf("failed to apply plugin '%s': %v", *job.PluginName, err)
+			return fmt.Errorf("failed to apply plugin '%s': %v", job.PluginName, err)
 		}
 		return plugin.Call()
 	case manifest.ExecMixin:
@@ -121,14 +121,13 @@ func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog log
 //
 // requires subLogger instance to create cascade logging output
 func (t *TaskRunner) execJobWithMixin(j *manifest.Job, subLog logging.Logger) error {
-	mixinName := *j.MixinName
-	mx, ok := t.Manifest.Mixins[mixinName]
+	mx, ok := t.Manifest.Mixins[j.MixinName]
 	if !ok {
-		return fmt.Errorf("mixin '%s' doesn't exists", mixinName)
+		return fmt.Errorf("mixin '%s' doesn't exists", j.MixinName)
 	}
 
 	// Create a task from mixin and job params
-	subLog.Debug("create sub-task from mixin '%s'", mixinName)
+	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
 	task := mx.ToTask(j.Vars)
 	if err := t.runSubTask(task, subLog.SubLogger()); err != nil {
 		return err

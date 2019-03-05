@@ -30,13 +30,13 @@ type Job struct {
 	Description string `yaml:"description,omitempty"`
 
 	// TaskName refers to task that should be run.
-	TaskName *string `yaml:"run,omitempty"`
+	TaskName string `yaml:"run,omitempty"`
 
 	// PluginName describes what plugin should handle this job.
-	PluginName *string `yaml:"plugin,omitempty"`
+	PluginName string `yaml:"plugin,omitempty"`
 
 	// MixinName is mixin to be used by this job
-	MixinName *string `yaml:"mixin,omitempty"`
+	MixinName string `yaml:"mixin,omitempty"`
 
 	// Delay before task start in milliseconds
 	Delay uint `yaml:"delay,omitempty"`
@@ -60,9 +60,9 @@ func (j *Job) FormatDescription() string {
 	}
 
 	// If description is empty, return used mixin or plugin name if available
-	for _, v := range []*string{j.PluginName, j.TaskName, j.MixinName} {
-		if v != nil {
-			return *v
+	for _, v := range []string{j.PluginName, j.TaskName, j.MixinName} {
+		if v != "" {
+			return v
 		}
 	}
 
@@ -73,15 +73,15 @@ func (j *Job) FormatDescription() string {
 //
 // If job has no 'plugin', 'task' or 'plugin' declaration, ExecEmpty will be returned
 func (j *Job) Type() JobExecType {
-	if j.PluginName != nil {
+	if j.PluginName != "" {
 		return ExecPlugin
 	}
 
-	if j.TaskName != nil {
+	if j.TaskName != "" {
 		return ExecTask
 	}
 
-	if j.MixinName != nil {
+	if j.MixinName != "" {
 		return ExecMixin
 	}
 
