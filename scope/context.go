@@ -54,7 +54,7 @@ func (c *Context) AppendGlobals(globals Vars) *Context {
 	return c
 }
 
-// AppendGlobals appends global variables to the context
+// AppendVariables appends global variables to the context
 func (c *Context) AppendVariables(globals Vars) *Context {
 	for k, v := range globals {
 		c.Globals[k] = v
