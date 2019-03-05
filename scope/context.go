@@ -9,14 +9,31 @@ import (
 type Vars map[string]string
 
 // Append appends variables from vars list
-func (v Vars) Append(newVars Vars) {
+func (v Vars) Append(newVars Vars) (out Vars) {
+	if v == nil {
+		return newVars.Clone()
+	}
+
+	out = v.Clone()
 	if newVars == nil || len(newVars) == 0 {
-		return
+		return out
 	}
 
 	for k, val := range newVars {
-		v[k] = val
+		out[k] = val
 	}
+
+	return out
+}
+
+// Clone creates a copy of variables map
+func (v Vars) Clone() (out Vars) {
+	out = make(Vars, len(v))
+	for k, val := range v {
+		out[k] = val
+	}
+
+	return out
 }
 
 // Context contains a set of globals and variables related to specific job
@@ -47,19 +64,13 @@ func CreateContext(projectDirectory string, vars Vars) (c *Context) {
 
 // AppendGlobals appends global variables to the context
 func (c *Context) AppendGlobals(globals Vars) *Context {
-	for k, v := range globals {
-		c.Globals[k] = v
-	}
-
+	c.Globals = c.Globals.Append(globals)
 	return c
 }
 
-// AppendVariables appends global variables to the context
-func (c *Context) AppendVariables(globals Vars) *Context {
-	for k, v := range globals {
-		c.Globals[k] = v
-	}
-
+// AppendVariables appends local variables to the context
+func (c *Context) AppendVariables(vars Vars) *Context {
+	c.Variables = c.Variables.Append(vars)
 	return c
 }
 
