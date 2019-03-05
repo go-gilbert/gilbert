@@ -10,6 +10,7 @@ import (
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
 	"os/exec"
+	"strings"
 )
 
 // Plugin implements gilbert plugin
@@ -61,7 +62,7 @@ func (p *Plugin) getPackage(pkgName string) (err error) {
 	}
 
 	p.log.Info("Downloading package '%s'", pkgName)
-	p.log.Debug(proc.Path)
+	p.log.Debug(strings.Join(proc.Args, " "))
 	if err := proc.Start(); err != nil {
 		return err
 	}
