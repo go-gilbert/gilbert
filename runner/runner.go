@@ -60,6 +60,11 @@ func (t *TaskRunner) RunTask(taskName string) error {
 	return nil
 }
 
+// runSubTask used to run sub-tasks created by parent job
+//
+// parentCtx used to expand task base properties (like description, etc.)
+//
+// subLogger used to create stack of log lines
 func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, parentCtx *scope.Context) error {
 	steps := len(task)
 
@@ -75,7 +80,13 @@ func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, pa
 			descr = parsed
 		}
 
-		subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
+		if steps > 1 {
+			// show total steps count only if more than one step provided
+			subLogger.Info("- %s [%d/%d]", descr, currentStep, steps)
+		} else {
+			subLogger.Info("- %s", descr)
+		}
+
 		err := t.runJob(&job, nil, subLogger.SubLogger())
 		if err != nil {
 			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
