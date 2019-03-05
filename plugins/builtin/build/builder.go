@@ -15,6 +15,10 @@ func NewBuildPlugin(context *scope.Context, params manifest.RawParams, log loggi
 		return nil, manifest.NewPluginConfigError("build", err)
 	}
 
+	if err := context.Scan(&p.Target.Os, &p.Target.Arch); err != nil {
+		return nil, manifest.NewPluginConfigError("build", err)
+	}
+
 	return &Plugin{
 		context: context,
 		params:  p,
