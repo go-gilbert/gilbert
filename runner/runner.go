@@ -102,8 +102,9 @@ func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, pa
 //
 // requires subLogger instance to create cascade log output
 func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog logging.Logger) error {
-	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).AppendGlobals(t.Manifest.Vars)
-	ctx.Variables.Append(parentVars)
+	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
+		AppendGlobals(t.Manifest.Vars).
+		AppendVariables(parentVars)
 
 	// check if job should be run
 	if !t.shouldRunJob(job, ctx) {
@@ -148,7 +149,7 @@ func (t *TaskRunner) execJobWithMixin(j *manifest.Job, ctx *scope.Context, subLo
 
 	// Create a task from mixin and job params
 	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
-	task := mx.ToTask(j.Vars)
+	task := mx.ToTask(ctx.Variables)
 	if err := t.runSubTask(task, subLog, ctx); err != nil {
 		return err
 	}
