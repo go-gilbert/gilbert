@@ -109,7 +109,7 @@ func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog log
 	execType := job.Type()
 	switch execType {
 	case manifest.ExecPlugin:
-		factory, err := t.PluginByName(job.TaskName)
+		factory, err := t.PluginByName(job.PluginName)
 		if err != nil {
 			return err
 		}
