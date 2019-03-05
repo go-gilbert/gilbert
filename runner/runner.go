@@ -49,13 +49,9 @@ func (t *TaskRunner) RunTask(taskName string) error {
 
 	for jobIndex, job := range *task {
 		currentStep := jobIndex + 1
-		descr := ""
-		if job.HasDescription() {
-			descr = ": " + job.Description
-		}
-
-		logging.Log.SubLogger().Log("Step %d of %d%s", currentStep, steps, descr)
-		err := t.runJob(&job, nil)
+		descr := job.FormatDescription()
+		logging.Log.SubLogger().Log("Step %d of %d: %s", currentStep, steps, descr)
+		err := t.runJob(&job, nil, t.subLogger.SubLogger())
 		if err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
 		}
@@ -64,44 +60,81 @@ func (t *TaskRunner) RunTask(taskName string) error {
 	return nil
 }
 
+func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger) error {
+	steps := len(task)
+
+	for jobIndex, job := range task {
+		currentStep := jobIndex + 1
+		descr := job.FormatDescription()
+		subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
+		err := t.runJob(&job, nil, subLogger.SubLogger())
+		if err != nil {
+			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
+		}
+	}
+
+	return nil
+}
+
 // runJob execute specified job
 //
-// if ctx is nil, default context will be created
-func (t *TaskRunner) runJob(job *manifest.Job, ctx *scope.Context) error {
-	if ctx == nil {
-		ctx = scope.CreateContext(t.CurrentDirectory, job.Vars).
-			AppendGlobals(t.Manifest.Vars)
-	}
+// parentVars are optional but allows to override job variables (used for nested sub-tasks).
+//
+// requires subLogger instance to create cascade log output
+func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog logging.Logger) error {
+	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).AppendGlobals(t.Manifest.Vars)
+	ctx.Variables.Append(parentVars)
 
 	// check if job should be run
 	if !t.shouldRunJob(job, ctx) {
-		t.subLogger.SubLogger().Info("Step was skipped")
+		subLog.Info("Step was skipped")
 		return nil
 	}
 
 	// Wait if necessary
 	if job.Delay > 0 {
-		t.subLogger.SubLogger().Debug("Job delay defined, waiting %dms...", job.Delay)
+		subLog.Debug("Job delay defined, waiting %dms...", job.Delay)
 		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
 	}
 
-	name, execType := job.ExecParams()
-
+	execType := job.Type()
 	switch execType {
 	case manifest.ExecPlugin:
-		factory, err := t.PluginByName(name)
+		factory, err := t.PluginByName(*job.TaskName)
 		if err != nil {
 			return err
 		}
 
-		plugin, err := factory(ctx, job.Params, t.subLogger.SubLogger())
+		plugin, err := factory(ctx, job.Params, subLog)
 		if err != nil {
 			return fmt.Errorf("failed to apply plugin '%s': %v", *job.PluginName, err)
 		}
 		return plugin.Call()
+	case manifest.ExecMixin:
+		return t.execJobWithMixin(job, subLog)
 	default:
 		return errNoTaskHandler
 	}
+}
+
+// execJobWithMixin constructs a task from job with mixin and runs it
+//
+// requires subLogger instance to create cascade logging output
+func (t *TaskRunner) execJobWithMixin(j *manifest.Job, subLog logging.Logger) error {
+	mixinName := *j.MixinName
+	mx, ok := t.Manifest.Mixins[mixinName]
+	if !ok {
+		return fmt.Errorf("mixin '%s' doesn't exists", mixinName)
+	}
+
+	// Create a task from mixin and job params
+	subLog.Debug("create sub-task from mixin '%s'", mixinName)
+	task := mx.ToTask(j.Vars)
+	if err := t.runSubTask(task, subLog.SubLogger()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
