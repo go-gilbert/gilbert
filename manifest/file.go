@@ -36,6 +36,9 @@ type Manifest struct {
 	// Tasks is a set of tasks
 	Tasks TaskSet `yaml:"tasks,omitempty"`
 
+	// Mixins is a set of declared mixins
+	Mixins Mixins `yaml:"mixins,omitempty"`
+
 	// location is manifest location
 	location string `yaml:"-"`
 }
