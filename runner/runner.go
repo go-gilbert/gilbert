@@ -60,12 +60,21 @@ func (t *TaskRunner) RunTask(taskName string) error {
 	return nil
 }
 
-func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger) error {
+func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, parentCtx *scope.Context) error {
 	steps := len(task)
 
 	for jobIndex, job := range task {
 		currentStep := jobIndex + 1
+
+		// sub task label can contain template expressions (e.g. mixin step description)
+		// so we should try to parse it
 		descr := job.FormatDescription()
+		if parsed, err := parentCtx.ExpandVariables(descr); err != nil {
+			subLogger.Error("description parse error: %s", err)
+		} else {
+			descr = parsed
+		}
+
 		subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
 		err := t.runJob(&job, nil, subLogger.SubLogger())
 		if err != nil {
@@ -111,7 +120,7 @@ func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog log
 		}
 		return plugin.Call()
 	case manifest.ExecMixin:
-		return t.execJobWithMixin(job, subLog)
+		return t.execJobWithMixin(job, ctx, subLog)
 	default:
 		return errNoTaskHandler
 	}
@@ -120,7 +129,7 @@ func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog log
 // execJobWithMixin constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) execJobWithMixin(j *manifest.Job, subLog logging.Logger) error {
+func (t *TaskRunner) execJobWithMixin(j *manifest.Job, ctx *scope.Context, subLog logging.Logger) error {
 	mx, ok := t.Manifest.Mixins[j.MixinName]
 	if !ok {
 		return fmt.Errorf("mixin '%s' doesn't exists", j.MixinName)
@@ -129,7 +138,7 @@ func (t *TaskRunner) execJobWithMixin(j *manifest.Job, subLog logging.Logger) er
 	// Create a task from mixin and job params
 	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
 	task := mx.ToTask(j.Vars)
-	if err := t.runSubTask(task, subLog.SubLogger()); err != nil {
+	if err := t.runSubTask(task, subLog.SubLogger(), ctx); err != nil {
 		return err
 	}
 
