@@ -13,8 +13,8 @@ mixins:
       params:
         outputPath: '{{buildDir}}/gilbert_{{os}}-{{arch}}{{ext}}'
         target:
-          os: {{os}}
-          arch: {{arch}}
+          os: '{{os}}'
+          arch: '{{arch}}'
         variables:
           'main.version': '{{ version }}'
           'main.commit': '{{ commit }}'
@@ -38,7 +38,7 @@ tasks:
     vars:
       os: windows
       arch: '386'
-      ext: .exe
+      ext: '.exe'
   - mixin: platform-build
     vars:
       os: windows
@@ -53,6 +53,6 @@ tasks:
       os: linux
       arch: 'amd64'
   - mixin: platform-build
-      vars:
-        os: linux
-        arch: '386'
+    vars:
+      os: linux
+      arch: '386'
