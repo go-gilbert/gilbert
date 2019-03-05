@@ -88,6 +88,20 @@ func (c *Context) ExpandVariables(str string) (out string, err error) {
 	return c.processor.ReadString(str)
 }
 
+// Scan does the same as ExpandVariables but with multiple variables and updates the value in pointer with expanded value
+//
+// Useful for bulk mapping of struct fields
+func (c *Context) Scan(vals ...*string) (err error) {
+	for _, ptr := range vals {
+		*ptr, err = c.processor.ReadString(*ptr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Environ gets list of OS environment variables with globals
 func (c *Context) Environ() (env []string) {
 	env = os.Environ()

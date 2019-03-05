@@ -4,7 +4,22 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestVarsScan(t *testing.T) {
+	c := &Context{
+		Variables: Vars{
+			"foo": "bar",
+		},
+	}
+
+	c.processor = NewExpressionProcessor(c)
+	input := "foo{{foo}}"
+	assert.NoError(t, c.Scan(&input))
+	assert.Equal(t, "foobar", input)
+}
 
 func TestVarsExtract(t *testing.T) {
 	c := &Context{
