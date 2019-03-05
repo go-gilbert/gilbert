@@ -20,6 +20,11 @@ mixins:
           'main.commit': '{{ commit }}'
 
 tasks:
+  pre-install:
+  - plugin: go-get
+    params:
+      packages:
+        - github.com/stretchr/testify
   build:
   - plugin: build
     params:
