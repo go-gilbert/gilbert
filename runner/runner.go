@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -23,6 +24,8 @@ type TaskRunner struct {
 	CurrentDirectory string
 	log              logging.Logger
 	subLogger        logging.Logger
+	context          context.Context
+	cancelFn         context.CancelFunc
 }
 
 // PluginByName gets plugin by name
@@ -39,19 +42,21 @@ func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, e
 
 // RunTask execute task by name
 func (t *TaskRunner) RunTask(taskName string) error {
-	task, ok := t.TaskByName(taskName)
+	task, ok := t.Manifest.Tasks[taskName]
 	if !ok {
 		return fmt.Errorf("task '%s' doesn't exists", taskName)
 	}
 
 	t.log.Log("Running task '%s'...", taskName)
-	steps := len(*task)
+	steps := len(task)
 
-	for jobIndex, job := range *task {
+	t.context, t.cancelFn = context.WithCancel(context.Background())
+	sl := t.subLogger.SubLogger()
+	for jobIndex, job := range task {
 		currentStep := jobIndex + 1
 		descr := job.FormatDescription()
-		logging.Log.SubLogger().Log("Step %d of %d: %s", currentStep, steps, descr)
-		err := t.runJob(&job, nil, t.subLogger.SubLogger())
+		t.subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
+		err := t.runJob(&job, NewJobContext(nil, sl, t.context))
 		if err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
 		}
@@ -60,62 +65,27 @@ func (t *TaskRunner) RunTask(taskName string) error {
 	return nil
 }
 
-// runSubTask used to run sub-tasks created by parent job
-//
-// parentCtx used to expand task base properties (like description, etc.)
-//
-// subLogger used to create stack of log lines
-func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, parentCtx *scope.Context) error {
-	steps := len(task)
-
-	for jobIndex, job := range task {
-		currentStep := jobIndex + 1
-
-		// sub task label can contain template expressions (e.g. mixin step description)
-		// so we should try to parse it
-		descr := job.FormatDescription()
-		if parsed, err := parentCtx.ExpandVariables(descr); err != nil {
-			subLogger.Error("description parse error: %s", err)
-		} else {
-			descr = parsed
-		}
-
-		if steps > 1 {
-			// show total steps count only if more than one step provided
-			subLogger.Info("- %s [%d/%d]", descr, currentStep, steps)
-		} else {
-			subLogger.Info("- %s", descr)
-		}
-
-		err := t.runJob(&job, nil, subLogger.SubLogger())
-		if err != nil {
-			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
-		}
-	}
-
-	return nil
-}
-
 // runJob execute specified job
-//
-// parentVars are optional but allows to override job variables (used for nested sub-tasks).
-//
-// requires subLogger instance to create cascade log output
-func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog logging.Logger) error {
-	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
+func (t *TaskRunner) runJob(job *manifest.Job, jobCtx JobContext) error {
+	s := scope.CreateScope(t.CurrentDirectory, job.Vars).
 		AppendGlobals(t.Manifest.Vars).
-		AppendVariables(parentVars)
+		AppendVariables(jobCtx.RootVars)
 
 	// check if job should be run
-	if !t.shouldRunJob(job, ctx) {
-		subLog.Info("Step was skipped")
+	if !t.shouldRunJob(job, s) {
+		jobCtx.Logger.Info("Step was skipped")
 		return nil
 	}
 
 	// Wait if necessary
 	if job.Delay > 0 {
-		subLog.Debug("Job delay defined, waiting %dms...", job.Delay)
-		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
+		jobCtx.Logger.Debug("Job delay defined, waiting %dms...", job.Delay)
+		time.Sleep(job.Delay.ToDuration())
+	}
+
+	if job.Deadline > 0 {
+		// Add timeout if requested
+		jobCtx = jobCtx.WithTimeout(job.Deadline.ToDuration())
 	}
 
 	execType := job.Type()
@@ -126,38 +96,81 @@ func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog log
 			return err
 		}
 
-		plugin, err := factory(ctx, job.Params, subLog)
+		plugin, err := factory(s, job.Params, jobCtx.Logger)
 		if err != nil {
 			return fmt.Errorf("failed to apply plugin '%s': %v", job.PluginName, err)
 		}
 		return plugin.Call()
 	case manifest.ExecMixin:
-		return t.execJobWithMixin(job, ctx, subLog)
+		return t.execJobWithMixin(job, s, jobCtx)
 	default:
 		return errNoTaskHandler
 	}
 }
 
+// Stop stops task runner
+func (t *TaskRunner) Stop() {
+	if t.cancelFn != nil {
+		t.cancelFn()
+	}
+}
+
+// runSubTask used to run sub-tasks created by parent job
+//
+// parentCtx used to expand task base properties (like description, etc.)
+//
+// subLogger used to create stack of log lines
+func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx JobContext) error {
+	steps := len(task)
+
+	for jobIndex, job := range task {
+		currentStep := jobIndex + 1
+
+		// sub task label can contain template expressions (e.g. mixin step description)
+		// so we should try to parse it
+		descr := job.FormatDescription()
+		if parsed, err := parentScope.ExpandVariables(descr); err != nil {
+			parentCtx.Logger.Error("description parse error: %s", err)
+		} else {
+			descr = parsed
+		}
+
+		if steps > 1 {
+			// show total steps count only if more than one step provided
+			parentCtx.Logger.Info("- [%d/%d] %s", currentStep, steps, descr)
+		} else {
+			parentCtx.Logger.Info("- %s", descr)
+		}
+
+		err := t.runJob(&job, parentCtx.ChildContext())
+		if err != nil {
+			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
+		}
+	}
+
+	return nil
+}
+
 // execJobWithMixin constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) execJobWithMixin(j *manifest.Job, ctx *scope.Context, subLog logging.Logger) error {
+func (t *TaskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx JobContext) error {
 	mx, ok := t.Manifest.Mixins[j.MixinName]
 	if !ok {
 		return fmt.Errorf("mixin '%s' doesn't exists", j.MixinName)
 	}
 
 	// Create a task from mixin and job params
-	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
-	task := mx.ToTask(ctx.Variables)
-	if err := t.runSubTask(task, subLog, ctx); err != nil {
+	ctx.Logger.Debug("create sub-task from mixin '%s'", j.MixinName)
+	task := mx.ToTask(s.Variables)
+	if err := t.runSubTask(task, s, ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
+func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Scope) bool {
 	condCmd := strings.TrimSpace(job.Condition)
 	if condCmd == "" {
 		return true
@@ -184,17 +197,6 @@ func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
 	}
 
 	return true
-}
-
-// TaskByName returns a task by name
-func (t *TaskRunner) TaskByName(taskName string) (taskPtr *manifest.Task, ok bool) {
-	task, ok := t.Manifest.Tasks[taskName]
-	if !ok {
-		return
-	}
-
-	taskPtr = &task
-	return
 }
 
 // NewTaskRunner creates a new TaskRunner instance
