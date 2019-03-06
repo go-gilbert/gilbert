@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"github.com/x1unix/gilbert/scope"
+	"time"
 )
 
 // JobExecType represents job type
@@ -21,6 +22,14 @@ const (
 	ExecMixin
 )
 
+// Period is job period in milliseconds
+type Period uint
+
+// ToDuration returns value in milliseconds for time.Duration
+func (d Period) ToDuration() time.Duration {
+	return time.Duration(d) * time.Millisecond
+}
+
 // Job is a single job in task
 type Job struct {
 	// Condition is shell command that should be successful to run specified job
@@ -39,7 +48,10 @@ type Job struct {
 	MixinName string `yaml:"mixin,omitempty"`
 
 	// Delay before task start in milliseconds
-	Delay uint `yaml:"delay,omitempty"`
+	Delay Period `yaml:"delay,omitempty"`
+
+	// Period is a time quota for job
+	Deadline Period `yaml:"deadline,omitempty"`
 
 	// Vars is a set of variables defined for this job.
 	Vars scope.Vars `yaml:"vars,omitempty"`
