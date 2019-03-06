@@ -13,7 +13,7 @@ type CommandEvaluator interface {
 }
 
 type shellEvaluator struct {
-	ctx *Context
+	ctx *Scope
 }
 
 func (e *shellEvaluator) prepareProcess(cmd string) (proc *exec.Cmd) {
@@ -41,6 +41,6 @@ func (e *shellEvaluator) Call(cmd string) (result []byte, err error) {
 	return data, nil
 }
 
-func newShellCommandEvaluator(ctx *Context) CommandEvaluator {
+func newShellCommandEvaluator(ctx *Scope) CommandEvaluator {
 	return &shellEvaluator{ctx: ctx}
 }

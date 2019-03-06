@@ -48,12 +48,12 @@ func (ex expressionMatch) expression() (string, bool) {
 
 // ExpressionProcessor evaluates template literals inside the string
 type ExpressionProcessor struct {
-	ctx           *Context
+	ctx           *Scope
 	commandRunner CommandEvaluator
 }
 
 // NewExpressionProcessor creates a new processor instance
-func NewExpressionProcessor(ctx *Context) ExpressionProcessor {
+func NewExpressionProcessor(ctx *Scope) ExpressionProcessor {
 	return ExpressionProcessor{
 		ctx:           ctx,
 		commandRunner: newShellCommandEvaluator(ctx),

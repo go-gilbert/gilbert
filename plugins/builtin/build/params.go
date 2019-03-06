@@ -55,7 +55,7 @@ type Params struct {
 }
 
 // linkerParams generates list of arguments for Go linker
-func (p *Params) linkerParams(ctx *scope.Context) (args []string, err error) {
+func (p *Params) linkerParams(ctx *scope.Scope) (args []string, err error) {
 	if p.Params.StripDebugInfo {
 		args = append(args, "-s", "-w")
 	}
@@ -75,7 +75,7 @@ func (p *Params) linkerParams(ctx *scope.Context) (args []string, err error) {
 }
 
 // buildArgs returns arguments for Go tools to build the artifact
-func (p *Params) buildArgs(ctx *scope.Context) (args []string, err error) {
+func (p *Params) buildArgs(ctx *scope.Scope) (args []string, err error) {
 	args = []string{"build"}
 
 	// Add output file param
@@ -117,7 +117,7 @@ func (p *Params) buildArgs(ctx *scope.Context) (args []string, err error) {
 }
 
 // createCompilerProcess creates compiler process to start
-func (p *Params) newCompilerProcess(ctx *scope.Context) (*exec.Cmd, error) {
+func (p *Params) newCompilerProcess(ctx *scope.Scope) (*exec.Cmd, error) {
 	args, err := p.buildArgs(ctx)
 	if err != nil {
 		return nil, err

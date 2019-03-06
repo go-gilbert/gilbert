@@ -10,7 +10,7 @@ import (
 
 // Plugin represents Gilbert's plugin
 type Plugin struct {
-	context *scope.Context
+	context *scope.Scope
 	params  Params
 	log     logging.Logger
 }

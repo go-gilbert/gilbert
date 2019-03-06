@@ -15,7 +15,7 @@ import (
 
 // Plugin implements gilbert plugin
 type Plugin struct {
-	context *scope.Context
+	context *scope.Scope
 	params  params
 	log     logging.Logger
 }
@@ -75,7 +75,7 @@ func (p *Plugin) getPackage(pkgName string) (err error) {
 }
 
 // NewPlugin creates a new plugin instance
-func NewPlugin(context *scope.Context, rawParams manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+func NewPlugin(context *scope.Scope, rawParams manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	p := params{}
 	if err := mapstructure.Decode(rawParams, &p); err != nil {
 		return nil, manifest.NewPluginConfigError("build", err)
