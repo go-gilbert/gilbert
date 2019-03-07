@@ -67,7 +67,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	wg := &sync.WaitGroup{}
 	asyncJobsCount := task.AsyncJobsCount()
 	asyncErrors := make(chan error, asyncJobsCount)
-	t.subLogger.Log("%d async jobs in task", asyncJobsCount)
+	t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
 
 	defer func() {
 		// Wait for unfinished async tasks
@@ -112,11 +112,19 @@ func (t *TaskRunner) startJobAsync(job *manifest.Job, ctx job.RunContext, errorH
 }
 
 func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx job.RunContext) error {
+	wg := &sync.WaitGroup{}
+	ctx.SetWaitGroup(wg)
+	wg.Add(1)
 	go t.runJob(job, ctx)
-	select {
-	case err := <-ctx.Error:
-		return err
+	wg.Wait()
+	close(ctx.Error)
+	err, ok := <-ctx.Error
+	if !ok {
+		ctx.Logger.Debug("Error: failed to read data from result channel")
+		return nil
 	}
+
+	return err
 }
 
 // runJob execute specified job
@@ -150,20 +158,20 @@ func (t *TaskRunner) runJob(j *manifest.Job, ctx job.RunContext) {
 	case manifest.ExecMixin:
 		t.execJobWithMixin(j, s, &ctx)
 	default:
-		ctx.Fail(errNoTaskHandler)
+		ctx.Result(errNoTaskHandler)
 	}
 }
 
 func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j *manifest.Job, ctx *job.RunContext) {
 	factory, err := t.PluginByName(j.PluginName)
 	if err != nil {
-		ctx.Fail(err)
+		ctx.Result(err)
 		return
 	}
 
 	plugin, err := factory(s, j.Params, ctx.Logger)
 	if err != nil {
-		ctx.Fail(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
+		ctx.Result(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
 	}
 
 	// Handle stop event
@@ -172,14 +180,13 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j *manifest.Job, ctx *job.Ru
 		select {
 		case <-ctx.Context.Done():
 			ctx.Logger.Debug("%s: stop signal received", j.PluginName)
-			ctx.Fail(plugin.Cancel())
+			ctx.Result(plugin.Cancel())
 		}
 	}()
 
-	// Call plugin
-	if err := plugin.Call(ctx, t); err != nil {
-		ctx.Fail(err)
-	}
+	// Call plugin and send result
+	err = plugin.Call(ctx, t)
+	ctx.Result(err)
 }
 
 // execJobWithMixin constructs a task from job with mixin and runs it
@@ -188,7 +195,7 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j *manifest.Job, ctx *job.Ru
 func (t *TaskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx *job.RunContext) {
 	mx, ok := t.manifest.Mixins[j.MixinName]
 	if !ok {
-		ctx.Fail(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
+		ctx.Result(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
 		return
 	}
 
@@ -196,7 +203,7 @@ func (t *TaskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx *job.
 	ctx.Logger.Debug("create sub-task from mixin '%s'", j.MixinName)
 	task := mx.ToTask(s.Variables)
 	if err := t.runSubTask(task, s, ctx); err != nil {
-		ctx.Fail(err)
+		ctx.Result(err)
 		return
 	}
 
