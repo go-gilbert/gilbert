@@ -42,10 +42,10 @@ func (r *RunContext) WithTimeout(t time.Duration) RunContext {
 }
 
 func (r *RunContext) Success() {
-	r.Fail(nil)
+	r.Result(nil)
 }
 
-func (r *RunContext) Fail(err error) {
+func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
 			if rec := recover(); rec != nil {
