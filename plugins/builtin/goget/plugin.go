@@ -7,7 +7,6 @@ import (
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/runner"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
@@ -24,7 +23,7 @@ type Plugin struct {
 }
 
 // Call implements plugins.plugin
-func (p *Plugin) Call(ctx *job.RunContext, r runner.TaskRunner) error {
+func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
 	if len(p.params.Packages) == 0 {
 		return errors.New("no packages to install")
 	}

@@ -3,7 +3,7 @@ package shell
 import (
 	"fmt"
 	"github.com/x1unix/gilbert/logging"
-	"github.com/x1unix/gilbert/runner"
+	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
 	"os"
@@ -20,7 +20,7 @@ type Plugin struct {
 }
 
 // Call calls a plugin
-func (p *Plugin) Call(tx *job.RunContext, r runner.TaskRunner) (err error) {
+func (p *Plugin) Call(tx *job.RunContext, r plugins.TaskRunner) (err error) {
 	p.proc, err = p.params.createProcess(p.scope)
 	if err != nil {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", p.params.Command, err)

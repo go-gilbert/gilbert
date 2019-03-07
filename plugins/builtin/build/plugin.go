@@ -3,7 +3,7 @@ package build
 import (
 	"fmt"
 	"github.com/x1unix/gilbert/logging"
-	"github.com/x1unix/gilbert/runner"
+	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
@@ -20,7 +20,7 @@ type Plugin struct {
 }
 
 // Call calls a plugin
-func (p *Plugin) Call(ctx *job.RunContext, r runner.TaskRunner) (err error) {
+func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) (err error) {
 	p.cmd, err = p.params.newCompilerProcess(p.scope)
 	if err != nil {
 		return err

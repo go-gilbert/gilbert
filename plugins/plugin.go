@@ -3,7 +3,6 @@ package plugins
 import (
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/runner"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
 )
@@ -17,8 +16,15 @@ type PluginFactory func(*scope.Scope, manifest.RawParams, logging.Logger) (Plugi
 // Plugin represents Gilbert's plugin
 type Plugin interface {
 	// Call calls a plugin
-	Call(ctx *job.RunContext, r runner.TaskRunner) error
+	Call(ctx *job.RunContext, r TaskRunner) error
 
 	// Cancel stops plugin execution
 	Cancel() error
+}
+
+// TaskRunner runs tasks from manifest file
+type TaskRunner interface {
+	PluginByName(pluginName string) (p PluginFactory, err error)
+	RunTask(taskName string) (err error)
+	Stop()
 }
