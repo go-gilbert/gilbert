@@ -55,10 +55,12 @@ func (r *RunContext) Result(err error) {
 		}()
 
 		r.Error <- err
-		if r.wg != nil {
-			r.Logger.Debug("ctx: done reported")
-			r.wg.Done()
+		if r.wg == nil {
+			r.Logger.Warn("Warning: waitgroup was no defined for job context")
+			return
 		}
+
+		r.wg.Done()
 	})
 }
 
