@@ -14,6 +14,7 @@ import (
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin"
+	"github.com/x1unix/gilbert/runner/job"
 )
 
 var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")
@@ -80,20 +81,20 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		}
 	}()
 
-	for jobIndex, job := range task {
+	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
-		descr := job.FormatDescription()
+		descr := j.FormatDescription()
 		t.subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
 		var err error
-		ctx := NewJobContext(nil, sl, t.context)
+		ctx := job.NewRunContext(nil, sl, t.context)
 		ctx.SetMetadata(taskName, currentStep)
-		ctx.wg = wg
+		ctx.SetWaitGroup(wg)
 
-		if job.Async {
+		if j.Async {
 			wg.Add(1)
-			go t.runJob(&job, ctx)
+			go t.runJob(&j, ctx)
 		} else {
-			err = t.startJobAndWait(&job, ctx)
+			err = t.startJobAndWait(&j, ctx)
 		}
 		if err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
@@ -103,7 +104,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	return nil
 }
 
-func (t *TaskRunner) startJobAsync(job *manifest.Job, ctx JobContext, errorHandler func(error)) {
+func (t *TaskRunner) startJobAsync(job *manifest.Job, ctx job.RunContext, errorHandler func(error)) {
 	go t.runJob(job, ctx)
 	select {
 	case err := <-ctx.Error:
@@ -111,7 +112,7 @@ func (t *TaskRunner) startJobAsync(job *manifest.Job, ctx JobContext, errorHandl
 	}
 }
 
-func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx JobContext) error {
+func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx job.RunContext) error {
 	go t.runJob(job, ctx)
 	select {
 	case err := <-ctx.Error:
@@ -120,7 +121,7 @@ func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx JobContext) error {
 }
 
 // runJob execute specified job
-func (t *TaskRunner) runJob(job *manifest.Job, jobCtx JobContext) {
+func (t *TaskRunner) runJob(job *manifest.Job, jobCtx job.RunContext) {
 	s := scope.CreateScope(t.CurrentDirectory, job.Vars).
 		AppendGlobals(t.Manifest.Vars).
 		AppendVariables(jobCtx.RootVars)
@@ -168,7 +169,7 @@ func (t *TaskRunner) runJob(job *manifest.Job, jobCtx JobContext) {
 // execJobWithMixin constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx JobContext) {
+func (t *TaskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx job.RunContext) {
 	mx, ok := t.Manifest.Mixins[j.MixinName]
 	if !ok {
 		ctx.Fail(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
@@ -191,7 +192,7 @@ func (t *TaskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx JobCo
 // parentCtx used to expand task base properties (like description, etc.)
 //
 // subLogger used to create stack of log lines
-func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx JobContext) error {
+func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx job.RunContext) error {
 	steps := len(task)
 
 	// Set waitgroup and buff channel for async jobs.
