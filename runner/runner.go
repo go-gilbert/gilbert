@@ -117,7 +117,12 @@ func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx job.RunContext) erro
 	wg.Add(1)
 	go t.runJob(job, ctx)
 	wg.Wait()
-	close(ctx.Error)
+
+	// All child jobs (except async jobs) inherit parent job channel,
+	// so we should close channel only if parent job was finished.
+	if !ctx.IsChild() {
+		close(ctx.Error)
+	}
 	err, ok := <-ctx.Error
 	if !ok {
 		ctx.Logger.Debug("Error: failed to read data from result channel")
@@ -222,7 +227,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 	wg := &sync.WaitGroup{}
 	asyncJobsCount := task.AsyncJobsCount()
 	asyncErrors := make(chan error, asyncJobsCount)
-	parentCtx.Logger.Log("%d async jobs in task", asyncJobsCount)
+	parentCtx.Logger.Debug("%d async jobs in task", asyncJobsCount)
 
 	defer func() {
 		// Wait for unfinished async tasks
@@ -258,6 +263,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		ctx := parentCtx.ChildContext()
 		if j.Async {
 			wg.Add(1)
+			ctx.Error = asyncErrors
 			go t.runJob(&j, ctx)
 			continue
 		}
