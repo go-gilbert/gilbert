@@ -14,6 +14,7 @@ type RunContext struct {
 	Logger   logging.Logger
 	Context  context.Context
 	Error    chan error
+	child    bool
 	wg       *sync.WaitGroup
 	once     sync.Once
 }
@@ -22,12 +23,17 @@ func (r *RunContext) SetWaitGroup(wg *sync.WaitGroup) {
 	r.wg = wg
 }
 
+func (r *RunContext) IsChild() bool {
+	return r.child
+}
+
 func (r *RunContext) ChildContext() RunContext {
 	return RunContext{
 		RootVars: r.RootVars,
 		Logger:   r.Logger.SubLogger(),
 		Context:  r.Context,
 		Error:    r.Error,
+		child:    true,
 		wg:       r.wg,
 	}
 }
