@@ -151,9 +151,23 @@ func (t *TaskRunner) runJob(j *manifest.Job, ctx job.RunContext) {
 		time.Sleep(j.Delay.ToDuration())
 	}
 
+	// FIXME: exec.Cmd-based jobs are still alive even if timeout elapsed
+	// occurs only with context.WithTimeout()
 	if j.Deadline > 0 {
+		ctx.Logger.Warn("Warning: 'deadline' is unstable")
+
 		// Add timeout if requested
-		ctx = ctx.WithTimeout(j.Deadline.ToDuration())
+		ttl := j.Deadline.ToDuration()
+		ctx = ctx.WithTimeout(ttl)
+
+		// Add deadline listener
+		go func() {
+			select {
+			case <-time.After(1 * time.Second):
+				ctx.Logger.Warn("job deadline finish")
+				ctx.Cancel()
+			}
+		}()
 	}
 
 	execType := j.Type()
