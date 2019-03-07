@@ -9,8 +9,6 @@ import (
 )
 
 type RunContext struct {
-	TaskName string
-	Step     int
 	RootVars scope.Vars
 	Logger   logging.Logger
 	Context  context.Context
@@ -21,11 +19,6 @@ type RunContext struct {
 
 func (r *RunContext) SetWaitGroup(wg *sync.WaitGroup) {
 	r.wg = wg
-}
-
-func (r *RunContext) SetMetadata(taskName string, step int) {
-	r.TaskName = taskName
-	r.Step = step
 }
 
 func (r *RunContext) ChildContext() RunContext {

@@ -16,7 +16,7 @@ const (
 // RawParams is raw plugin params
 type RawParams map[string]interface{}
 
-// Manifest represents manifest file (gilbert.yaml)
+// manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
 	// Version is gilbert file format version
 	Version string `yaml:"version"`
@@ -42,7 +42,7 @@ func (m *Manifest) Location() string {
 	return m.location
 }
 
-// UnmarshalManifest parses yaml contents into Manifest structure
+// UnmarshalManifest parses yaml contents into manifest structure
 func UnmarshalManifest(data []byte) (m *Manifest, err error) {
 	m = &Manifest{}
 	err = yaml.Unmarshal(data, m)

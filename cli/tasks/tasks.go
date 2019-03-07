@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	r *runner.TaskRunner
+	r runner.TaskRunner
 )
 
 func getManifest(dir string) (*manifest.Manifest, error) {
@@ -38,7 +38,7 @@ func RunTask(c *cli.Context) (err error) {
 	return runTask(task)
 }
 
-func getRunner() (*runner.TaskRunner, error) {
+func getRunner() (runner.TaskRunner, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("cannot get current working directory, %v", err)

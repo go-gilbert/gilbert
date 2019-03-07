@@ -1,7 +1,7 @@
 version: 1.0
 vars:
   buildDir: './build'
-  version: '0.3.1'
+  version: '0.3.2'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
@@ -20,6 +20,14 @@ mixins:
           'main.commit': '{{ commit }}'
 
 tasks:
+  install:
+  - plugin: build
+    params:
+      outputPath: '{{GOPATH}}/bin/gilbert'
+      variables:
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
+
   pre-install:
   - plugin: go-get
     params:
