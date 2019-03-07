@@ -18,6 +18,7 @@ type RunContext struct {
 	wg       *sync.WaitGroup
 	once     sync.Once
 	finished bool
+	cancelFn context.CancelFunc
 }
 
 func (r *RunContext) SetWaitGroup(wg *sync.WaitGroup) {
@@ -40,11 +41,18 @@ func (r *RunContext) ChildContext() RunContext {
 }
 
 func (r *RunContext) WithTimeout(t time.Duration) RunContext {
-	ctx, _ := context.WithTimeout(r.Context, t)
+	ctx, fn := context.WithTimeout(r.Context, t)
 	return RunContext{
 		RootVars: r.RootVars,
 		Logger:   r.Logger,
 		Context:  ctx,
+		cancelFn: fn,
+	}
+}
+
+func (r *RunContext) Cancel() {
+	if r.cancelFn != nil {
+		r.cancelFn()
 	}
 }
 
