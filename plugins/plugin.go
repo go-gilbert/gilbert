@@ -16,10 +16,10 @@ type PluginFactory func(*scope.Scope, manifest.RawParams, logging.Logger) (Plugi
 // Plugin represents Gilbert's plugin
 type Plugin interface {
 	// Call calls a plugin
-	Call(ctx *job.RunContext, r TaskRunner) error
+	Call(*job.RunContext, TaskRunner) error
 
 	// Cancel stops plugin execution
-	Cancel() error
+	Cancel(*job.RunContext) error
 }
 
 // TaskRunner runs tasks from manifest file

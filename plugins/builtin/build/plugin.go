@@ -35,14 +35,16 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) (err error) {
 		return fmt.Errorf(`failed build project, %s`, err)
 	}
 
+	ctx.Logger.Debug("started")
 	if err = p.cmd.Wait(); err != nil {
 		return shell.FormatExitError(err)
 	}
 
+	ctx.Logger.Debug("waited")
 	return nil
 }
 
-func (p *Plugin) Cancel() error {
+func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	if p.cmd != nil {
 		if err := p.cmd.Process.Kill(); err != nil {
 			p.log.Warn(err.Error())

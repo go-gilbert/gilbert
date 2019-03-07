@@ -41,6 +41,8 @@ func (p *Plugin) Call(tx *job.RunContext, r plugins.TaskRunner) (err error) {
 	if err := p.proc.Wait(); err != nil {
 		return formatExitError(err)
 	}
+
+	p.log.Debug("done")
 	return nil
 }
 
@@ -57,8 +59,9 @@ func (p *Plugin) decorateProcessOutput() {
 	p.proc.Stderr = p.log.ErrorWriter()
 }
 
-func (p *Plugin) Cancel() error {
+func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	if p.proc != nil {
+		p.log.Debug("received stop signal")
 		if err := p.proc.Process.Kill(); err != nil {
 			p.log.Warn(err.Error())
 		}
