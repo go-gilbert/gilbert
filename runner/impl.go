@@ -120,55 +120,72 @@ func (t *taskRunner) startJobAndWait(job *manifest.Job, ctx job.RunContext) erro
 }
 
 // runJob execute specified job
-func (t *taskRunner) runJob(job *manifest.Job, jobCtx job.RunContext) {
-	s := scope.CreateScope(t.CurrentDirectory, job.Vars).
+func (t *taskRunner) runJob(j *manifest.Job, ctx job.RunContext) {
+	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
 		AppendGlobals(t.manifest.Vars).
-		AppendVariables(jobCtx.RootVars)
+		AppendVariables(ctx.RootVars)
 
 	// check if job should be run
-	if !t.shouldRunJob(job, s) {
-		jobCtx.Logger.Info("step was skipped")
-		jobCtx.Success()
+	if !t.shouldRunJob(j, s) {
+		ctx.Logger.Info("step was skipped")
+		ctx.Success()
 		return
 	}
 
 	// Wait if necessary
-	if job.Delay > 0 {
-		jobCtx.Logger.Debug("Job delay defined, waiting %dms...", job.Delay)
-		time.Sleep(job.Delay.ToDuration())
+	if j.Delay > 0 {
+		ctx.Logger.Debug("Job delay defined, waiting %dms...", j.Delay)
+		time.Sleep(j.Delay.ToDuration())
 	}
 
-	if job.Deadline > 0 {
+	if j.Deadline > 0 {
 		// Add timeout if requested
-		jobCtx = jobCtx.WithTimeout(job.Deadline.ToDuration())
+		ctx = ctx.WithTimeout(j.Deadline.ToDuration())
 	}
 
-	execType := job.Type()
+	execType := j.Type()
 	switch execType {
 	case manifest.ExecPlugin:
-		factory, err := t.PluginByName(job.PluginName)
-		if err != nil {
-			jobCtx.Fail(err)
-			return
-		}
-
-		plugin, err := factory(s, job.Params, jobCtx.Logger)
-		if err != nil {
-			jobCtx.Fail(fmt.Errorf("failed to apply plugin '%s': %v", job.PluginName, err))
-		}
-
-		return plugin.Call()
+		t.applyJobPlugin(s, j, &ctx)
 	case manifest.ExecMixin:
-		t.execJobWithMixin(job, s, jobCtx)
+		t.execJobWithMixin(j, s, &ctx)
 	default:
-		jobCtx.Fail(errNoTaskHandler)
+		ctx.Fail(errNoTaskHandler)
+	}
+}
+
+func (t *taskRunner) applyJobPlugin(s *scope.Scope, j *manifest.Job, ctx *job.RunContext) {
+	factory, err := t.PluginByName(j.PluginName)
+	if err != nil {
+		ctx.Fail(err)
+		return
+	}
+
+	plugin, err := factory(s, j.Params, ctx.Logger)
+	if err != nil {
+		ctx.Fail(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
+	}
+
+	// Handle stop event
+	// Event may arrive on SIGKILL or when timeout reached
+	go func() {
+		select {
+		case <-ctx.Context.Done():
+			ctx.Logger.Debug("%s: stop signal received", j.PluginName)
+			ctx.Fail(plugin.Cancel())
+		}
+	}()
+
+	// Call plugin
+	if err := plugin.Call(ctx, t); err != nil {
+		ctx.Fail(err)
 	}
 }
 
 // execJobWithMixin constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *taskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx job.RunContext) {
+func (t *taskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx *job.RunContext) {
 	mx, ok := t.manifest.Mixins[j.MixinName]
 	if !ok {
 		ctx.Fail(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
@@ -191,7 +208,7 @@ func (t *taskRunner) execJobWithMixin(j *manifest.Job, s *scope.Scope, ctx job.R
 // parentCtx used to expand task base properties (like description, etc.)
 //
 // subLogger used to create stack of log lines
-func (t *taskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx job.RunContext) error {
+func (t *taskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx *job.RunContext) error {
 	steps := len(task)
 
 	// Set waitgroup and buff channel for async jobs.
@@ -207,17 +224,17 @@ func (t *taskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		close(asyncErrors)
 		for err := range asyncErrors {
 			if err != nil {
-				parentCtx.Logger.Error("async job returned error: %s", err)
+				parentCtx.Logger.Error("async j returned error: %s", err)
 			}
 		}
 	}()
 
-	for jobIndex, job := range task {
+	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
 
 		// sub task label can contain template expressions (e.g. mixin step description)
 		// so we should try to parse it
-		descr := job.FormatDescription()
+		descr := j.FormatDescription()
 		if parsed, err := parentScope.ExpandVariables(descr); err != nil {
 			parentCtx.Logger.Error("description parse error: %s", err)
 		} else {
@@ -232,13 +249,13 @@ func (t *taskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		}
 
 		ctx := parentCtx.ChildContext()
-		if job.Async {
+		if j.Async {
 			wg.Add(1)
-			go t.runJob(&job, ctx)
+			go t.runJob(&j, ctx)
 			continue
 		}
 
-		if err := t.startJobAndWait(&job, ctx); err != nil {
+		if err := t.startJobAndWait(&j, ctx); err != nil {
 			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
 		}
 	}

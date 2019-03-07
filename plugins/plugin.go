@@ -18,4 +18,7 @@ type PluginFactory func(*scope.Scope, manifest.RawParams, logging.Logger) (Plugi
 type Plugin interface {
 	// Call calls a plugin
 	Call(ctx *job.RunContext, r runner.TaskRunner) error
+
+	// Cancel stops plugin execution
+	Cancel() error
 }
