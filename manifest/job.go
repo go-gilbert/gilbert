@@ -47,6 +47,9 @@ type Job struct {
 	// MixinName is mixin to be used by this job
 	MixinName string `yaml:"mixin,omitempty"`
 
+	// Async means that job should be run asynchronously
+	Async bool `yaml:"async,omitempty"`
+
 	// Delay before task start in milliseconds
 	Delay Period `yaml:"delay,omitempty"`
 

@@ -13,12 +13,6 @@ const (
 	FileName = "gilbert.yaml"
 )
 
-// Task is a group of jobs
-type Task []Job
-
-// TaskSet is a set of tasks declared in a manifest file
-type TaskSet map[string]Task
-
 // RawParams is raw plugin params
 type RawParams map[string]interface{}
 
