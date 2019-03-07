@@ -184,8 +184,8 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j *manifest.Job, ctx *job.Ru
 	go func() {
 		select {
 		case <-ctx.Context.Done():
-			ctx.Logger.Debug("%s: stop signal received", j.PluginName)
-			ctx.Result(plugin.Cancel())
+			ctx.Logger.Debug("sent stop signal to '%s' plugin", j.PluginName)
+			ctx.Result(plugin.Cancel(ctx))
 		}
 	}()
 

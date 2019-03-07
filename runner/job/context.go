@@ -17,6 +17,7 @@ type RunContext struct {
 	child    bool
 	wg       *sync.WaitGroup
 	once     sync.Once
+	finished bool
 }
 
 func (r *RunContext) SetWaitGroup(wg *sync.WaitGroup) {
@@ -51,6 +52,10 @@ func (r *RunContext) Success() {
 	r.Result(nil)
 }
 
+func (r *RunContext) IsAlive() bool {
+	return !r.finished
+}
+
 func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
@@ -66,6 +71,8 @@ func (r *RunContext) Result(err error) {
 			return
 		}
 
+		r.finished = true
+		r.Logger.Debug("result received")
 		r.wg.Done()
 	})
 }

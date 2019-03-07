@@ -7,6 +7,7 @@ import (
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/runner"
 	"os"
+	"os/signal"
 )
 
 var (
@@ -52,7 +53,17 @@ func getRunner() (*runner.TaskRunner, error) {
 	return runner.NewTaskRunner(m, dir, logging.Log), nil
 }
 
+func handleShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	for range c {
+		logging.Log.Log("Shutting down...")
+		r.Stop()
+	}
+}
+
 func runTask(taskName string) error {
+	go handleShutdown()
 	if err := r.RunTask(taskName); err != nil {
 		return err
 	}
