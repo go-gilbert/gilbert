@@ -73,16 +73,16 @@ func newParams(ctx *scope.Scope) Params {
 }
 
 // NewShellPlugin creates a new shell plugin instance
-func NewShellPlugin(context *scope.Scope, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
-	p := newParams(context)
+func NewShellPlugin(scope *scope.Scope, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+	p := newParams(scope)
 
 	if err := mapstructure.Decode(params, &p); err != nil {
 		return nil, fmt.Errorf("failed to read configuration: %s", err)
 	}
 
 	return &Plugin{
-		context: context,
-		params:  p,
-		log:     log,
+		scope:  scope,
+		params: p,
+		log:    log,
 	}, nil
 }

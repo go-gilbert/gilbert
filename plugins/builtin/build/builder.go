@@ -9,19 +9,19 @@ import (
 )
 
 // NewBuildPlugin creates a new build plugin instance
-func NewBuildPlugin(context *scope.Scope, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+func NewBuildPlugin(scope *scope.Scope, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	p := newParams()
 	if err := mapstructure.Decode(params, &p); err != nil {
 		return nil, manifest.NewPluginConfigError("build", err)
 	}
 
-	if err := context.Scan(&p.Target.Os, &p.Target.Arch); err != nil {
+	if err := scope.Scan(&p.Target.Os, &p.Target.Arch); err != nil {
 		return nil, manifest.NewPluginConfigError("build", err)
 	}
 
 	return &Plugin{
-		context: context,
-		params:  p,
-		log:     log,
+		scope:  scope,
+		params: p,
+		log:    log,
 	}, nil
 }

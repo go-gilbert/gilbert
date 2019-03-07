@@ -3,6 +3,8 @@ package shell
 import (
 	"fmt"
 	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/runner"
+	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
 	"os"
 	"os/exec"
@@ -11,46 +13,56 @@ import (
 
 // Plugin represents Gilbert's plugin
 type Plugin struct {
-	context *scope.Scope
-	params  Params
-	log     logging.Logger
+	scope  *scope.Scope
+	params Params
+	log    logging.Logger
+	proc   *exec.Cmd
 }
 
 // Call calls a plugin
-func (p *Plugin) Call() error {
-	proc, err := p.params.createProcess(p.context)
+func (p *Plugin) Call(tx *job.RunContext, r runner.TaskRunner) (err error) {
+	p.proc, err = p.params.createProcess(p.scope)
 	if err != nil {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", p.params.Command, err)
 	}
 
 	p.log.Debug("command: '%s'", p.params.Command)
-	p.log.Debug(`starting process "%s"...`, strings.Join(proc.Args, " "))
+	p.log.Debug(`starting process "%s"...`, strings.Join(p.proc.Args, " "))
 
 	// Add std listeners when silent is off
 	if !p.params.Silent {
-		p.decorateProcessOutput(proc)
+		p.decorateProcessOutput()
 	}
 
-	if err = proc.Start(); err != nil {
-		return fmt.Errorf(`failed to execute command "%s": %s`, strings.Join(proc.Args, " "), err)
+	if err = p.proc.Start(); err != nil {
+		return fmt.Errorf(`failed to execute command "%s": %s`, strings.Join(p.proc.Args, " "), err)
 	}
 
-	if err := proc.Wait(); err != nil {
+	if err := p.proc.Wait(); err != nil {
 		return formatExitError(err)
 	}
 	return nil
 }
 
-func (p *Plugin) decorateProcessOutput(proc *exec.Cmd) {
-	proc.Stdin = os.Stdin
-
+func (p *Plugin) decorateProcessOutput() {
 	if p.params.RawOutput {
 		p.log.Debug("raw output enabled")
-		proc.Stdout = os.Stdout
-		proc.Stderr = os.Stderr
+		p.proc.Stdout = os.Stdout
+		p.proc.Stderr = os.Stderr
+		p.proc.Stdin = os.Stdin
 		return
 	}
 
-	proc.Stdout = p.log
-	proc.Stderr = p.log.ErrorWriter()
+	p.proc.Stdout = p.log
+	p.proc.Stderr = p.log.ErrorWriter()
+}
+
+func (p *Plugin) Cancel() error {
+	if p.proc != nil {
+		if err := p.proc.Process.Kill(); err != nil {
+			p.log.Warn(err.Error())
+		}
+	}
+
+	return nil
 }
