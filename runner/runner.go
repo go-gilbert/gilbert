@@ -191,6 +191,7 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j *manifest.Job, ctx *job.Ru
 	plugin, err := factory(s, j.Params, ctx.Logger)
 	if err != nil {
 		ctx.Result(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
+		return
 	}
 
 	// Handle stop event
