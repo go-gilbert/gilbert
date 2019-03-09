@@ -29,12 +29,13 @@ func (r *RunContext) IsChild() bool {
 	return r.child
 }
 
-func (r *RunContext) ChildContext() RunContext {
+func (r *RunContext) ForkContext() RunContext {
 	return RunContext{
 		RootVars: r.RootVars,
 		Logger:   r.Logger.SubLogger(),
 		Context:  r.Context,
 		Error:    r.Error,
+		cancelFn: r.cancelFn,
 		child:    true,
 		wg:       r.wg,
 	}

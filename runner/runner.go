@@ -275,7 +275,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 			parentCtx.Logger.Info("- %s", descr)
 		}
 
-		ctx := parentCtx.ChildContext()
+		ctx := parentCtx.ForkContext()
 		if j.Async {
 			wg.Add(1)
 			ctx.Error = asyncErrors
