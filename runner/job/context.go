@@ -41,6 +41,20 @@ func (r *RunContext) ForkContext() RunContext {
 	}
 }
 
+func (r *RunContext) ChildContext() RunContext {
+	ctx, cancelFn := context.WithCancel(r.Context)
+
+	return RunContext{
+		RootVars: r.RootVars,
+		Logger:   r.Logger.SubLogger(),
+		Context:  ctx,
+		Error:    r.Error,
+		cancelFn: cancelFn,
+		child:    true,
+		wg:       r.wg,
+	}
+}
+
 func (r *RunContext) WithTimeout(t time.Duration) RunContext {
 	ctx, fn := context.WithTimeout(r.Context, t)
 	return RunContext{
@@ -52,9 +66,12 @@ func (r *RunContext) WithTimeout(t time.Duration) RunContext {
 }
 
 func (r *RunContext) Cancel() {
-	if r.cancelFn != nil {
-		r.cancelFn()
+	if r.cancelFn == nil {
+		r.Logger.Error("Bug: context cancel function is nil")
+		return
 	}
+
+	r.cancelFn()
 }
 
 func (r *RunContext) Success() {
