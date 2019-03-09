@@ -2,7 +2,7 @@ package watch
 
 import (
 	"fmt"
-	"github.com/fsnotify/fsnotify"
+	"github.com/rjeczalik/notify"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
@@ -11,64 +11,52 @@ import (
 
 type Plugin struct {
 	params
-	scope   *scope.Scope
-	log     logging.Logger
-	watcher *fsnotify.Watcher
-	done    chan bool
+	scope  *scope.Scope
+	log    logging.Logger
+	done   chan bool
+	events chan notify.EventInfo
 }
 
 func newPlugin(s *scope.Scope, p params, l logging.Logger) (*Plugin, error) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize watcher, %s", err)
-	}
-
 	return &Plugin{
-		params:  p,
-		scope:   s,
-		log:     l,
-		watcher: watcher,
-		done:    make(chan bool, 1),
+		params: p,
+		scope:  s,
+		log:    l,
+		done:   make(chan bool),
 	}, nil
 }
 
-func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) (err error) {
+func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
+	p.events = make(chan notify.EventInfo, 1)
+	if err := notify.Watch(p.Path, p.events, notify.All); err != nil {
+		return fmt.Errorf("failed to initialize watcher for '%s': %s", p.Path, err)
+	}
+
 	defer func() {
-		if err = p.watcher.Close(); err != nil {
-			p.log.Warn("failed to close watcher: %s", err)
-		}
+		notify.Stop(p.events)
+		p.log.Debug("watcher removed")
 	}()
 
 	go func() {
 		for {
 			select {
-			case event, ok := <-p.watcher.Events:
+			case event, ok := <-p.events:
 				if !ok {
 					return
 				}
-				p.log.Debug("event: %s", event)
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					p.log.Info("modified file: %s", event.Name)
-				}
-			case err, ok := <-p.watcher.Errors:
-				if !ok {
-					return
-				}
-				p.log.Error("error: %s", err)
+				p.log.Info("event: %v %s", event.Event(), event.Path())
 			}
 		}
 	}()
 
-	err = p.watcher.Add(p.Path)
-	if err != nil {
-		return err
-	}
-
+	p.log.Info("watcher is watching for changes in '%s'", p.Path)
 	<-p.done
 	return nil
 }
 
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	p.done <- true
+	notify.Stop(p.events)
+	p.log.Debug("watcher removed")
 	return nil
 }
