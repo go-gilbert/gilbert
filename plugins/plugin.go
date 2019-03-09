@@ -24,7 +24,17 @@ type Plugin interface {
 
 // TaskRunner runs tasks from manifest file
 type TaskRunner interface {
+	// PluginByName returns plugin constructor
 	PluginByName(pluginName string) (p PluginFactory, err error)
+
+	// RunTask runs task by name
 	RunTask(taskName string) (err error)
+
+	// RunJob starts job in separate goroutine.
+	//
+	// Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
+	RunJob(j *manifest.Job, ctx job.RunContext)
+
+	// Stop halts task runner
 	Stop()
 }

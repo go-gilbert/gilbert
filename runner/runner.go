@@ -91,7 +91,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 
 		if j.Async {
 			wg.Add(1)
-			go t.runJob(&j, ctx)
+			go t.handleJob(&j, ctx)
 		} else {
 			err = t.startJobAndWait(&j, ctx)
 		}
@@ -103,8 +103,15 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	return nil
 }
 
+// RunJob starts job in separate goroutine.
+//
+// Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
+func (t *TaskRunner) RunJob(j *manifest.Job, ctx job.RunContext) {
+	go t.handleJob(j, ctx)
+}
+
 func (t *TaskRunner) startJobAsync(job *manifest.Job, ctx job.RunContext, errorHandler func(error)) {
-	go t.runJob(job, ctx)
+	go t.handleJob(job, ctx)
 	select {
 	case err := <-ctx.Error:
 		errorHandler(err)
@@ -115,7 +122,7 @@ func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx job.RunContext) erro
 	wg := &sync.WaitGroup{}
 	ctx.SetWaitGroup(wg)
 	wg.Add(1)
-	go t.runJob(job, ctx)
+	go t.handleJob(job, ctx)
 	wg.Wait()
 
 	// All child jobs (except async jobs) inherit parent job channel,
@@ -132,8 +139,8 @@ func (t *TaskRunner) startJobAndWait(job *manifest.Job, ctx job.RunContext) erro
 	return err
 }
 
-// runJob execute specified job
-func (t *TaskRunner) runJob(j *manifest.Job, ctx job.RunContext) {
+// handleJob handles specified job
+func (t *TaskRunner) handleJob(j *manifest.Job, ctx job.RunContext) {
 	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
 		AppendGlobals(t.manifest.Vars).
 		AppendVariables(ctx.RootVars)
@@ -279,7 +286,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		if j.Async {
 			wg.Add(1)
 			ctx.Error = asyncErrors
-			go t.runJob(&j, ctx)
+			go t.handleJob(&j, ctx)
 			continue
 		}
 
