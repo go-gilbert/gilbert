@@ -5,6 +5,11 @@ vars:
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
+  async-test:
+    - plugin: shell
+      async: true
+      params:
+        command: 'foo'
   platform-build:
     - plugin: build
       description: 'build for {{os}} {{arch}}'
@@ -20,16 +25,20 @@ mixins:
           'main.commit': '{{ commit }}'
 
 tasks:
-  test-async:
-    - plugin: watch
+  test-deadline-async:
+    - plugin: shell
+      deadline: 2000
       async: true
       params:
-        path: './.tmp/...'
-        job:
-          plugin: shell
-          params:
-            silent: true
-            command: 'sleep 10'
+        command: 'sleep 4'
+    - plugin: shell
+      params:
+        command: 'ping -c 5 localhost'
+  test-async:
+    - mixin: async-test
+    - plugin: shell
+      params:
+        command: 'uname -a'
     - plugin: shell
       params:
         command: 'sleep 2'
