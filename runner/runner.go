@@ -64,29 +64,24 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	sl := t.subLogger.SubLogger()
 
 	// Set waitgroup and buff channel for async jobs.
-	wg := &sync.WaitGroup{}
+	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
-	var asyncErrors chan error
 	if asyncJobsCount > 0 {
-		asyncErrors = make(chan error, asyncJobsCount)
 		t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
-		go func() {
-			select {
-			case err, ok := <-asyncErrors:
-				if ok && err != nil {
-					t.subLogger.Error("async job returned error: %s", err)
-				}
-			case <-t.context.Done():
-				return
-			}
-		}()
+		tracker = newAsyncJobTracker(t, t.context, asyncJobsCount)
+		go tracker.trackAsyncJobs()
 
 		defer func() {
 			// Wait for unfinished async tasks
 			// and collect results from async jobs
 			t.subLogger.Log("waiting for async jobs to complete")
-			wg.Wait()
-			close(asyncErrors)
+			if asyncErr := tracker.wait(); asyncErr != nil {
+				if err == nil {
+					// Report error only if no previous errors.
+					// P.S - it's okay since all async errors were logged previously
+					err = fmt.Errorf("task '%s' returned error in async job: %s", taskName, asyncErr)
+				}
+			}
 		}()
 	}
 
@@ -98,9 +93,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		ctx := job.NewRunContext(nil, sl, t.context)
 
 		if j.Async {
-			wg.Add(1)
-			ctx.SetWaitGroup(wg)
-			ctx.Error = asyncErrors
+			tracker.decorateJobContext(&ctx)
 			go t.handleJob(j, ctx)
 			continue
 		}
@@ -110,7 +103,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		}
 	}
 
-	return nil
+	return err
 }
 
 // RunJob starts job in separate goroutine.
