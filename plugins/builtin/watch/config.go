@@ -9,7 +9,15 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
-var defaultDebounceTime = manifest.Period(1000)
+var defaultDebounceTime = manifest.Period(3000)
+
+// additional ignore list with temporary and hidden files
+var ignoredDevItems = []string{
+	manifest.FileName,
+	"./*go-tmp-umask",
+	".*",
+	".*/**",
+}
 
 type params struct {
 	Path         string          `mapstructure:"path"`
@@ -59,6 +67,9 @@ func parseParams(raw manifest.RawParams, scope *scope.Scope) (*params, error) {
 	if len(p.Ignore) == 0 {
 		return &p, nil
 	}
+
+	// Append internal go temporary files to ignore
+	p.Ignore = append(p.Ignore, ignoredDevItems...)
 
 	// Convert paths in ignore list from relative to absolute
 	p.blacklist = make([]string, len(p.Ignore))

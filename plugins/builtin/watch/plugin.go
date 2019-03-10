@@ -56,7 +56,6 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 					return
 				}
 				fPath := event.Path()
-				p.log.Debug("event: %v %s", event.Event(), fPath)
 				ignored, err := p.pathIgnored(fPath)
 				if err != nil {
 					p.log.Error("path ignore check failed: %s", err)
@@ -64,6 +63,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 				}
 
 				if !ignored {
+					p.log.Debug("event: %v %s", event.Event(), fPath)
 					timer.Reset(interval)
 				}
 			case <-timer.C:
