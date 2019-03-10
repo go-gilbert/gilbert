@@ -80,6 +80,9 @@ gilbert run build
     <a href="#next">Next steps</a>
 </h3>
 <p>
-    We recommend to read about gilbert file <a href="../schema">syntax</a> documentation for more information. 
-    <br /><br />
+    We recommend to read about gilbert file <a href="../schema">syntax</a> documentation for more information.
+</p>
+<p>
+    Also, you can find a good use-case example in <a href="https://github.com/x1unix/demo-go-plugins" target="_blank">this demo project</a>.<br />
+    That repo shows usage of mixins and a few built-in plugins for a real-world web-server example.
 </p>
