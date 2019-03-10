@@ -54,3 +54,11 @@ pre code {
 	top: -2px;
 	left: 2px;
 }
+
+#top-brand {
+	background: #1c86f2 !important;
+	overflow: hidden;
+	height: 48px;
+	width: 48px;
+	border-radius: 50%;
+}
