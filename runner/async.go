@@ -16,7 +16,7 @@ type asyncJobTracker struct {
 	err    error
 }
 
-func newAsyncJobTracker(r *TaskRunner, ctx context.Context, poolSize int) *asyncJobTracker {
+func newAsyncJobTracker(ctx context.Context, r *TaskRunner, poolSize int) *asyncJobTracker {
 	return &asyncJobTracker{
 		wg:     &sync.WaitGroup{},
 		errors: make(chan error, poolSize),

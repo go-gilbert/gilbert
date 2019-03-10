@@ -12,6 +12,7 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
+// Plugin implements plugins.Plugin interface
 type Plugin struct {
 	params
 	scope  *scope.Scope
@@ -30,6 +31,7 @@ func newPlugin(s *scope.Scope, p params, l logging.Logger) (*Plugin, error) {
 	}, nil
 }
 
+// Call starts watch plugin
 func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 	p.events = make(chan notify.EventInfo, 1)
 	if err := notify.Watch(p.Path, p.events, notify.All); err != nil {
@@ -84,7 +86,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 	return nil
 }
 
-func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.JobRunner) {
+func (p *Plugin) invokeJob(ctx *job.RunContext, r plugins.JobRunner) {
 	p.log.Debug("wait until previous process stops")
 	p.dead.Lock()
 	ctx.Error = make(chan error, 1)
@@ -103,6 +105,7 @@ func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.JobRunner) {
 	}
 }
 
+// Cancel stops watch plugin
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	p.done <- true
 	notify.Stop(p.events)

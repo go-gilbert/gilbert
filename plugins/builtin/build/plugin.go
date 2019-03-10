@@ -2,13 +2,14 @@ package build
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
+
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
-	"os/exec"
-	"strings"
 )
 
 // Plugin represents Gilbert's plugin
@@ -42,9 +43,10 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
 	return nil
 }
 
+// Cancel cancels build process
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	if p.cmd != nil {
-		if err := p.cmd.Process.Kill(); err != nil {
+		if err := shell.KillProcessGroup(p.cmd); err != nil {
 			p.log.Warn(err.Error())
 		}
 	}

@@ -88,6 +88,7 @@ func (p *Plugin) getPackage(pkgName string, ctx *job.RunContext) (err error) {
 	return err
 }
 
+// Cancel cancels plugin execution
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	p.stopped = true
 	return nil

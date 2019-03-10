@@ -7,6 +7,7 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
+// NewWatchPlugin creates a new plugin instance
 func NewWatchPlugin(scope *scope.Scope, rawParams manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
 	params, err := parseParams(rawParams, scope)
 	if err != nil {

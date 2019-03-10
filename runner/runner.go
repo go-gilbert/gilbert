@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/x1unix/gilbert/manifest"
@@ -28,7 +27,6 @@ type TaskRunner struct {
 	subLogger        logging.Logger
 	context          context.Context
 	cancelFn         context.CancelFunc
-	wg               *sync.WaitGroup
 }
 
 // PluginByName gets plugin by name
@@ -68,7 +66,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
 		t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
-		tracker = newAsyncJobTracker(t, t.context, asyncJobsCount)
+		tracker = newAsyncJobTracker(t.context, t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
@@ -90,10 +88,10 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		descr := j.FormatDescription()
 		t.subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
 		var err error
-		ctx := job.NewRunContext(nil, sl, t.context)
+		ctx := job.NewRunContext(t.context, nil, sl)
 
 		if j.Async {
-			tracker.decorateJobContext(&ctx)
+			tracker.decorateJobContext(ctx)
 			go t.handleJob(j, ctx)
 			continue
 		}
@@ -109,11 +107,11 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 // RunJob starts job in separate goroutine.
 //
 // Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
-func (t *TaskRunner) RunJob(j manifest.Job, ctx job.RunContext) {
+func (t *TaskRunner) RunJob(j manifest.Job, ctx *job.RunContext) {
 	go t.handleJob(j, ctx)
 }
 
-func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx job.RunContext) error {
+func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx *job.RunContext) error {
 	go t.handleJob(job, ctx)
 	// All child jobs (except async jobs) inherit parent job channel,
 	// so we should close channel only if parent job was finished.
@@ -131,7 +129,7 @@ func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx job.RunContext) error
 }
 
 // handleJob handles specified job
-func (t *TaskRunner) handleJob(j manifest.Job, ctx job.RunContext) {
+func (t *TaskRunner) handleJob(j manifest.Job, ctx *job.RunContext) {
 	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
 		AppendGlobals(t.manifest.Vars).
 		AppendVariables(ctx.RootVars)
@@ -158,9 +156,9 @@ func (t *TaskRunner) handleJob(j manifest.Job, ctx job.RunContext) {
 	execType := j.Type()
 	switch execType {
 	case manifest.ExecPlugin:
-		t.applyJobPlugin(s, j, &ctx)
+		t.applyJobPlugin(s, j, ctx)
 	case manifest.ExecMixin:
-		t.execJobWithMixin(j, s, &ctx)
+		t.execJobWithMixin(j, s, ctx)
 	default:
 		ctx.Result(errNoTaskHandler)
 	}
@@ -229,7 +227,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
 		parentCtx.Logger.Debug("%d async jobs in sub-task", asyncJobsCount)
-		tracker = newAsyncJobTracker(t, parentCtx.Context, asyncJobsCount)
+		tracker = newAsyncJobTracker(parentCtx.Context, t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
@@ -268,7 +266,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 
 		ctx := parentCtx.ChildContext()
 		if j.Async {
-			tracker.decorateJobContext(&ctx)
+			tracker.decorateJobContext(ctx)
 			go t.handleJob(j, ctx)
 			continue
 		}

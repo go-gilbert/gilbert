@@ -24,7 +24,6 @@ type params struct {
 	Ignore       []string        `mapstructure:"ignore"`
 	DebounceTime manifest.Period `mapstructure:"debounceTime"`
 	Job          *manifest.Job   `mapstructure:"run"`
-	rootDir      string
 	blacklist    []string
 }
 

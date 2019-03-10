@@ -10,9 +10,9 @@ import (
 )
 
 // RunContext used to store job state and communicate between task runner and job
-type RunContext struct {
-	// RootVars used to hold variables of root context
-	RootVars scope.Vars
+type RunContext struct { // nolint: maligned
+	child    bool
+	finished bool
 
 	// Logger is sub-logger instance for the job
 	Logger logging.Logger
@@ -23,11 +23,12 @@ type RunContext struct {
 	// Error is job result channel
 	Error chan error
 
-	child    bool
 	wg       *sync.WaitGroup
-	once     sync.Once
-	finished bool
 	cancelFn context.CancelFunc
+	once     sync.Once
+
+	// RootVars used to hold variables of root context
+	RootVars scope.Vars
 }
 
 // SetWaitGroup sets wait group instance for current job
@@ -56,10 +57,10 @@ func (r *RunContext) ForkContext() RunContext {
 }
 
 // ChildContext creates a new child context with separate Error channel and context
-func (r *RunContext) ChildContext() RunContext {
+func (r *RunContext) ChildContext() *RunContext {
 	ctx, cancelFn := context.WithCancel(r.Context)
 
-	return RunContext{
+	return &RunContext{
 		RootVars: r.RootVars,
 		Logger:   r.Logger.SubLogger(),
 		Context:  ctx,
@@ -131,7 +132,7 @@ func (r *RunContext) Result(err error) {
 }
 
 // NewRunContext creates a new job context instance
-func NewRunContext(rootVars scope.Vars, log logging.Logger, parentCtx context.Context) RunContext {
+func NewRunContext(parentCtx context.Context, rootVars scope.Vars, log logging.Logger) *RunContext {
 	ctx, cancelFn := context.WithCancel(parentCtx)
-	return RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1), cancelFn: cancelFn}
+	return &RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1), cancelFn: cancelFn}
 }

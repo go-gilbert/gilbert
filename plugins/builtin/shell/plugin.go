@@ -59,6 +59,7 @@ func (p *Plugin) decorateProcessOutput(cmd *exec.Cmd) {
 	cmd.Stderr = p.log.ErrorWriter()
 }
 
+// Cancel cancels shell command execution
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	if p.cmd == nil {
 		return nil

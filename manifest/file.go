@@ -16,7 +16,7 @@ const (
 // RawParams is raw plugin params
 type RawParams map[string]interface{}
 
-// manifest represents manifest file (gilbert.yaml)
+// Manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
 	// Version is gilbert file format version
 	Version string `yaml:"version"`
