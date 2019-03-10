@@ -9,11 +9,20 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
+// RunContext used to store job state and communicate between task runner and job
 type RunContext struct {
+	// RootVars used to hold variables of root context
 	RootVars scope.Vars
-	Logger   logging.Logger
-	Context  context.Context
-	Error    chan error
+
+	// Logger is sub-logger instance for the job
+	Logger logging.Logger
+
+	// Context is context.Context instance for current job.
+	Context context.Context
+
+	// Error is job result channel
+	Error chan error
+
 	child    bool
 	wg       *sync.WaitGroup
 	once     sync.Once
@@ -21,14 +30,19 @@ type RunContext struct {
 	cancelFn context.CancelFunc
 }
 
+// SetWaitGroup sets wait group instance for current job
+//
+// This value will be used later to call wg.Done() when job was finished.
 func (r *RunContext) SetWaitGroup(wg *sync.WaitGroup) {
 	r.wg = wg
 }
 
+// IsChild checks if context is child context
 func (r *RunContext) IsChild() bool {
 	return r.child
 }
 
+// ForkContext creates a context copy, but creates a separate sub-logger
 func (r *RunContext) ForkContext() RunContext {
 	return RunContext{
 		RootVars: r.RootVars,
@@ -41,6 +55,7 @@ func (r *RunContext) ForkContext() RunContext {
 	}
 }
 
+// ChildContext creates a new child context with separate Error channel and context
 func (r *RunContext) ChildContext() RunContext {
 	ctx, cancelFn := context.WithCancel(r.Context)
 
@@ -54,6 +69,7 @@ func (r *RunContext) ChildContext() RunContext {
 	}
 }
 
+// WithTimeout works the same as ForkContext but creates a context that will be canceled by timeout
 func (r *RunContext) WithTimeout(t time.Duration) RunContext {
 	ctx, fn := context.WithTimeout(r.Context, t)
 	return RunContext{
@@ -64,6 +80,7 @@ func (r *RunContext) WithTimeout(t time.Duration) RunContext {
 	}
 }
 
+// Cancel cancels the context and stops all jobs used by this context
 func (r *RunContext) Cancel() {
 	if r.cancelFn == nil {
 		r.Logger.Error("Bug: context cancel function is nil")
@@ -73,14 +90,19 @@ func (r *RunContext) Cancel() {
 	r.cancelFn()
 }
 
+// Success reports successful result.
+//
+// Alias to Result(nil)
 func (r *RunContext) Success() {
 	r.Result(nil)
 }
 
+// IsAlive checks if context was not finished
 func (r *RunContext) IsAlive() bool {
 	return !r.finished
 }
 
+// Result reports job result and finished the context
 func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
@@ -101,6 +123,7 @@ func (r *RunContext) Result(err error) {
 	})
 }
 
+// NewRunContext creates a new job context instance
 func NewRunContext(rootVars scope.Vars, log logging.Logger, ctx context.Context) RunContext {
 	return RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1)}
 }
