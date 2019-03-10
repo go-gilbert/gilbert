@@ -80,15 +80,18 @@ func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.JobRunner) {
 	p.log.Debug("wait until previous process stops")
 	p.dead.Lock()
 	ctx.Error = make(chan error, 1)
-	p.log.Info("- Starting '%s'", p.Job.FormatDescription())
+	description := p.Job.FormatDescription()
+	p.log.Info("- Starting '%s'", description)
 	r.RunJob(*p.Job, ctx)
 	select {
 	case err := <-ctx.Error:
-		p.log.Debug("tracked job finished")
 		p.dead.Unlock()
 		if err != nil {
-			p.log.Error("Job failed: %s", err)
+			p.log.Error("- '%s' failed: %s", description, err)
+			return
 		}
+
+		p.log.Success("- '%s' finished", description)
 	}
 }
 
