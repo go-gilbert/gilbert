@@ -69,19 +69,26 @@ func (r *RunContext) ChildContext() RunContext {
 	}
 }
 
-// WithTimeout works the same as ForkContext but creates a context that will be canceled by timeout
-func (r *RunContext) WithTimeout(t time.Duration) RunContext {
-	ctx, fn := context.WithTimeout(r.Context, t)
-	return RunContext{
-		RootVars: r.RootVars,
-		Logger:   r.Logger,
-		Context:  ctx,
-		cancelFn: fn,
-	}
+// Timeout adds timeout to the context
+func (r *RunContext) Timeout(timeout time.Duration) {
+	// Used as workaround, since context.WithTimeout() reports Done()
+	// but hangs goroutine.
+	go func() {
+		select {
+		case <-time.After(timeout):
+			if !r.finished {
+				r.Logger.Warn("Job deadline exceeded")
+				r.Cancel()
+			}
+		case <-r.Context.Done():
+			return
+		}
+	}()
 }
 
 // Cancel cancels the context and stops all jobs used by this context
 func (r *RunContext) Cancel() {
+	r.finished = true
 	if r.cancelFn == nil {
 		r.Logger.Error("Bug: context cancel function is nil")
 		return
@@ -124,6 +131,7 @@ func (r *RunContext) Result(err error) {
 }
 
 // NewRunContext creates a new job context instance
-func NewRunContext(rootVars scope.Vars, log logging.Logger, ctx context.Context) RunContext {
-	return RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1)}
+func NewRunContext(rootVars scope.Vars, log logging.Logger, parentCtx context.Context) RunContext {
+	ctx, cancelFn := context.WithCancel(parentCtx)
+	return RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1), cancelFn: cancelFn}
 }

@@ -149,23 +149,10 @@ func (t *TaskRunner) handleJob(j manifest.Job, ctx job.RunContext) {
 		time.Sleep(j.Delay.ToDuration())
 	}
 
-	// FIXME: exec.Cmd-based jobs are still alive even if timeout elapsed
-	// occurs only with context.WithTimeout()
 	if j.Deadline > 0 {
-		ctx.Logger.Warn("Warning: 'deadline' is unstable")
-
 		// Add timeout if requested
 		ttl := j.Deadline.ToDuration()
-		ctx = ctx.WithTimeout(ttl)
-
-		// Add deadline listener
-		go func() {
-			select {
-			case <-time.After(1 * time.Second):
-				ctx.Logger.Warn("job deadline finish")
-				ctx.Cancel()
-			}
-		}()
+		ctx.Timeout(ttl)
 	}
 
 	execType := j.Type()
@@ -234,6 +221,7 @@ func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.R
 //
 // subLogger used to create stack of log lines
 func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx *job.RunContext) (err error) {
+	// FIXME: drop copy-paste from RunTask
 	steps := len(task)
 
 	// Set waitgroup and buff channel for async jobs.
