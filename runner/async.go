@@ -13,7 +13,6 @@ type asyncJobTracker struct {
 	errors chan error
 	runner *TaskRunner
 	ctx    context.Context
-	err    error
 }
 
 func newAsyncJobTracker(ctx context.Context, r *TaskRunner, poolSize int) *asyncJobTracker {
@@ -31,7 +30,6 @@ func (t *asyncJobTracker) trackAsyncJobs() {
 	case err, ok := <-t.errors:
 		if ok && err != nil {
 			t.runner.subLogger.Error("ERROR: async job returned error: %s", err)
-			t.err = err
 		}
 	case <-t.ctx.Done():
 		return
@@ -46,10 +44,12 @@ func (t *asyncJobTracker) decorateJobContext(ctx *job.RunContext) {
 }
 
 // wait waits until all async jobs complete
-func (t *asyncJobTracker) wait() error {
+func (t *asyncJobTracker) wait() (err error) {
 	// Wait for unfinished async tasks
 	// and collect results from async jobs
 	t.wg.Wait()
 	close(t.errors)
-	return t.err
+
+	// TODO: report if any of async jobs failed
+	return err
 }
