@@ -86,7 +86,12 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
 		descr := j.FormatDescription()
-		t.subLogger.Log("Step %d of %d: %s", currentStep, steps, descr)
+		if steps > 1 {
+			// show total steps count only if more than one step provided
+			t.subLogger.Info("- [%d/%d] %s", currentStep, steps, descr)
+		} else {
+			t.subLogger.Info("- %s", descr)
+		}
 		var err error
 		ctx := job.NewRunContext(t.context, nil, sl)
 
