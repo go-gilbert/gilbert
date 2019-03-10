@@ -49,12 +49,12 @@
   <link href="/gilbert/css/highlight.css" rel="stylesheet" type="text/css">
   <link href="/gilbert/css/master.css" rel="stylesheet" type="text/css">
   <link href="/gilbert/css/kube.demo.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/hljs/atom-one-light.css" rel="stylesheet" type="text/css">
 
  <link href="/gilbert/css/custom.css" rel="stylesheet" type="text/css">
 
   <script src="/gilbert/js/jquery-2.1.4.min.js" type="text/javascript">
   </script>
-
   <script type="text/javascript" src="/gilbert/js/tocbot.min.js"></script>
 </head>
 
@@ -69,13 +69,17 @@
   </div>
   <div class="hide-sm" id="top">
     <div id="top-brand">
-      <a href="https://x1unix.github.io/gilbert/" title="home">Gilbert</a>
+      <a href="https://x1unix.github.io/gilbert/" title="Gilbert">
+        <img src="https://x1unix.github.io/gilbert/img/gilbert.png" class="head__logo--img" height="48" width="48" />
+      </a>
     </div>
     <nav id="top-nav-main">
       <ul>
        
        
     <li><a href="/gilbert/docs/" >Documentation</a></li>
+    
+    <li><a href="https://github.com/x1unix/gilbert" >Source</a></li>
     
       </ul>
     </nav>
@@ -118,35 +122,39 @@ headingSelector: 'h3'
 
 
 
-    <p><h3 class="section-head" id="h-installation">
-    <a href="#h-installation">Installation</a>
+    <p><h3 class="section-head" id="installation">
+    <a href="#installation">Installation</a>
 </h3>
 <p>
     You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or grab the latest version using <code>go get</code>:
-</p>
-<pre class="code">go get -u github.com/x1unix/gilbert</pre>
-<p>
-    This command will install <b>Gilbert</b> tool into <code>$GOPATH/bin</code>
 </p></p>
 
-<p><h3 class="section-head" id="h-project-integration">
-    <a href="#h-project-integration">Project integration</a>
+<pre><code>go get -u github.com/x1unix/gilbert
+</code></pre>
+
+<p>
+    This command will install <b>Gilbert</b> tool into `$GOPATH/bin`
+</p>
+
+<p><h3 class="section-head" id="project-integration">
+    <a href="#project-integration">Project integration</a>
 </h3>
 <p>
     <strong>Gilbert</strong> uses <code>gilbert.yaml</code> file to store list of tasks to run in project folder.
 </p>
 <p>
     To generate a sample <code>gilbert.yaml</code> file, navigate to your project directory in terminal and run <code>gilbert init</code> command:
-</p>
-<pre class="code">
-    $ cd $GOPATH/src/github.com/user/myproject
-    $ gilbert init
-</pre>
+</p></p>
+
+<pre><code>$ cd $GOPATH/src/github.com/user/myproject
+$ gilbert init
+</code></pre>
+
 <p>
     This command will generate a sample file with <code>build</code> and <code>clean</code> tasks:
 </p>
-<pre class="code">
-version: &ldquo;1.0&rdquo;
+
+<pre><code class="language-yaml">version: &quot;1.0&quot;
 vars:
   appVersion: 1.0.0
 tasks:
@@ -159,26 +167,63 @@ tasks:
     plugin: shell
     params:
       command: rm -rf ./vendor
-</pre>
-<h3 class="section-head" id="h-running-tasks">
-    <a href="#h-running-tasks">Running tasks</a>
+</code></pre>
+
+<p><h3 class="section-head" id="available-tasks">
+    <a href="#available-tasks">Available tasks</a>
+</h3>
+<p>
+    To get list of available tasks, run
+</p></p>
+
+<pre><code class="language-bash">gilbert ls
+</code></pre>
+
+<p><h3 class="section-head" id="running-tasks">
+    <a href="#running-tasks">Running tasks</a>
 </h3>
 <p>
     To run a task declared in <code>gilbert.yaml</code>, use <code>gilbert run</code> command.
 </p>
 <p>
-    <b>Example:</b>
-    <pre class="code">
-gilbert run build
-    </pre>
+    <b>Example:</b></p>
+
+<pre><code class="language-bash">gilbert run build
+</code></pre>
+
+<p></p>
+<h3 class="section-head" id="next">
+    <a href="#next">Next steps</a>
+</h3>
+<p>
+    We recommend to read about gilbert file <a href="../schema">syntax</a> documentation for more information.
+</p>
+<p>
+    Also, you can find a good use-case example in <a href="https://github.com/x1unix/demo-go-plugins" target="_blank">this demo project</a>.<br />
+    That repo shows usage of mixins and a few built-in plugins for a real-world web-server example.
 </p></p>
 
 
+    <script src='/gilbert/js/highlight.pack.js'></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     
     </div>
     </div>
 </main>
-  <footer></footer>
+  <footer>   <footer id="footer">
+    <nav>
+      <ul>
+        <li><span>Gilbert</span></li>
+        <li>
+          <a href="/docs/">Docs</a>
+        </li>
+        <li>
+          <a href="https://github.com/x1unix/gilbert">Source</a>
+        </li>
+      </ul>
+    </nav>
+    <p>2019 &copy; Licence MIT.</p>
+  </footer> </footer>
 
 
   <script src="/gilbert/js/kube.js" type="text/javascript">

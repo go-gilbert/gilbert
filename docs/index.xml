@@ -16,15 +16,15 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://x1unix.github.io/gilbert/docs/quick-start/</guid>
-      <description>Installation   You can download release binaries from releases page or grab the latest version using go get: go get -u github.com/x1unix/gilbert  This command will install Gilbert tool into $GOPATH/bin Project integration   Gilbert uses gilbert.yaml file to store list of tasks to run in project folder.  To generate a sample gilbert.yaml file, navigate to your project directory in terminal and run gilbert init command: $ cd $GOPATH/src/github.</description>
+      <description>Installation   You can download release binaries from releases page or grab the latest version using go get: go get -u github.com/x1unix/gilbert   This command will install Gilbert tool into `$GOPATH/bin` Project integration   Gilbert uses gilbert.yaml file to store list of tasks to run in project folder.  To generate a sample gilbert.yaml file, navigate to your project directory in terminal and run gilbert init command: $ cd $GOPATH/src/github.</description>
     </item>
     
     <item>
-      <title>gilbert.yaml</title>
-      <link>https://x1unix.github.io/gilbert/docs/gilbert-yaml/</link>
+      <title>Schema</title>
+      <link>https://x1unix.github.io/gilbert/docs/schema/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://x1unix.github.io/gilbert/docs/gilbert-yaml/</guid>
+      <guid>https://x1unix.github.io/gilbert/docs/schema/</guid>
       <description>Manifest file  gilbert.yaml it&amp;rsquo;s a yaml file that contains all information about your tasks and tells Gilbert what to do when you try to run specific task.  This file should be located at the root folder of your codebase, or at least at the same location where you call gilbert command.  To create a sample file, use gilbert init command. Structure  gilbert.yaml consists of tasks, and tasks include a list of jobs to be done and rules.</description>
     </item>
     
@@ -34,7 +34,8 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://x1unix.github.io/gilbert/docs/built-in-plugins/</guid>
-      <description>Build plugin  Build plugin is abstraction over go build compile tool and simplifies build params pass. This plugin can operate without configuration. Configuration sample version: 1.0 tasks: build: - plugin: build params: source: &amp;lsquo;github.com/foo/bar&amp;rsquo; # default: current package buildMode: &amp;lsquo;c-archive&amp;rsquo; # default: &amp;ldquo;default&amp;rdquo; outputPath: &amp;lsquo;./build/foo.exe&amp;rsquo; # default: project directory params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &amp;lsquo;-X main.foo=bar&amp;rsquo; target: os: windows # default: current OS arch: &amp;lsquo;386&amp;rsquo; # default: current arch variables: # default: empty &amp;lsquo;main.</description>
+      <description>Build plugin  Build plugin is abstraction over go build compile tool and simplifies build params pass. This plugin can operate without configuration. Configuration sample
+version: 1.0 tasks: build: - plugin: build params: source: &#39;github.com/foo/bar&#39; # default: current package buildMode: &#39;c-archive&#39; # default: &amp;quot;default&amp;quot; outputPath: &#39;./build/foo.exe&#39; # default: project directory params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &#39;-X main.foo=bar&#39; target: os: windows # default: current OS arch: &#39;386&#39; # default: current arch variables: # default: empty &#39;main.</description>
     </item>
     
   </channel>

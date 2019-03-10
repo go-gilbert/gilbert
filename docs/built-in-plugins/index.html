@@ -49,12 +49,12 @@
   <link href="/gilbert/css/highlight.css" rel="stylesheet" type="text/css">
   <link href="/gilbert/css/master.css" rel="stylesheet" type="text/css">
   <link href="/gilbert/css/kube.demo.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/hljs/atom-one-light.css" rel="stylesheet" type="text/css">
 
  <link href="/gilbert/css/custom.css" rel="stylesheet" type="text/css">
 
   <script src="/gilbert/js/jquery-2.1.4.min.js" type="text/javascript">
   </script>
-
   <script type="text/javascript" src="/gilbert/js/tocbot.min.js"></script>
 </head>
 
@@ -69,13 +69,17 @@
   </div>
   <div class="hide-sm" id="top">
     <div id="top-brand">
-      <a href="https://x1unix.github.io/gilbert/" title="home">Gilbert</a>
+      <a href="https://x1unix.github.io/gilbert/" title="Gilbert">
+        <img src="https://x1unix.github.io/gilbert/img/gilbert.png" class="head__logo--img" height="48" width="48" />
+      </a>
     </div>
     <nav id="top-nav-main">
       <ul>
        
        
     <li><a href="/gilbert/docs/" >Documentation</a></li>
+    
+    <li><a href="https://github.com/x1unix/gilbert" >Source</a></li>
     
       </ul>
     </nav>
@@ -118,145 +122,281 @@ headingSelector: 'h3'
 
 
 
-    <p><h3 class="section-head" id="h-build-plugin"><a href="#h-build-plugin">Build plugin</a></h3>
+    <p><h3 class="section-head" id="build-plugin"><a href="#build-plugin">Build plugin</a></h3>
 <p>
     Build plugin is abstraction over <code>go build</code> compile tool and simplifies build params pass.
     <br />
     This plugin can operate without configuration.
 </p>
-<h4>Configuration sample</h4>
-<pre class="code">
-version: 1.0
+<h4>Configuration sample</h4></p>
+
+<pre><code class="language-yaml">version: 1.0
 tasks:
     build:
     - plugin: build
       params:
-        source: &lsquo;github.com/foo/bar&rsquo;        # default: current package
-        buildMode: &lsquo;c-archive&rsquo;              # default: &ldquo;default&rdquo;
-        outputPath: &lsquo;./build/foo.exe&rsquo;       # default: project directory
+        source: 'github.com/foo/bar'        # default: current package
+        buildMode: 'c-archive'              # default: &quot;default&quot;
+        outputPath: './build/foo.exe'       # default: project directory
         params:
             stripDebugInfo: true            # removes debug info, default: false
             linkerFlags:                    # custom linker flags, default: empty
-            - &lsquo;-X main.foo=bar&rsquo;
+            - '-X main.foo=bar'
         target:
             os: windows     # default: current OS
-            arch: &lsquo;386&rsquo;     # default: current arch
+            arch: '386'     # default: current arch
         variables:          # default: empty
-            &lsquo;main.commit&rsquo;: &lsquo;{% git log &ndash;format=%H -n 1 %}&rsquo;
-</pre>
-<h4>Configuration params</h4>
+            'main.commit': '{% git log --format=%H -n 1 %}' 
+</code></pre>
+
+<p><h4>Configuration params</h4>
 <p>
         <table>
         <tr>
             <th>Param name</th>
-            <th>Required</th>
+            <th>Type</th>
             <th>Description</th>
         </tr>
         <tr>
             <td><code>source</code></td>
-            <td><i>false</i></td>
+            <td><i>string</i></td>
             <td>Package name to be built</td>
         </tr>
         <tr>
             <td><code>buildMode</code></td>
-            <td><i>false</i></td>
+            <td><i>string</i></td>
             <td>Build mode, see <code>go help buildmode</code> for possible values</td>
         </tr>
         <tr>
             <td><code>outputPath</code></td>
-            <td><i>false</i></td>
+            <td><i>string</i></td>
             <td>Artifact output path</td>
         </tr>
         <tr>
             <td><code>params</code></td>
-            <td><i>false</i></td>
-            <td>Additional params related to linker</td>
+            <td><i>object</i></td>
+            <td>
+                Additional params related to linker:
+                <ul>
+                    <li><code>stripDebugInfo</code> - Remove all debug symbols</li>
+                    <li><code>linkerFlags</code> - Array of flags passed to linker</li>
+                </ul>
+            </td>
         </tr>
         <tr>
             <td><code>target</code></td>
-            <td><i>false</i></td>
-            <td>Defines build target. Uses values for <code>GOOS</code> and <code>GOARCH</code>.</td>
+            <td><i>object</i></td>
+            <td>
+                Defines build target:
+                <ul>
+                    <li><code>os</code> - Target operating system (<i>default: current OS</i>)</li>
+                    <li><code>arch</code> - Target architecture (<i>default: current architecture</i>)</li>
+                </ul>
+            </td>
         </tr>
         <tr>
             <td><code>variables</code></td>
-            <td><i>false</i></td>
-            <td>Source variables that should be overwriten by linker</td>
+            <td><i>dict</i></td>
+            <td>
+                Key-value pair of variables to replace in executable by linker (<code>main.version</code> for example).<br />
+                Can be useful to set application version or build commit.
+            </td>
         </tr>
     </table>
 </p></p>
 
-<p><h3 class="section-head" id="h-shell-plugin"><a href="#h-shell-plugin">Shell plugin</a></h3>
+<p><h3 class="section-head" id="shell-plugin"><a href="#shell-plugin">Shell plugin</a></h3>
 <p>
     Shell plugin allows to execute shell commands. If command returns non-zero exit code, task will fail.
 </p>
-<h4>Configuration sample</h4>
-<pre class="code">
-version: 1.0
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
 tasks:
-    run_something:
-    - plugin: shell
-      params:
-        command: &lsquo;scp root@localhost:/foo/bar ./bar&rsquo;
-        silent: false           # optional, default: false
-        rawOutput: false        # optional, default: false
-        shell: &lsquo;/bin/bash&rsquo;      # optional, default: /bin/sh or cmd.exe
-        shellExecParam: &lsquo;-c&rsquo;    # optional, default: -c (or /c on windows for cmd.exe)
-        workDir: &lsquo;/tmp&rsquo;         # optional, default: project directory
-        env:                    # optional, default: use user&rsquo;s env vars
-            LC_LANG: &lsquo;en_UTF-8&rsquo;
-</pre>
-<h4>Configuration params</h4>
+  run_something:
+  - plugin: shell
+    params:
+      command: 'scp root@localhost:/foo/bar ./bar'
+      silent: false           # optional, default: false
+      rawOutput: false        # optional, default: false
+      shell: '/bin/bash'      # optional, default: /bin/sh or cmd.exe
+      shellExecParam: '-c'    # optional, default: -c (or /c on windows for cmd.exe)
+      workDir: '/tmp'         # optional, default: project directory
+      env:                    # optional, default: use user's env vars
+        LC_LANG: 'en_UTF-8'
+</code></pre>
+
+<p><h4>Configuration params</h4>
 <p>
         <table>
         <tr>
             <th>Param name</th>
-            <th>Required</th>
+            <th>Type</th>
             <th>Description</th>
         </tr>
         <tr>
-            <td><code>command</code></td>
-            <td><i>true</i></td>
+            <td class="param-required"><code>command</code></td>
+            <td><i>string</i></td>
             <td>Command to run</td>
         </tr>
         <tr>
             <td><code>silent</code></td>
-            <td><i>false</i></td>
+            <td><i>boolean</i></td>
             <td>Hide command output</td>
         </tr>
         <tr>
             <td><code>rawOutput</code></td>
-            <td><i>false</i></td>
+            <td><i>boolean</i></td>
             <td>Do not decorate command output, can be useful if command output seems ugly</td>
         </tr>
         <tr>
             <td><code>shell</code></td>
-            <td><i>false</i></td>
+            <td><i>string</i></td>
             <td>Shell executable, not recommended to change on <b>Windows</b></td>
         </tr>
         <tr>
             <td><code>shellExecParam</code></td>
-            <td><i>false</i></td>
+            <td><i>string</i></td>
             <td>Shell command argument, not recommended to change</td>
         </tr>
         <tr>
             <td><code>workDir</code></td>
-            <td><i>false</i></td>
+            <td><i>string</i></td>
             <td>Working directory</td>
         </tr>
         <tr>
             <td><code>env</code></td>
-            <td><i>false</i></td>
+            <td><i>dict</i></td>
             <td>Custom environment variables</td>
         </tr>
     </table>
+</p>
+<h3 class="section-head" id="watch-plugin"><a href="#watch-plugin">Watch plugin</a></h3>
+<p>
+    Tracks file changes in specified path and restarts specified job on file/folder change.
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
+tasks:
+  watch:
+  - plugin: watch
+    params:
+      path: './src/...'   # path to watch, required
+      debounceTime: 300   # debounce time, optional
+      ignore:
+      - *.log             # list of entries to ignore, optional
+      job:
+        mixin: build-and-run-server # job to execure, similar to manifest job syntax. required.
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>path</code></td>
+            <td><i>string</i></td>
+            <td>Path to track for changes. Use <code>/...</code> to track changes in all sub-directories.</td>
+        </tr>
+        <tr>
+            <td><code>debounceTime</code></td>
+            <td><i>int</i></td>
+            <td>period to postpone job execution until after wait milliseconds have elapsed since the last time it was invoked</td>
+        </tr>
+        <tr>
+            <td><code>ignore</code></td>
+            <td><i>[]string</i></td>
+            <td>List of entries to ignore. All dotfiles are already included</td>
+        </tr>
+        <tr>
+            <td><code>job</code></td>
+            <td><i>object</i></td>
+            <td>Job to run. See <a href="../schema/#tasks">Job definition</a> for more info</td>
+        </tr>
+    </table>
+</p>
+<p>
+  <span class="param-required"></span> - Required parameter<br />
+</p>
+<h3 class="section-head" id="go-get-plugin"><a href="#go-get-plugin">Go-Get plugin</a></h3>
+<p>
+    Installs libraries using <code>go get</code> tool
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
+tasks:
+  watch:
+  - plugin: go-get
+    params:
+      update: false       # force update, optional
+      verbose: false      # debug output, optional
+      downloadOnly: false # download without build, optional
+      packages:
+      - github.com/stretchr/testify
+      - github.com/alecthomas/gometalinter
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>packages</code></td>
+            <td><i>[]string</i></td>
+            <td>List of packages to install</td>
+        </tr>
+        <tr>
+            <td><code>update</code></td>
+            <td><i>boolean</i></td>
+            <td>Force package update</td>
+        </tr>
+        <tr>
+            <td><code>downloadOnly</code></td>
+            <td><i>boolean</i></td>
+            <td>Download libraries without compilation</td>
+        </tr>
+        <tr>
+            <td><code>verbose</code></td>
+            <td><i>boolean</i></td>
+            <td>Debug output</td>
+        </tr>
+    </table>
+</p>
+<p>
+  <span class="param-required"></span> - Required parameter<br />
 </p></p>
 
 
+    <script src='/gilbert/js/highlight.pack.js'></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     
     </div>
     </div>
 </main>
-  <footer></footer>
+  <footer>   <footer id="footer">
+    <nav>
+      <ul>
+        <li><span>Gilbert</span></li>
+        <li>
+          <a href="/docs/">Docs</a>
+        </li>
+        <li>
+          <a href="https://github.com/x1unix/gilbert">Source</a>
+        </li>
+      </ul>
+    </nav>
+    <p>2019 &copy; Licence MIT.</p>
+  </footer> </footer>
 
 
   <script src="/gilbert/js/kube.js" type="text/javascript">
