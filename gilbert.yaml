@@ -70,6 +70,7 @@ tasks:
       arch: 'amd64'
       ext: .exe
   - mixin: platform-build
+    if: '[ $(uname -s) == "Darwin" ]'
     vars:
       os: darwin
       arch: 'amd64'
