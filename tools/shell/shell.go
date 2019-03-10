@@ -3,7 +3,6 @@ package shell
 import (
 	"fmt"
 	"os/exec"
-	"runtime"
 	"syscall"
 )
 
@@ -25,25 +24,4 @@ func FormatExitError(err error) error {
 	}
 
 	return fmt.Errorf("process finished with error - %s", err)
-}
-
-// PrepareCommand prepares a command to execute
-func PrepareCommand(cmdName string) *exec.Cmd {
-	cmd := exec.Command(shellPath, shellCmdPrefix, wrapCommand(cmdName))
-
-	// Assign process group (for unix only)
-	if runtime.GOOS != "windows" {
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	}
-
-	return cmd
-}
-
-// KillProcessGroup kills process group created by parent process
-func KillProcessGroup(cmd *exec.Cmd) error {
-	if runtime.GOOS == OsWindows {
-		return cmd.Process.Kill()
-	}
-
-	return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 }

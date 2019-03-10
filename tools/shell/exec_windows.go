@@ -1,5 +1,9 @@
 package shell
 
+import (
+	"os/exec"
+)
+
 const (
 	shellPath            = "cmd.exe"
 	shellCmdPrefix       = "/C"
@@ -8,4 +12,15 @@ const (
 
 func wrapCommand(cmd string) string {
 	return winCodePageFixPrefix + " && " + cmd
+}
+
+// KillProcessGroup kills process group created by parent process
+func KillProcessGroup(cmd *exec.Cmd) error {
+	return cmd.Process.Kill()
+}
+
+// PrepareCommand prepares a command to execute
+func PrepareCommand(cmdName string) *exec.Cmd {
+	cmd := exec.Command(shellPath, shellCmdPrefix, wrapCommand(cmdName))
+	return cmd
 }

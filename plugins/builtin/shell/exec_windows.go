@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"os/exec"
 	"strings"
 )
 
@@ -23,4 +24,8 @@ func (p *Params) preparedCommand() string {
 		return p.Command
 	}
 	return winCodePageFixPrefix + " && " + p.Command
+}
+
+func decorateCommand(cmd *exec.Cmd) {
+	// Nothing to do here
 }

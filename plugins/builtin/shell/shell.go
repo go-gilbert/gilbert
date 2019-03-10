@@ -10,8 +10,6 @@ import (
 	"github.com/x1unix/gilbert/tools/shell"
 	"os"
 	"os/exec"
-	"runtime"
-	"syscall"
 )
 
 // Params contains params for shell plugin
@@ -64,9 +62,7 @@ func (p *Params) createProcess(ctx *scope.Scope) (*exec.Cmd, error) {
 	}
 
 	// Assign process group (for unix only)
-	if runtime.GOOS != "windows" {
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	}
+	decorateCommand(cmd)
 
 	return cmd, nil
 }
