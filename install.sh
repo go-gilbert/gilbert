@@ -44,7 +44,7 @@ get_arch() {
         echo "386"
         ;;
     *)
-        echo NIL
+        echo ${NIL}
         ;;
     esac
 }
