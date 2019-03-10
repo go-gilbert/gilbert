@@ -33,34 +33,34 @@ func (d Period) ToDuration() time.Duration {
 // Job is a single job in task
 type Job struct {
 	// Condition is shell command that should be successful to run specified job
-	Condition string `yaml:"if,omitempty"`
+	Condition string `yaml:"if,omitempty" mapstructure:"if"`
 
 	// Description is job description
-	Description string `yaml:"description,omitempty"`
+	Description string `yaml:"description,omitempty" mapstructure:"description"`
 
 	// TaskName refers to task that should be run.
-	TaskName string `yaml:"run,omitempty"`
+	TaskName string `yaml:"run,omitempty" mapstructure:"run"`
 
 	// PluginName describes what plugin should handle this job.
-	PluginName string `yaml:"plugin,omitempty"`
+	PluginName string `yaml:"plugin,omitempty" mapstructure:"plugin"`
 
 	// MixinName is mixin to be used by this job
-	MixinName string `yaml:"mixin,omitempty"`
+	MixinName string `yaml:"mixin,omitempty" mapstructure:"mixin"`
 
 	// Async means that job should be run asynchronously
-	Async bool `yaml:"async,omitempty"`
+	Async bool `yaml:"async,omitempty" mapstructure:"async"`
 
 	// Delay before task start in milliseconds
-	Delay Period `yaml:"delay,omitempty"`
+	Delay Period `yaml:"delay,omitempty" mapstructure:"delay"`
 
 	// Period is a time quota for job
-	Deadline Period `yaml:"deadline,omitempty"`
+	Deadline Period `yaml:"deadline,omitempty" mapstructure:"deadline"`
 
 	// Vars is a set of variables defined for this job.
-	Vars scope.Vars `yaml:"vars,omitempty"`
+	Vars scope.Vars `yaml:"vars,omitempty" mapstructure:"vars"`
 
 	// Params is a set of arguments for the job.
-	Params map[string]interface{} `yaml:"params,omitempty"`
+	Params map[string]interface{} `yaml:"params,omitempty" mapstructure:"params"`
 }
 
 // HasDescription checks if description is available
