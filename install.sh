@@ -62,7 +62,7 @@ compile_install() {
         warn "dep is not installed, downloading..."
         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
         local curl_result=$?
-        if [[ $curl_result -ne 0 ]]; then
+        if [ $curl_result -ne 0 ]; then
             panic "failed to install 'dep' (${curl_result})"
         fi
     fi
