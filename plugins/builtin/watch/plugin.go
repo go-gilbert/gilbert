@@ -2,6 +2,7 @@ package watch
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/rjeczalik/notify"
@@ -17,6 +18,7 @@ type Plugin struct {
 	log    logging.Logger
 	done   chan bool
 	events chan notify.EventInfo
+	dead   *sync.Mutex
 }
 
 func newPlugin(s *scope.Scope, p params, l logging.Logger) (*Plugin, error) {
@@ -34,6 +36,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 		return fmt.Errorf("failed to initialize watcher for '%s': %s", p.Path, err)
 	}
 
+	p.dead = &sync.Mutex{}
 	childCtx := ctx.ChildContext()
 	defer func() {
 		notify.Stop(p.events)
@@ -58,6 +61,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 			case <-timer.C:
 				// Re-start job when timer ends.
 				p.log.Debug("timer ended")
+
 				if childCtx.IsAlive() {
 					childCtx.Cancel()
 				}
@@ -73,12 +77,15 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 }
 
 func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.JobRunner) {
+	p.log.Debug("wait until previous process stops")
+	p.dead.Lock()
 	ctx.Error = make(chan error, 1)
 	p.log.Debug("tracked job started")
 	r.RunJob(p.Job, ctx)
 	select {
 	case err := <-ctx.Error:
 		p.log.Debug("tracked job finished")
+		p.dead.Unlock()
 		if err != nil {
 			p.log.Error("Job failed: %s", err)
 		}
