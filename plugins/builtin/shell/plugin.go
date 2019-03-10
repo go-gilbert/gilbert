@@ -17,44 +17,32 @@ type Plugin struct {
 	scope  *scope.Scope
 	params Params
 	log    logging.Logger
-	done   chan bool
+	cmd    *exec.Cmd
 }
 
 // Call calls a plugin
 func (p *Plugin) Call(tx *job.RunContext, r plugins.JobRunner) (err error) {
-	defer close(p.done)
-	cmd, err := p.params.createProcess(p.scope)
+	p.cmd, err = p.params.createProcess(p.scope)
 	if err != nil {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", p.params.Command, err)
 	}
 
 	p.log.Debug("command: '%s'", p.params.Command)
-	p.log.Debug(`starting process "%s"...`, strings.Join(cmd.Args, " "))
+	p.log.Debug(`starting process "%s"...`, strings.Join(p.cmd.Args, " "))
 
 	// Add std listeners when silent is off
 	if !p.params.Silent {
-		p.decorateProcessOutput(cmd)
+		p.decorateProcessOutput(p.cmd)
 	}
 
-	if err = cmd.Start(); err != nil {
-		return fmt.Errorf(`failed to execute command "%s": %s`, strings.Join(cmd.Args, " "), err)
+	if err = p.cmd.Start(); err != nil {
+		return fmt.Errorf(`failed to execute command "%s": %s`, strings.Join(p.cmd.Args, " "), err)
 	}
 
-	go func() {
-		select {
-		case <-p.done:
-			p.log.Debug("received stop signal")
-			if err := shell.KillProcessGroup(cmd); err != nil {
-				p.log.Warn("process killed with error: %s", err)
-			}
-		}
-	}()
-
-	if err := cmd.Wait(); err != nil {
+	if err = p.cmd.Wait(); err != nil {
 		return formatExitError(err)
 	}
 
-	p.log.Debug("done")
 	return nil
 }
 
@@ -72,6 +60,14 @@ func (p *Plugin) decorateProcessOutput(cmd *exec.Cmd) {
 }
 
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
-	p.done <- true
+	if p.cmd == nil {
+		return nil
+	}
+
+	p.log.Debug("received stop signal")
+	if err := shell.KillProcessGroup(p.cmd); err != nil {
+		p.log.Warn("process killed with error: %s", err)
+	}
+
 	return nil
 }

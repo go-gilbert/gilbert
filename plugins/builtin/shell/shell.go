@@ -90,6 +90,5 @@ func NewShellPlugin(scope *scope.Scope, params manifest.RawParams, log logging.L
 		scope:  scope,
 		params: p,
 		log:    log,
-		done:   make(chan bool, 1),
 	}, nil
 }
