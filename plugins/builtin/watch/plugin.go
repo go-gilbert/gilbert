@@ -47,7 +47,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 	// Start file watcher
 	go func() {
 		interval := p.DebounceTime.ToDuration()
-		timer := time.NewTimer(interval) // Debounce timer
+		t := time.NewTimer(interval) // Debounce timer
 
 		for {
 			select {
@@ -64,9 +64,9 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 
 				if !ignored {
 					p.log.Debug("event: %v %s", event.Event(), fPath)
-					timer.Reset(interval)
+					t.Reset(interval)
 				}
-			case <-timer.C:
+			case <-t.C:
 				// Re-start job when timer ends.
 				p.log.Debug("timer ended")
 

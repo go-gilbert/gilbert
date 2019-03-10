@@ -9,7 +9,7 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
-var defaultDebounceTime = manifest.Period(3000)
+var defaultDebounceTime = manifest.Period(500)
 
 // additional ignore list with temporary and hidden files
 var ignoredDevItems = []string{
