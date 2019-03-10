@@ -14,6 +14,8 @@
 
     {{ .Content}}
 <!-- Inject script tag in this template  -->
+    <script src='{{ "/js/highlight.pack.js" | relURL }}'></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     {{if .Params.script}}
      {{ $script := (delimit (slice "scripts" .Params.script) "/")}}
     {{ partial (string $script) .}}

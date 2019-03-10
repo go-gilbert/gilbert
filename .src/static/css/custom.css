@@ -32,3 +32,25 @@
 	animation: logo-anim 1.5s;
 	top: 15px;
 }
+
+pre code {
+	font-style: normal;
+}
+
+.param-optional:after {
+	content: '?';
+	color: blue;
+	font-size: 0.8em;
+	position: relative;
+	top: -8px;
+	left: 2px;
+}
+
+.param-required:after {
+	content: '*';
+	color: red;
+	font-size: 1em;
+	position: relative;
+	top: -2px;
+	left: 2px;
+}
