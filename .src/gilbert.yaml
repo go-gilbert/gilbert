@@ -10,4 +10,5 @@ tasks:
   build:
   - plugin: shell
     params:
+      rawOutput: true
       command: hugo -d ../
