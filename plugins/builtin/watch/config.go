@@ -2,19 +2,20 @@ package watch
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/scope"
-	"path/filepath"
 )
 
 var defaultDebounceTime = manifest.Period(1000)
 
 type params struct {
-	Path         string
-	Ignore       []string
-	DebounceTime manifest.Period
-	Job          *manifest.Job
+	Path         string          `mapstructure:"path"`
+	Ignore       []string        `mapstructure:"ignore"`
+	DebounceTime manifest.Period `mapstructure:"debounceTime"`
+	Job          *manifest.Job   `mapstructure:"run"`
 	rootDir      string
 	blacklist    []string
 }
