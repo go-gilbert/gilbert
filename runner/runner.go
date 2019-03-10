@@ -245,26 +245,31 @@ func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.R
 // parentCtx used to expand task base properties (like description, etc.)
 //
 // subLogger used to create stack of log lines
-func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx *job.RunContext) error {
+func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx *job.RunContext) (err error) {
 	steps := len(task)
 
 	// Set waitgroup and buff channel for async jobs.
-	wg := &sync.WaitGroup{}
+	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
-	asyncErrors := make(chan error, asyncJobsCount)
-	parentCtx.Logger.Debug("%d async jobs in task", asyncJobsCount)
+	if asyncJobsCount > 0 {
+		parentCtx.Logger.Debug("%d async jobs in sub-task", asyncJobsCount)
+		tracker = newAsyncJobTracker(t, parentCtx.Context, asyncJobsCount)
+		go tracker.trackAsyncJobs()
 
-	defer func() {
-		// Wait for unfinished async tasks
-		// and collect results from async jobs
-		wg.Wait()
-		close(asyncErrors)
-		for err := range asyncErrors {
-			if err != nil {
-				parentCtx.Logger.Error("async j returned error: %s", err)
+		defer func() {
+			// Wait for unfinished async tasks
+			// and collect results from async jobs
+			t.subLogger.Log("Waiting for %d async job(s) to complete", asyncJobsCount)
+			if asyncErr := tracker.wait(); asyncErr != nil {
+
+				if err == nil {
+					// Report error only if no previous errors.
+					// P.S - it's okay since all async errors were logged previously
+					err = fmt.Errorf("async job returned error - %s", asyncErr)
+				}
 			}
-		}
-	}()
+		}()
+	}
 
 	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
@@ -272,8 +277,8 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		// sub task label can contain template expressions (e.g. mixin step description)
 		// so we should try to parse it
 		descr := j.FormatDescription()
-		if parsed, err := parentScope.ExpandVariables(descr); err != nil {
-			parentCtx.Logger.Error("description parse error: %s", err)
+		if parsed, perr := parentScope.ExpandVariables(descr); perr != nil {
+			parentCtx.Logger.Error("description parse error: %s", perr)
 		} else {
 			descr = parsed
 		}
@@ -287,18 +292,17 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 
 		ctx := parentCtx.ChildContext()
 		if j.Async {
-			wg.Add(1)
-			ctx.Error = asyncErrors
+			tracker.decorateJobContext(&ctx)
 			go t.handleJob(j, ctx)
 			continue
 		}
 
-		if err := t.startJobAndWait(j, ctx); err != nil {
+		if err = t.startJobAndWait(j, ctx); err != nil {
 			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
 		}
 	}
 
-	return nil
+	return err
 }
 
 func (t *TaskRunner) shouldRunJob(job manifest.Job, ctx *scope.Scope) bool {
