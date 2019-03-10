@@ -47,7 +47,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
 func (p *Plugin) Cancel(ctx *job.RunContext) error {
 	if p.cmd != nil {
 		if err := shell.KillProcessGroup(p.cmd); err != nil {
-			p.log.Warn(err.Error())
+			p.log.Debug(err.Error())
 		}
 	}
 
