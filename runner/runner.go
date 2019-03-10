@@ -66,20 +66,29 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	// Set waitgroup and buff channel for async jobs.
 	wg := &sync.WaitGroup{}
 	asyncJobsCount := task.AsyncJobsCount()
-	asyncErrors := make(chan error, asyncJobsCount)
-	t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
-
-	defer func() {
-		// Wait for unfinished async tasks
-		// and collect results from async jobs
-		wg.Wait()
-		close(asyncErrors)
-		for err := range asyncErrors {
-			if err != nil {
-				t.subLogger.Error("async job returned error: %s", err)
+	var asyncErrors chan error
+	if asyncJobsCount > 0 {
+		asyncErrors = make(chan error, asyncJobsCount)
+		t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
+		go func() {
+			select {
+			case err, ok := <-asyncErrors:
+				if ok && err != nil {
+					t.subLogger.Error("async job returned error: %s", err)
+				}
+			case <-t.context.Done():
+				return
 			}
-		}
-	}()
+		}()
+
+		defer func() {
+			// Wait for unfinished async tasks
+			// and collect results from async jobs
+			t.subLogger.Log("waiting for async jobs to complete")
+			wg.Wait()
+			close(asyncErrors)
+		}()
+	}
 
 	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
@@ -94,10 +103,9 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 			ctx.Error = asyncErrors
 			go t.handleJob(j, ctx)
 			continue
-		} else {
-			err = t.startJobAndWait(j, ctx)
 		}
-		if err != nil {
+
+		if err = t.startJobAndWait(j, ctx); err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
 		}
 	}
@@ -284,7 +292,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 			parentCtx.Logger.Info("- %s", descr)
 		}
 
-		ctx := parentCtx.ForkContext()
+		ctx := parentCtx.ChildContext()
 		if j.Async {
 			wg.Add(1)
 			ctx.Error = asyncErrors
