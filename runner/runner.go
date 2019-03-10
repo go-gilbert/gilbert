@@ -113,26 +113,14 @@ func (t *TaskRunner) RunJob(j manifest.Job, ctx job.RunContext) {
 	go t.handleJob(j, ctx)
 }
 
-func (t *TaskRunner) startJobAsync(job manifest.Job, ctx job.RunContext, errorHandler func(error)) {
-	go t.handleJob(job, ctx)
-	select {
-	case err := <-ctx.Error:
-		errorHandler(err)
-	}
-}
-
 func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx job.RunContext) error {
-	wg := &sync.WaitGroup{}
-	ctx.SetWaitGroup(wg)
-	wg.Add(1)
 	go t.handleJob(job, ctx)
-	wg.Wait()
-
 	// All child jobs (except async jobs) inherit parent job channel,
 	// so we should close channel only if parent job was finished.
 	if !ctx.IsChild() {
-		close(ctx.Error)
+		defer close(ctx.Error)
 	}
+
 	err, ok := <-ctx.Error
 	if !ok {
 		ctx.Logger.Debug("Error: failed to read data from result channel")
