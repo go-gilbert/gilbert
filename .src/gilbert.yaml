@@ -7,3 +7,7 @@ tasks:
   - plugin: shell
     params:
       command: hugo server -D
+  build:
+  - plugin: shell
+    params:
+      command: hugo -d ../
