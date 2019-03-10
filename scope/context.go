@@ -36,8 +36,8 @@ func (v Vars) Clone() (out Vars) {
 	return out
 }
 
-// Context contains a set of globals and variables related to specific job
-type Context struct {
+// Scope contains a set of globals and variables related to specific job
+type Scope struct {
 	Globals     Vars // Globals is set of global variables for all tasks
 	Variables   Vars // Variables is set of variables for specific job
 	processor   ExpressionProcessor
@@ -46,9 +46,9 @@ type Context struct {
 	}
 }
 
-// CreateContext creates a new context
-func CreateContext(projectDirectory string, vars Vars) (c *Context) {
-	c = &Context{
+// CreateScope creates a new context
+func CreateScope(projectDirectory string, vars Vars) (c *Scope) {
+	c = &Scope{
 		Globals: Vars{
 			"PROJECT": projectDirectory,
 			"BUILD":   filepath.Join(projectDirectory, "build"),
@@ -63,25 +63,25 @@ func CreateContext(projectDirectory string, vars Vars) (c *Context) {
 }
 
 // AppendGlobals appends global variables to the context
-func (c *Context) AppendGlobals(globals Vars) *Context {
+func (c *Scope) AppendGlobals(globals Vars) *Scope {
 	c.Globals = c.Globals.Append(globals)
 	return c
 }
 
 // AppendVariables appends local variables to the context
-func (c *Context) AppendVariables(vars Vars) *Context {
+func (c *Scope) AppendVariables(vars Vars) *Scope {
 	c.Variables = c.Variables.Append(vars)
 	return c
 }
 
 // Global returns a global variable value by it's name
-func (c *Context) Global(varName string) (out string, ok bool) {
+func (c *Scope) Global(varName string) (out string, ok bool) {
 	out, ok = c.Globals[varName]
 	return
 }
 
 // Var returns a local variable value by it's name
-func (c *Context) Var(varName string) (isLocal bool, out string, ok bool) {
+func (c *Scope) Var(varName string) (isLocal bool, out string, ok bool) {
 	out, ok = c.Variables[varName]
 	if ok {
 		isLocal = true
@@ -95,14 +95,14 @@ func (c *Context) Var(varName string) (isLocal bool, out string, ok bool) {
 }
 
 // ExpandVariables expands an expression stored inside a passed string
-func (c *Context) ExpandVariables(str string) (out string, err error) {
+func (c *Scope) ExpandVariables(str string) (out string, err error) {
 	return c.processor.ReadString(str)
 }
 
 // Scan does the same as ExpandVariables but with multiple variables and updates the value in pointer with expanded value
 //
 // Useful for bulk mapping of struct fields
-func (c *Context) Scan(vals ...*string) (err error) {
+func (c *Scope) Scan(vals ...*string) (err error) {
 	for _, ptr := range vals {
 		*ptr, err = c.processor.ReadString(*ptr)
 		if err != nil {
@@ -114,7 +114,7 @@ func (c *Context) Scan(vals ...*string) (err error) {
 }
 
 // Environ gets list of OS environment variables with globals
-func (c *Context) Environ() (env []string) {
+func (c *Scope) Environ() (env []string) {
 	env = os.Environ()
 	for k, v := range c.Globals {
 		env = append(env, k+"="+v)

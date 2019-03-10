@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
@@ -27,6 +28,7 @@ var verboseFlag = cli.BoolFlag{
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	app := cli.NewApp()
 	app.Name = "gilbert"
 	app.Usage = "Build automation tool for Go"

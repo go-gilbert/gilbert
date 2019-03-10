@@ -1,10 +1,15 @@
 version: 1.0
 vars:
   buildDir: './build'
-  version: '0.3.1'
+  version: '0.4.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
+  async-test:
+    - plugin: shell
+      async: true
+      params:
+        command: 'foo'
   platform-build:
     - plugin: build
       description: 'build for {{os}} {{arch}}'
@@ -20,6 +25,36 @@ mixins:
           'main.commit': '{{ commit }}'
 
 tasks:
+  test-deadline-async:
+    - plugin: shell
+      deadline: 2000
+      async: true
+      params:
+        command: 'sleep 4'
+    - plugin: shell
+      params:
+        command: 'ping -c 5 localhost'
+  test-async:
+    - mixin: async-test
+    - plugin: shell
+      params:
+        command: 'uname -a'
+    - plugin: shell
+      async: true
+      params:
+        command: 'ping -c 5 localhost'
+  install:
+  - plugin: build
+    params:
+      outputPath: '{{GOPATH}}/bin/gilbert'
+      variables:
+        'main.version': '{{ version }}'
+        'main.commit': '{{ commit }}'
+
+  lint:
+    - plugin: shell
+      params:
+        command: 'gometalinter ./...'
   pre-install:
   - plugin: go-get
     params:
@@ -49,6 +84,7 @@ tasks:
       arch: 'amd64'
       ext: .exe
   - mixin: platform-build
+    if: '[ $(uname -s) == "Darwin" ]'
     vars:
       os: darwin
       arch: 'amd64'

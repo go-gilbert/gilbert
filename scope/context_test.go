@@ -9,7 +9,7 @@ import (
 )
 
 func TestVarsScan(t *testing.T) {
-	c := &Context{
+	c := &Scope{
 		Variables: Vars{
 			"foo": "bar",
 		},
@@ -22,7 +22,7 @@ func TestVarsScan(t *testing.T) {
 }
 
 func TestVarsExtract(t *testing.T) {
-	c := &Context{
+	c := &Scope{
 		Globals: Vars{
 			"GOROOT": "/usr/local/go",
 			"GOPATH": "/home/root/go",

@@ -50,6 +50,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:6938b6ee0351393c55baa54b64352e49a741a1b7b616a7d134d237106812070f"
+  name = "github.com/rjeczalik/notify"
+  packages = ["."]
+  pruneopts = ""
+  revision = "69d839f37b13a8cb7a78366f7633a4071cb43be7"
+  version = "v0.9.2"
+
+[[projects]]
   digest = "1:381bcbeb112a51493d9d998bbba207a529c73dbb49b3fd789e48c63fac1f192c"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
@@ -87,6 +95,7 @@
   input-imports = [
     "github.com/fatih/color",
     "github.com/mitchellh/mapstructure",
+    "github.com/rjeczalik/notify",
     "github.com/stretchr/testify/assert",
     "github.com/urfave/cli",
     "gopkg.in/yaml.v2",

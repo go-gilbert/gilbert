@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -12,22 +13,25 @@ import (
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin"
+	"github.com/x1unix/gilbert/runner/job"
 )
 
 var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")
 
-// TaskRunner is task runner
+// TaskRunner runs tasks
 type TaskRunner struct {
-	Plugins          map[string]plugins.PluginFactory
-	Manifest         *manifest.Manifest
+	plugins          map[string]plugins.PluginFactory
+	manifest         *manifest.Manifest
 	CurrentDirectory string
 	log              logging.Logger
 	subLogger        logging.Logger
+	context          context.Context
+	cancelFn         context.CancelFunc
 }
 
 // PluginByName gets plugin by name
 func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, err error) {
-	p, ok := t.Plugins[pluginName]
+	p, ok := t.plugins[pluginName]
 
 	if !ok {
 		err = fmt.Errorf("plugin '%s' not found", pluginName)
@@ -37,27 +41,181 @@ func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, e
 	return
 }
 
+// Stop stops task runner
+func (t *TaskRunner) Stop() {
+	if t.cancelFn != nil {
+		t.cancelFn()
+	}
+}
+
 // RunTask execute task by name
-func (t *TaskRunner) RunTask(taskName string) error {
-	task, ok := t.TaskByName(taskName)
+func (t *TaskRunner) RunTask(taskName string) (err error) {
+	task, ok := t.manifest.Tasks[taskName]
 	if !ok {
 		return fmt.Errorf("task '%s' doesn't exists", taskName)
 	}
 
 	t.log.Log("Running task '%s'...", taskName)
-	steps := len(*task)
+	steps := len(task)
 
-	for jobIndex, job := range *task {
+	t.context, t.cancelFn = context.WithCancel(context.Background())
+	sl := t.subLogger.SubLogger()
+
+	// Set waitgroup and buff channel for async jobs.
+	var tracker *asyncJobTracker
+	asyncJobsCount := task.AsyncJobsCount()
+	if asyncJobsCount > 0 {
+		t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
+		tracker = newAsyncJobTracker(t.context, t, asyncJobsCount)
+		go tracker.trackAsyncJobs()
+
+		defer func() {
+			// Wait for unfinished async tasks
+			// and collect results from async jobs
+			t.subLogger.Log("Waiting for %d async job(s) to complete", asyncJobsCount)
+			if asyncErr := tracker.wait(); asyncErr != nil {
+				if err == nil {
+					// Report error only if no previous errors.
+					// P.S - it's okay since all async errors were logged previously
+					err = fmt.Errorf("task '%s' returned error in async job: %s", taskName, asyncErr)
+				}
+			}
+		}()
+	}
+
+	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
-		descr := job.FormatDescription()
-		logging.Log.SubLogger().Log("Step %d of %d: %s", currentStep, steps, descr)
-		err := t.runJob(&job, nil, t.subLogger.SubLogger())
-		if err != nil {
+		descr := j.FormatDescription()
+		if steps > 1 {
+			// show total steps count only if more than one step provided
+			t.subLogger.Info("- [%d/%d] %s", currentStep, steps, descr)
+		} else {
+			t.subLogger.Info("- %s", descr)
+		}
+		var err error
+		ctx := job.NewRunContext(t.context, nil, sl)
+
+		if j.Async {
+			tracker.decorateJobContext(ctx)
+			go t.handleJob(j, ctx)
+			continue
+		}
+
+		if err = t.startJobAndWait(j, ctx); err != nil {
 			return fmt.Errorf("task '%s' returned an error on step %d: %v", taskName, currentStep, err)
 		}
 	}
 
-	return nil
+	return err
+}
+
+// RunJob starts job in separate goroutine.
+//
+// Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
+func (t *TaskRunner) RunJob(j manifest.Job, ctx *job.RunContext) {
+	go t.handleJob(j, ctx)
+}
+
+func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx *job.RunContext) error {
+	go t.handleJob(job, ctx)
+	// All child jobs (except async jobs) inherit parent job channel,
+	// so we should close channel only if parent job was finished.
+	if !ctx.IsChild() {
+		defer close(ctx.Error)
+	}
+
+	err, ok := <-ctx.Error
+	if !ok {
+		ctx.Logger.Debug("Error: failed to read data from result channel")
+		return nil
+	}
+
+	return err
+}
+
+// handleJob handles specified job
+func (t *TaskRunner) handleJob(j manifest.Job, ctx *job.RunContext) {
+	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
+		AppendGlobals(t.manifest.Vars).
+		AppendVariables(ctx.RootVars)
+
+	// check if job should be run
+	if !t.shouldRunJob(j, s) {
+		ctx.Logger.Info("step was skipped")
+		ctx.Success()
+		return
+	}
+
+	// Wait if necessary
+	if j.Delay > 0 {
+		ctx.Logger.Debug("Job delay defined, waiting %dms...", j.Delay)
+		time.Sleep(j.Delay.ToDuration())
+	}
+
+	if j.Deadline > 0 {
+		// Add timeout if requested
+		ttl := j.Deadline.ToDuration()
+		ctx.Timeout(ttl)
+	}
+
+	execType := j.Type()
+	switch execType {
+	case manifest.ExecPlugin:
+		t.applyJobPlugin(s, j, ctx)
+	case manifest.ExecMixin:
+		t.execJobWithMixin(j, s, ctx)
+	default:
+		ctx.Result(errNoTaskHandler)
+	}
+}
+
+func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j manifest.Job, ctx *job.RunContext) {
+	factory, err := t.PluginByName(j.PluginName)
+	if err != nil {
+		ctx.Result(err)
+		return
+	}
+
+	plugin, err := factory(s, j.Params, ctx.Logger)
+	if err != nil {
+		ctx.Result(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
+		return
+	}
+
+	// Handle stop event
+	// Event may arrive on SIGKILL or when timeout reached
+	go func() {
+		select {
+		case <-ctx.Context.Done():
+			ctx.Logger.Debug("sent stop signal to '%s' plugin", j.PluginName)
+			ctx.Result(plugin.Cancel(ctx))
+		}
+	}()
+
+	// Call plugin and send result
+	err = plugin.Call(ctx, t)
+	ctx.Result(err)
+}
+
+// execJobWithMixin constructs a task from job with mixin and runs it
+//
+// requires subLogger instance to create cascade logging output
+func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.RunContext) {
+	mx, ok := t.manifest.Mixins[j.MixinName]
+	if !ok {
+		ctx.Result(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
+		return
+	}
+
+	// Create a task from mixin and job params
+	ctx.Logger.Debug("create sub-task from mixin '%s'", j.MixinName)
+	task := mx.ToTask(s.Variables)
+	if err := t.runSubTask(task, s, ctx); err != nil {
+		ctx.Result(err)
+		return
+	}
+
+	ctx.Success()
 }
 
 // runSubTask used to run sub-tasks created by parent job
@@ -65,99 +223,68 @@ func (t *TaskRunner) RunTask(taskName string) error {
 // parentCtx used to expand task base properties (like description, etc.)
 //
 // subLogger used to create stack of log lines
-func (t *TaskRunner) runSubTask(task manifest.Task, subLogger logging.Logger, parentCtx *scope.Context) error {
+func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx *job.RunContext) (err error) {
+	// FIXME: drop copy-paste from RunTask
 	steps := len(task)
 
-	for jobIndex, job := range task {
+	// Set waitgroup and buff channel for async jobs.
+	var tracker *asyncJobTracker
+	asyncJobsCount := task.AsyncJobsCount()
+	if asyncJobsCount > 0 {
+		parentCtx.Logger.Debug("%d async jobs in sub-task", asyncJobsCount)
+		tracker = newAsyncJobTracker(parentCtx.Context, t, asyncJobsCount)
+		go tracker.trackAsyncJobs()
+
+		defer func() {
+			// Wait for unfinished async tasks
+			// and collect results from async jobs
+			t.subLogger.Log("Waiting for %d async job(s) to complete", asyncJobsCount)
+			if asyncErr := tracker.wait(); asyncErr != nil {
+
+				if err == nil {
+					// Report error only if no previous errors.
+					// P.S - it's okay since all async errors were logged previously
+					err = fmt.Errorf("async job returned error - %s", asyncErr)
+				}
+			}
+		}()
+	}
+
+	for jobIndex, j := range task {
 		currentStep := jobIndex + 1
 
 		// sub task label can contain template expressions (e.g. mixin step description)
 		// so we should try to parse it
-		descr := job.FormatDescription()
-		if parsed, err := parentCtx.ExpandVariables(descr); err != nil {
-			subLogger.Error("description parse error: %s", err)
+		descr := j.FormatDescription()
+		if parsed, perr := parentScope.ExpandVariables(descr); perr != nil {
+			parentCtx.Logger.Error("description parse error: %s", perr)
 		} else {
 			descr = parsed
 		}
 
 		if steps > 1 {
 			// show total steps count only if more than one step provided
-			subLogger.Info("- %s [%d/%d]", descr, currentStep, steps)
+			parentCtx.Logger.Info("- [%d/%d] %s", currentStep, steps, descr)
 		} else {
-			subLogger.Info("- %s", descr)
+			parentCtx.Logger.Info("- %s", descr)
 		}
 
-		err := t.runJob(&job, nil, subLogger.SubLogger())
-		if err != nil {
+		ctx := parentCtx.ChildContext()
+		if j.Async {
+			tracker.decorateJobContext(ctx)
+			go t.handleJob(j, ctx)
+			continue
+		}
+
+		if err = t.startJobAndWait(j, ctx); err != nil {
 			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
 		}
 	}
 
-	return nil
+	return err
 }
 
-// runJob execute specified job
-//
-// parentVars are optional but allows to override job variables (used for nested sub-tasks).
-//
-// requires subLogger instance to create cascade log output
-func (t *TaskRunner) runJob(job *manifest.Job, parentVars scope.Vars, subLog logging.Logger) error {
-	ctx := scope.CreateContext(t.CurrentDirectory, job.Vars).
-		AppendGlobals(t.Manifest.Vars).
-		AppendVariables(parentVars)
-
-	// check if job should be run
-	if !t.shouldRunJob(job, ctx) {
-		subLog.Info("Step was skipped")
-		return nil
-	}
-
-	// Wait if necessary
-	if job.Delay > 0 {
-		subLog.Debug("Job delay defined, waiting %dms...", job.Delay)
-		time.Sleep(time.Duration(job.Delay) * time.Millisecond)
-	}
-
-	execType := job.Type()
-	switch execType {
-	case manifest.ExecPlugin:
-		factory, err := t.PluginByName(job.PluginName)
-		if err != nil {
-			return err
-		}
-
-		plugin, err := factory(ctx, job.Params, subLog)
-		if err != nil {
-			return fmt.Errorf("failed to apply plugin '%s': %v", job.PluginName, err)
-		}
-		return plugin.Call()
-	case manifest.ExecMixin:
-		return t.execJobWithMixin(job, ctx, subLog)
-	default:
-		return errNoTaskHandler
-	}
-}
-
-// execJobWithMixin constructs a task from job with mixin and runs it
-//
-// requires subLogger instance to create cascade logging output
-func (t *TaskRunner) execJobWithMixin(j *manifest.Job, ctx *scope.Context, subLog logging.Logger) error {
-	mx, ok := t.Manifest.Mixins[j.MixinName]
-	if !ok {
-		return fmt.Errorf("mixin '%s' doesn't exists", j.MixinName)
-	}
-
-	// Create a task from mixin and job params
-	subLog.Debug("create sub-task from mixin '%s'", j.MixinName)
-	task := mx.ToTask(ctx.Variables)
-	if err := t.runSubTask(task, subLog, ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
+func (t *TaskRunner) shouldRunJob(job manifest.Job, ctx *scope.Scope) bool {
 	condCmd := strings.TrimSpace(job.Condition)
 	if condCmd == "" {
 		return true
@@ -186,22 +313,11 @@ func (t *TaskRunner) shouldRunJob(job *manifest.Job, ctx *scope.Context) bool {
 	return true
 }
 
-// TaskByName returns a task by name
-func (t *TaskRunner) TaskByName(taskName string) (taskPtr *manifest.Task, ok bool) {
-	task, ok := t.Manifest.Tasks[taskName]
-	if !ok {
-		return
-	}
-
-	taskPtr = &task
-	return
-}
-
-// NewTaskRunner creates a new TaskRunner instance
+// NewTaskRunner creates a new task runner instance
 func NewTaskRunner(man *manifest.Manifest, cwd string, writer logging.Logger) *TaskRunner {
 	t := &TaskRunner{
-		Plugins:          builtin.DefaultPlugins,
-		Manifest:         man,
+		plugins:          builtin.DefaultPlugins,
+		manifest:         man,
 		CurrentDirectory: cwd,
 		log:              writer,
 		subLogger:        writer.SubLogger(),

@@ -6,6 +6,9 @@ import (
 	"syscall"
 )
 
+// OsWindows is windows os name
+const OsWindows = "windows"
+
 // FormatExitError extracts process wait error and formats it
 func FormatExitError(err error) error {
 	if exiterr, ok := err.(*exec.ExitError); ok {
@@ -21,9 +24,4 @@ func FormatExitError(err error) error {
 	}
 
 	return fmt.Errorf("process finished with error - %s", err)
-}
-
-// PrepareCommand prepares a command to execute
-func PrepareCommand(cmd string) *exec.Cmd {
-	return exec.Command(shellPath, shellCmdPrefix, wrapCommand(cmd))
 }

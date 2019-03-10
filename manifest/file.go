@@ -13,12 +13,6 @@ const (
 	FileName = "gilbert.yaml"
 )
 
-// Task is a group of jobs
-type Task []Job
-
-// TaskSet is a set of tasks declared in a manifest file
-type TaskSet map[string]Task
-
 // RawParams is raw plugin params
 type RawParams map[string]interface{}
 
@@ -48,7 +42,7 @@ func (m *Manifest) Location() string {
 	return m.location
 }
 
-// UnmarshalManifest parses yaml contents into Manifest structure
+// UnmarshalManifest parses yaml contents into manifest structure
 func UnmarshalManifest(data []byte) (m *Manifest, err error) {
 	m = &Manifest{}
 	err = yaml.Unmarshal(data, m)

@@ -1,6 +1,9 @@
 package shell
 
-import "strings"
+import (
+	"os/exec"
+	"strings"
+)
 
 const (
 	shellWin             = "cmd.exe"
@@ -21,4 +24,8 @@ func (p *Params) preparedCommand() string {
 		return p.Command
 	}
 	return winCodePageFixPrefix + " && " + p.Command
+}
+
+func decorateCommand(cmd *exec.Cmd) {
+	// Nothing to do here
 }

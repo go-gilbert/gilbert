@@ -2,15 +2,14 @@ package shell
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-
 	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
+	"os"
+	"os/exec"
 )
 
 // Params contains params for shell plugin
@@ -39,7 +38,7 @@ type Params struct {
 	Env shell.Environment
 }
 
-func (p *Params) createProcess(ctx *scope.Context) (*exec.Cmd, error) {
+func (p *Params) createProcess(ctx *scope.Scope) (*exec.Cmd, error) {
 	// TODO: check if Shell or ShellExecParam are empty
 	cmdstr, err := ctx.ExpandVariables(p.preparedCommand())
 	if err != nil {
@@ -62,10 +61,13 @@ func (p *Params) createProcess(ctx *scope.Context) (*exec.Cmd, error) {
 		cmd.Env = os.Environ()
 	}
 
+	// Assign process group (for unix only)
+	decorateCommand(cmd)
+
 	return cmd, nil
 }
 
-func newParams(ctx *scope.Context) Params {
+func newParams(ctx *scope.Scope) Params {
 	p := defaultParams()
 	p.WorkDir = ctx.Environment.ProjectDirectory
 
@@ -73,16 +75,16 @@ func newParams(ctx *scope.Context) Params {
 }
 
 // NewShellPlugin creates a new shell plugin instance
-func NewShellPlugin(context *scope.Context, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
-	p := newParams(context)
+func NewShellPlugin(scope *scope.Scope, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+	p := newParams(scope)
 
 	if err := mapstructure.Decode(params, &p); err != nil {
 		return nil, fmt.Errorf("failed to read configuration: %s", err)
 	}
 
 	return &Plugin{
-		context: context,
-		params:  p,
-		log:     log,
+		scope:  scope,
+		params: p,
+		log:    log,
 	}, nil
 }
