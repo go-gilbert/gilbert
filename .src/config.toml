@@ -8,13 +8,17 @@ Paginate = 4
   RSSLink = "/index.xml"
   author = "x1unix" # add your company name
   github = "https://github.com/x1unix/gilbert"
-  twitter = "" # add your twitter profile
+  twitter = "@x1unix" # add your twitter profile
   email = "denis0051@gmail.com"
 
 [[menu.main]]
     name = "Documentation"
     weight = -100
     url = "/docs/"
+[[menu.main]]
+    name = "Source"
+    weight = -100
+    url = "https://github.com/x1unix/gilbert"
 # [[menu.main]]
 #     name = "Blog"
 #     weight = -100
