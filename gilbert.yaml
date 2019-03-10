@@ -42,7 +42,7 @@ tasks:
     - plugin: shell
       async: true
       params:
-        command: 'foo'
+        command: 'ping -c 5 localhost'
   install:
   - plugin: build
     params:
