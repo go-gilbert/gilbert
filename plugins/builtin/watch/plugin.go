@@ -2,12 +2,13 @@ package watch
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/rjeczalik/notify"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
-	"time"
 )
 
 type Plugin struct {
@@ -40,26 +41,28 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
 		p.log.Debug("watcher removed")
 	}()
 
+	// Start file watcher
 	go func() {
 		interval := p.DebounceTime.ToDuration()
-		timer := time.NewTimer(interval)
-		hasEvent := false
+		timer := time.NewTimer(interval) // Debounce timer
+
 		for {
 			select {
 			case event, ok := <-p.events:
 				if !ok {
 					return
 				}
-				hasEvent = true
-				p.log.Info("event: %v %s", event.Event(), event.Path())
+				// Reset timer when new FS event came
+				p.log.Debug("event: %v %s", event.Event(), event.Path())
 				timer.Reset(interval)
 			case <-timer.C:
-				if hasEvent {
-					hasEvent = false
+				// Re-start job when timer ends.
+				p.log.Debug("timer ended")
+				if childCtx.IsAlive() {
 					childCtx.Cancel()
-					childCtx = ctx.ChildContext()
-					go p.invokeJob(childCtx, r)
 				}
+				childCtx = ctx.ChildContext()
+				go p.invokeJob(childCtx, r)
 			}
 		}
 	}()
@@ -70,12 +73,14 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
 }
 
 func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.TaskRunner) {
-	p.log.Debug("job invoke start")
+	ctx.Error = make(chan error, 1)
+	p.log.Debug("tracked job started")
 	r.RunJob(p.Job, ctx)
 	select {
 	case err := <-ctx.Error:
+		p.log.Debug("tracked job finished")
 		if err != nil {
-			p.log.Error("Error: %s", err)
+			p.log.Error("Job failed: %s", err)
 		}
 	}
 }
