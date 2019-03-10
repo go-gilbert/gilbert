@@ -74,7 +74,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		defer func() {
 			// Wait for unfinished async tasks
 			// and collect results from async jobs
-			t.subLogger.Log("waiting for async jobs to complete")
+			t.subLogger.Log("Waiting for %d async job(s) to complete", asyncJobsCount)
 			if asyncErr := tracker.wait(); asyncErr != nil {
 				if err == nil {
 					// Report error only if no previous errors.
