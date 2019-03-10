@@ -48,10 +48,9 @@ func (r *RunContext) ChildContext() RunContext {
 		RootVars: r.RootVars,
 		Logger:   r.Logger.SubLogger(),
 		Context:  ctx,
-		Error:    r.Error,
+		Error:    make(chan error, 1),
 		cancelFn: cancelFn,
 		child:    true,
-		wg:       r.wg,
 	}
 }
 
@@ -87,19 +86,18 @@ func (r *RunContext) Result(err error) {
 		defer func() {
 			if rec := recover(); rec != nil {
 				r.Logger.Error("Bug: failed to return job result, %v", rec)
-				r.wg.Done()
+				if r.wg != nil {
+					r.wg.Done()
+				}
 			}
 		}()
 
-		r.Error <- err
-		if r.wg == nil {
-			r.Logger.Warn("Warning: waitgroup was no defined for job context")
-			return
-		}
-
 		r.finished = true
+		r.Error <- err
 		r.Logger.Debug("result received")
-		r.wg.Done()
+		if r.wg != nil {
+			r.wg.Done()
+		}
 	})
 }
 
