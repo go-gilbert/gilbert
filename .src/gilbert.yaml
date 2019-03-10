@@ -1,0 +1,9 @@
+version: 1.0
+vars:
+  buildDir: './build'
+
+tasks:
+  serve:
+  - plugin: shell
+    params:
+      command: hugo server -D
