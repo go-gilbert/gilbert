@@ -55,9 +55,17 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 				if !ok {
 					return
 				}
-				// Reset timer when new FS event came
-				p.log.Debug("event: %v %s", event.Event(), event.Path())
-				timer.Reset(interval)
+				fPath := event.Path()
+				p.log.Debug("event: %v %s", event.Event(), fPath)
+				ignored, err := p.pathIgnored(fPath)
+				if err != nil {
+					p.log.Error("path ignore check failed: %s", err)
+					continue
+				}
+
+				if !ignored {
+					timer.Reset(interval)
+				}
 			case <-timer.C:
 				// Re-start job when timer ends.
 				p.log.Debug("timer ended")
