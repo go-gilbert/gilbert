@@ -31,5 +31,9 @@ func parseParams(raw manifest.RawParams, scope *scope.Scope) (*params, error) {
 		return nil, err
 	}
 
+	if p.Path == "" {
+		return nil, fmt.Errorf("watch path is undefined, please set path to watch in 'path' parameter")
+	}
+
 	return &p, nil
 }
