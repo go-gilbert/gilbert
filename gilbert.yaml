@@ -1,7 +1,7 @@
 version: 1.0
 vars:
   buildDir: './build'
-  version: '0.3.2'
+  version: '0.4.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
@@ -20,6 +20,19 @@ mixins:
           'main.commit': '{{ commit }}'
 
 tasks:
+  test-async:
+    - plugin: watch
+      async: true
+      params:
+        path: './.tmp/...'
+        job:
+          plugin: shell
+          params:
+            silent: true
+            command: 'sleep 10'
+    - plugin: shell
+      params:
+        command: 'sleep 2'
   install:
   - plugin: build
     params:
