@@ -16,25 +16,19 @@ type PluginFactory func(*scope.Scope, manifest.RawParams, logging.Logger) (Plugi
 // Plugin represents Gilbert's plugin
 type Plugin interface {
 	// Call calls a plugin
-	Call(*job.RunContext, TaskRunner) error
+	Call(*job.RunContext, JobRunner) error
 
 	// Cancel stops plugin execution
 	Cancel(*job.RunContext) error
 }
 
-// TaskRunner runs tasks from manifest file
-type TaskRunner interface {
+// JobRunner runs jobs
+type JobRunner interface {
 	// PluginByName returns plugin constructor
 	PluginByName(pluginName string) (p PluginFactory, err error)
-
-	// RunTask runs task by name
-	RunTask(taskName string) (err error)
 
 	// RunJob starts job in separate goroutine.
 	//
 	// Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
 	RunJob(j *manifest.Job, ctx job.RunContext)
-
-	// Stop halts task runner
-	Stop()
 }

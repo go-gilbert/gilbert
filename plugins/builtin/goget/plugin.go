@@ -23,7 +23,7 @@ type Plugin struct {
 }
 
 // Call implements plugins.plugin
-func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
+func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 	if len(p.params.Packages) == 0 {
 		return errors.New("no packages to install")
 	}

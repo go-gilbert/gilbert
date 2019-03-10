@@ -20,7 +20,7 @@ type Plugin struct {
 }
 
 // Call calls a plugin
-func (p *Plugin) Call(tx *job.RunContext, r plugins.TaskRunner) (err error) {
+func (p *Plugin) Call(tx *job.RunContext, r plugins.JobRunner) (err error) {
 	p.proc, err = p.params.createProcess(p.scope)
 	if err != nil {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", p.params.Command, err)

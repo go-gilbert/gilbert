@@ -20,7 +20,7 @@ type Plugin struct {
 }
 
 // Call calls a plugin
-func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) (err error) {
+func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
 	p.cmd, err = p.params.newCompilerProcess(p.scope)
 	if err != nil {
 		return err

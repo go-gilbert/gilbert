@@ -28,7 +28,7 @@ func newPlugin(s *scope.Scope, p params, l logging.Logger) (*Plugin, error) {
 	}, nil
 }
 
-func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
+func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 	p.events = make(chan notify.EventInfo, 1)
 	if err := notify.Watch(p.Path, p.events, notify.All); err != nil {
 		return fmt.Errorf("failed to initialize watcher for '%s': %s", p.Path, err)
@@ -72,7 +72,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.TaskRunner) error {
 	return nil
 }
 
-func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.TaskRunner) {
+func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.JobRunner) {
 	ctx.Error = make(chan error, 1)
 	p.log.Debug("tracked job started")
 	r.RunJob(p.Job, ctx)
