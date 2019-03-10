@@ -20,6 +20,14 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 ## Installation
 
+### Linux and macOS
+
+```bash
+curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh
+```
+
+### Other OS'es
+
 Release binaries are available on the [releases](https://github.com/x1unix/gilbert/releases) page.
 
 Also, you can install a development version using `go get`:
