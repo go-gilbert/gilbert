@@ -81,7 +81,7 @@ func (p *Plugin) invokeJob(ctx job.RunContext, r plugins.JobRunner) {
 	p.dead.Lock()
 	ctx.Error = make(chan error, 1)
 	p.log.Info("- Starting '%s'", p.Job.FormatDescription())
-	r.RunJob(p.Job, ctx)
+	r.RunJob(*p.Job, ctx)
 	select {
 	case err := <-ctx.Error:
 		p.log.Debug("tracked job finished")

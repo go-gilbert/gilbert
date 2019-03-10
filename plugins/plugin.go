@@ -30,5 +30,5 @@ type JobRunner interface {
 	// RunJob starts job in separate goroutine.
 	//
 	// Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
-	RunJob(j *manifest.Job, ctx job.RunContext)
+	RunJob(j manifest.Job, ctx job.RunContext)
 }
