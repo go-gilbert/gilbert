@@ -6,6 +6,7 @@ import (
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
+	"github.com/x1unix/gilbert/tools/shell"
 	"os"
 	"os/exec"
 	"strings"
@@ -43,10 +44,9 @@ func (p *Plugin) Call(tx *job.RunContext, r plugins.JobRunner) (err error) {
 		select {
 		case <-p.done:
 			p.log.Debug("received stop signal")
-			if err := cmd.Process.Kill(); err != nil {
-				p.log.Warn("kill: %s", err.Error())
+			if err := shell.KillProcessGroup(cmd); err != nil {
+				p.log.Warn("process killed with error: %s", err)
 			}
-			p.log.Debug("Killed")
 		}
 	}()
 

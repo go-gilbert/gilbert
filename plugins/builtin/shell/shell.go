@@ -2,15 +2,16 @@ package shell
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-
 	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
+	"os"
+	"os/exec"
+	"runtime"
+	"syscall"
 )
 
 // Params contains params for shell plugin
@@ -60,6 +61,11 @@ func (p *Params) createProcess(ctx *scope.Scope) (*exec.Cmd, error) {
 		cmd.Env = p.Env.ToArray(os.Environ()...)
 	} else {
 		cmd.Env = os.Environ()
+	}
+
+	// Assign process group (for unix only)
+	if runtime.GOOS != "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}
 
 	return cmd, nil

@@ -1,6 +1,8 @@
 package shell
 
-import "strings"
+import (
+	"strings"
+)
 
 const (
 	shellWin             = "cmd.exe"
