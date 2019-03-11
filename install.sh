@@ -1,7 +1,7 @@
 #!/bin/sh
 PKG_URL="github.com/x1unix/gilbert"
 URL_DOWNLOAD_PREFIX="https://${PKG_URL}/releases/latest/download"
-ISSUE_URL="https://github.com/x1unix/demo-go-plugins/issues"
+ISSUE_URL="https://github.com/x1unix/gilbert/issues"
 NIL="nil"
 GOROOT=${GOROOT:-$(go env GOROOT)}
 GOPATH=${GOPATH:-$(go env GOPATH)}
