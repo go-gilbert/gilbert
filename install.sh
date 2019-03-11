@@ -35,9 +35,9 @@ get_gilbert_name() {
 }
 
 get_arch() {
-    a=$(arch)
+    a=$(uname -m)
     case ${a} in
-    "x86_64")
+    "x86_64" | "amd64" )
         echo "amd64"
         ;;
     "i386" | "i486" | "i586")
