@@ -31,7 +31,7 @@ check_env() {
     fi
 
     if [ "$PATH" != *"${GOPATH}/bin"* ]; then
-        warn "Go binaries directory '${GOPATH}/bin' is not included in PATH variable!\nPlease run 'export PATH=\$PATH:\$GOPATH\bin' after installation"
+        warn "Go binaries directory '${GOPATH}/bin' is not included in PATH variable!\nPlease run 'export PATH=\$PATH:\$GOPATH/bin' after installation"
         PATH="${PATH}:${GOPATH}/bin"
     fi
 }
