@@ -85,12 +85,12 @@ compile_install() {
     echo "-> Installing dependencies..."
     dep ensure
     echo "-> Building..."
-    go build -o ${GOROOT}/bin/gilbert .
+    go build -o ${GOPATH}/bin/gilbert .
     local build_result=$?
     if [ $build_result -ne 0 ]; then
         panic "build failed for $(uname -s) $(uname -s) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
     fi
-    echo "-> Installed to '${GOROOT}/bin/gilbert'"
+    echo "-> Installed to '${GOPATH}/bin/gilbert'"
     printf "${GREEN}Done!${NC}\n"
     exit 0
 }
