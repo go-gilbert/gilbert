@@ -30,7 +30,7 @@ check_env() {
         panic "Git is not installed"
     fi
 
-    if [[ "$PATH" != *"${GOPATH}/bin"* ]]; then
+    if [ "$PATH" != *"${GOPATH}/bin"* ]; then
         warn "Go binaries directory '${GOPATH}/bin' is not included in PATH variable!\nPlease run 'export PATH=\$PATH:\$GOPATH\bin' after installation"
         PATH="${PATH}:${GOPATH}/bin"
     fi
