@@ -1,6 +1,7 @@
 #!/bin/sh
 PKG_URL="github.com/x1unix/gilbert"
 URL_DOWNLOAD_PREFIX="https://${PKG_URL}/releases/latest/download"
+ISSUE_URL="https://github.com/x1unix/demo-go-plugins/issues"
 NIL="nil"
 GOROOT=${GOROOT:-$(go env GOROOT)}
 GOPATH=${GOPATH:-$(go env GOPATH)}
@@ -85,6 +86,10 @@ compile_install() {
     dep ensure
     echo "-> Building..."
     go build -o ${GOROOT}/bin/gilbert .
+    local build_result=$?
+    if [ $build_result -ne 0 ]; then
+        panic "build failed for $(uname -s) $(uname-s) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
+    fi
     echo "-> Installed to '${GOROOT}/bin/gilbert'"
     printf "${GREEN}Done!${NC}\n"
     exit 0
