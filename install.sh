@@ -88,7 +88,7 @@ compile_install() {
     go build -o ${GOROOT}/bin/gilbert .
     local build_result=$?
     if [ $build_result -ne 0 ]; then
-        panic "build failed for $(uname -s) $(uname-s) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
+        panic "build failed for $(uname -s) $(uname -s) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
     fi
     echo "-> Installed to '${GOROOT}/bin/gilbert'"
     printf "${GREEN}Done!${NC}\n"
