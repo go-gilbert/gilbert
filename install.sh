@@ -2,6 +2,8 @@
 PKG_URL="github.com/x1unix/gilbert"
 URL_DOWNLOAD_PREFIX="https://${PKG_URL}/releases/latest/download"
 NIL="nil"
+GOROOT=${GOROOT:-$(go env GOROOT)}
+GOPATH=${GOPATH:-$(go env GOPATH)}
 
 RED="\033[0;31m"
 GREEN='\033[0;32m'
