@@ -103,7 +103,7 @@ main() {
         compile_install
     fi
 
-    local dest_file="${GOROOT}/bin/gilbert"
+    local dest_file="${GOPATH}/bin/gilbert"
     local lnk=${URL_DOWNLOAD_PREFIX}/${gb_name}
     echo "-> Downloading '${lnk}'..."
     wget ${lnk} -O "${dest_file}"
