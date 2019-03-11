@@ -1,7 +1,11 @@
 #!/bin/sh
 PKG_URL="github.com/x1unix/gilbert"
 URL_DOWNLOAD_PREFIX="https://${PKG_URL}/releases/latest/download"
+ISSUE_URL="https://${PKG_URL}/issues"
 NIL="nil"
+GOROOT=${GOROOT:-$(go env GOROOT)}
+GOPATH=${GOPATH:-$(go env GOPATH)}
+PATH="${PATH}"
 
 RED="\033[0;31m"
 GREEN='\033[0;32m'
@@ -21,6 +25,15 @@ panic() {
 check_env() {
     if [ -z "${GOROOT}" ]; then
         panic "GOROOT environment variable is undefined"
+    fi
+
+    if ! type "git"; then
+        panic "Git is not installed"
+    fi
+
+    if [ "$PATH" != *"${GOPATH}/bin"* ]; then
+        warn "Go binaries directory '${GOPATH}/bin' is not included in PATH variable!\nPlease run 'export PATH=\$PATH:\$GOPATH/bin' after installation"
+        PATH="${PATH}:${GOPATH}/bin"
     fi
 }
 
@@ -73,6 +86,10 @@ compile_install() {
     dep ensure
     echo "-> Building..."
     go build -o ${GOROOT}/bin/gilbert .
+    local build_result=$?
+    if [ $build_result -ne 0 ]; then
+        panic "build failed for $(uname -s) $(uname -s) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
+    fi
     echo "-> Installed to '${GOROOT}/bin/gilbert'"
     printf "${GREEN}Done!${NC}\n"
     exit 0
