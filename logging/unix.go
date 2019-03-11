@@ -1,4 +1,4 @@
-// +build !windows
+// +build !windows !js !nacl
 
 package logging
 
