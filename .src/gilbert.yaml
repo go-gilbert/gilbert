@@ -6,6 +6,7 @@ tasks:
   serve:
   - plugin: shell
     params:
+      rawOutput: true
       command: hugo server -D
   build:
   - plugin: shell
