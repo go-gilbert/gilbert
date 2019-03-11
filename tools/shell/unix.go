@@ -1,4 +1,4 @@
-// +build !windows !js !nacl
+// +build !windows,!js,!nacl
 
 package shell
 
