@@ -10,15 +10,21 @@ bref = "This article covers installation of Gilbert on your local machine"
 <h3 class="section-head" id="installation">
     <a href="#installation">Installation</a>
 </h3>
+<h4>Unix-like operating systems</h4>
 <p>
-    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or grab the latest version using `go get`:
+    Run this command to install Gilbert on your system:
+```bash
+curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh
+```
+
+Default installation path is `$GOPATH/bin`
+<h4>Windows</h4>
+<p>
+    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or grab the development version using `go get`:
 </p>
 ```
 go get -u github.com/x1unix/gilbert
 ```
-<p>
-    This command will install <b>Gilbert</b> tool into `$GOPATH/bin`
-</p>
 
 
 <h3 class="section-head" id="project-integration">
@@ -80,7 +86,7 @@ gilbert run build
     <a href="#next">Next steps</a>
 </h3>
 <p>
-    We recommend to read about gilbert file <a href="../schema">syntax</a> documentation for more information.
+    We recommend to read about gilbert <a href="../schema">file syntax documentation</a> and take a look on <a href="../built-in-plugins">built-in plugins</a> for more information.
 </p>
 <p>
     Also, you can find a good use-case example in <a href="https://github.com/x1unix/demo-go-plugins" target="_blank">this demo project</a>.<br />
