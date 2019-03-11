@@ -16,7 +16,8 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://x1unix.github.io/gilbert/docs/quick-start/</guid>
-      <description>Installation   You can download release binaries from releases page or grab the latest version using go get: go get -u github.com/x1unix/gilbert   This command will install Gilbert tool into `$GOPATH/bin` Project integration   Gilbert uses gilbert.yaml file to store list of tasks to run in project folder.  To generate a sample gilbert.yaml file, navigate to your project directory in terminal and run gilbert init command: $ cd $GOPATH/src/github.</description>
+      <description>Installation  Unix-like operating systems  Run this command to install Gilbert on your system:
+curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh  Default installation path is $GOPATH/bin Windows  You can download release binaries from releases page or grab the development version using go get: go get -u github.com/x1unix/gilbert  Project integration   Gilbert uses gilbert.yaml file to store list of tasks to run in project folder.  To generate a sample gilbert.</description>
     </item>
     
     <item>
