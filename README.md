@@ -20,7 +20,9 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 ## Installation
 
-### Linux and macOS
+### Unix-based OS'es
+
+This installation is supported for **Linux**, **FreeBSD** and **MacOS**
 
 ```bash
 curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh

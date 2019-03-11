@@ -1,3 +1,5 @@
+// +build !windows,!js,!nacl
+
 package shell
 
 import (
