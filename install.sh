@@ -4,6 +4,7 @@ URL_DOWNLOAD_PREFIX="https://${PKG_URL}/releases/latest/download"
 NIL="nil"
 GOROOT=${GOROOT:-$(go env GOROOT)}
 GOPATH=${GOPATH:-$(go env GOPATH)}
+PATH="${PATH}"
 
 RED="\033[0;31m"
 GREEN='\033[0;32m'
@@ -23,6 +24,15 @@ panic() {
 check_env() {
     if [ -z "${GOROOT}" ]; then
         panic "GOROOT environment variable is undefined"
+    fi
+
+    if ! type "git"; then
+        panic "Git is not installed"
+    fi
+
+    if [[ "$PATH" != *"${GOPATH}/bin"* ]]; then
+        warn "Go binaries directory '${GOPATH}/bin' is not included in PATH variable!\nPlease run 'export PATH=\$PATH:\$GOPATH\bin' after installation"
+        PATH="${PATH}:${GOPATH}/bin"
     fi
 }
 
