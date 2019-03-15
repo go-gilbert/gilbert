@@ -1,15 +1,13 @@
 version: 1.0
+imports:
+  - ./docs/test_jobs.yaml
+
 vars:
   buildDir: './build'
-  version: '0.4.1'
+  version: '0.5.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
-  async-test:
-    - plugin: shell
-      async: true
-      params:
-        command: 'foo'
   platform-build:
     - plugin: build
       description: 'build for {{os}} {{arch}}'
@@ -23,26 +21,7 @@ mixins:
         variables:
           'main.version': '{{ version }}'
           'main.commit': '{{ commit }}'
-
 tasks:
-  test-deadline-async:
-    - plugin: shell
-      deadline: 2000
-      async: true
-      params:
-        command: 'sleep 4'
-    - plugin: shell
-      params:
-        command: 'ping -c 5 localhost'
-  test-async:
-    - mixin: async-test
-    - plugin: shell
-      params:
-        command: 'uname -a'
-    - plugin: shell
-      async: true
-      params:
-        command: 'ping -c 5 localhost'
   install:
   - plugin: build
     params:
@@ -55,11 +34,13 @@ tasks:
     - plugin: shell
       params:
         command: 'gometalinter ./...'
+
   pre-install:
   - plugin: go-get
     params:
       packages:
         - github.com/stretchr/testify
+
   build:
   - plugin: build
     params:
