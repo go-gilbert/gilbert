@@ -1,0 +1,7 @@
+version: 1.0
+imports:
+  - ./b1.yaml
+  - ./b2.yaml
+tasks:
+  bar:
+    - plugin: shell
