@@ -1,4 +1,6 @@
 version: 1.0
+vars:
+  b: b11
 
 tasks:
   b11:

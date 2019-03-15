@@ -1,7 +1,8 @@
 version: 1.0
 imports:
   - ./b11.yaml
-
+vars:
+  b: b1
 tasks:
   b1:
     - plugin: shell

@@ -37,3 +37,37 @@ type Manifest struct {
 func (m *Manifest) Location() string {
 	return m.location
 }
+
+func (m *Manifest) includeParent(parent *Manifest) {
+	m.Vars = m.Vars.AppendNew(parent.Vars)
+
+	// Copy mixins
+	for k, mx := range parent.Mixins {
+		// Skip if mixin with the same name defined in parent
+		if _, ok := m.Mixins[k]; ok {
+			continue
+		}
+
+		if m.Mixins == nil {
+			m.Mixins = make(Mixins)
+		}
+
+		m.Mixins[k] = make(Mixin, 0, len(mx))
+		copy(mx, m.Mixins[k])
+	}
+
+	// Copy tasks
+	for k, mx := range parent.Tasks {
+		// Skip if mixin with the same name defined in parent
+		if _, ok := m.Tasks[k]; ok {
+			continue
+		}
+
+		if m.Tasks == nil {
+			m.Tasks = make(TaskSet)
+		}
+
+		m.Tasks[k] = make(Task, 0, len(mx))
+		copy(mx, m.Tasks[k])
+	}
+}
