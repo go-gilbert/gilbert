@@ -27,6 +27,8 @@ bref = "This article covers all information about gilbert.yaml syntax and step-b
 </p>
 ```yaml
 version: 1.0
+imports:
+  - ./misc/mixins.yaml
 vars:
   appVersion: 1.0.0
 tasks:
@@ -41,10 +43,13 @@ tasks:
       command: rm -rf ./vendor
 ```
 <p>
-    Here are 4 main sections:
+    <b>Sections:</b>
     <ul>
         <li>
             <code>version</code> - file schema version
+        </li>
+        <li>
+          <code>imports</code> - list of files to import. Imported files should share the same syntax as <code>gilbert.yaml</code> file.
         </li>
         <li>
             <code>vars</code> - list of global variables that available for all tasks and jobs
