@@ -21,6 +21,9 @@
     </nav>
     <nav id="top-nav-extra"> 
       <ul>
+        <li>
+          {{ partial "theme-selector"}}
+        </li>
         {{ range .Site.Menus.extra }} 
           <li>
             <a href="{{ .Permalink }}">{{ .Name }}</a>
