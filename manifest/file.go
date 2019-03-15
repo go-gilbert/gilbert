@@ -1,11 +1,7 @@
 package manifest
 
 import (
-	"fmt"
 	"github.com/x1unix/gilbert/scope"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"path/filepath"
 )
 
 const (
@@ -42,26 +38,38 @@ func (m *Manifest) Location() string {
 	return m.location
 }
 
-// UnmarshalManifest parses yaml contents into manifest structure
-func UnmarshalManifest(data []byte) (m *Manifest, err error) {
-	m = &Manifest{}
-	err = yaml.Unmarshal(data, m)
-	return
-}
+func (m *Manifest) includeParent(parent *Manifest) {
+	m.Vars = m.Vars.AppendNew(parent.Vars)
 
-// FromDirectory loads gilbert.yaml from specified directory
-func FromDirectory(dir string) (m *Manifest, err error) {
-	location := filepath.Join(dir, FileName)
-	data, err := ioutil.ReadFile(location)
-	if err != nil {
-		return nil, fmt.Errorf("manifest file not found (%s) at %s", FileName, dir)
+	if len(parent.Mixins) > 0 {
+		if m.Mixins == nil {
+			m.Mixins = make(Mixins)
+		}
+
+		// Copy mixins
+		for k, mx := range parent.Mixins {
+			// Skip if mixin with the same name defined in parent
+			if _, ok := m.Mixins[k]; ok {
+				continue
+			}
+
+			m.Mixins[k] = append(m.Mixins[k], mx...)
+		}
 	}
 
-	m, err = UnmarshalManifest(data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse manifest file:\n  %v", err)
-	}
+	if len(parent.Tasks) > 0 {
+		if m.Tasks == nil {
+			m.Tasks = make(TaskSet)
+		}
 
-	m.location = location
-	return m, nil
+		// Copy tasks
+		for k, mx := range parent.Tasks {
+			// Skip if mixin with the same name defined in parent
+			if _, ok := m.Tasks[k]; ok {
+				continue
+			}
+
+			m.Tasks[k] = append(m.Tasks[k], mx...)
+		}
+	}
 }

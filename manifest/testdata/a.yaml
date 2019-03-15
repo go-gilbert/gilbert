@@ -1,0 +1,7 @@
+version: 1.0
+imports:
+  - ./include/b.yaml
+  - ./include/c.yaml
+tasks:
+  build:
+    - plugin: build
