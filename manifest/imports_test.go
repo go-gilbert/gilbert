@@ -25,6 +25,9 @@ func TestLoadManifest(t *testing.T) {
 			},
 		},
 		Tasks: TaskSet{
+			"build": Task{
+				Job{PluginName: "build"},
+			},
 			"b": Task{
 				Job{PluginName: "shell"},
 			},
