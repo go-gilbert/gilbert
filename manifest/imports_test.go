@@ -8,7 +8,7 @@ import (
 
 const testFile = "./testdata/a.yaml"
 
-func TestImportResolver_BuildTree(t *testing.T) {
+func TestLoadManifest(t *testing.T) {
 	expected := Manifest{
 		Version:  "1.0",
 		location: "./testdata/a.yaml",
