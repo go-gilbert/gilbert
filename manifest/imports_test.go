@@ -61,10 +61,9 @@ func TestImportResolver_BuildTree(t *testing.T) {
 		},
 	}
 
-	m := testManifest(t)
-	tr := newImportTree(m)
-	err := tr.resolveImports()
+	result, err := LoadManifest(testFile)
 	assert.NoError(t, err)
-	result := tr.result()
-	assert.Equal(t, expected, result)
+	if err == nil {
+		assert.Equal(t, expected, *result)
+	}
 }
