@@ -2,6 +2,10 @@ version: 1.0
 vars:
   b: b11
 
+mixins:
+  b11mx:
+    - plugin: build
+
 tasks:
   b11:
     - plugin: shell

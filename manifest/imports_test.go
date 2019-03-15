@@ -28,13 +28,19 @@ func testManifest(t *testing.T) *Manifest {
 
 func TestImportResolver_BuildTree(t *testing.T) {
 	expected := Manifest{
-		Version: "1.0",
+		Version:  "1.0",
+		location: "./testdata/a.yaml",
 		Imports: []string{
 			"./include/b.yaml",
 			"./include/c.yaml",
 		},
 		Vars: scope.Vars{
 			"b": "b0",
+		},
+		Mixins: Mixins{
+			"b11mx": Mixin{
+				Job{PluginName: "build"},
+			},
 		},
 		Tasks: TaskSet{
 			"b": Task{
