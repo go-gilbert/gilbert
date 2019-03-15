@@ -3,28 +3,10 @@ package manifest
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/x1unix/gilbert/scope"
-	"io/ioutil"
 	"testing"
 )
 
 const testFile = "./testdata/a.yaml"
-
-func testManifest(t *testing.T) *Manifest {
-	data, err := ioutil.ReadFile(testFile)
-	if err != nil {
-		t.Fatalf("test manifest file not found at %s", testFile)
-		return nil
-	}
-
-	m, err := UnmarshalManifest(data)
-	if err != nil {
-		t.Fatalf("failed to parse manifest file:\n  %v", err)
-		return nil
-	}
-
-	m.location = testFile
-	return m
-}
 
 func TestImportResolver_BuildTree(t *testing.T) {
 	expected := Manifest{
