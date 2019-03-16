@@ -12,28 +12,43 @@ type Logger interface {
 	// SubLogger creates a new sublogger
 	SubLogger() Logger
 
-	// Sprintf formats and adds padding to specified message
-	Sprintf(message string, args ...interface{}) string
+	// Formats formats a specified message
+	Format(message string, args ...interface{}) string
 
 	// Log logs a message
-	Log(message string, args ...interface{})
+	Log(args ...interface{})
+
+	// Log formats and logs a message
+	Logf(message string, args ...interface{})
 
 	// Debug writes a debug message
-	Debug(message string, args ...interface{})
+	Debug(args ...interface{})
+
+	// Debugf formats and writes a debug message
+	Debugf(message string, args ...interface{})
 
 	// Warn writes a warning message
-	Warn(message string, args ...interface{})
+	Warn(args ...interface{})
+
+	// Warn formats and writes a warning message
+	Warnf(message string, args ...interface{})
 
 	// Error writes an error message
-	Error(message string, args ...interface{})
+	Error(args ...interface{})
+
+	// Errorf formats and writes an error message
+	Errorf(message string, args ...interface{})
 
 	// Info writes an info level message
-	Info(message string, args ...interface{})
+	Info(args ...interface{})
+
+	// Infof formats and writes an info level message
+	Infof(message string, args ...interface{})
 
 	// Success logs an success message
 	Success(message string, args ...interface{})
 
-	// Write logs a raw slice of bytes
+	// Write implements io.Writer interface
 	Write(data []byte) (int, error)
 
 	// ErrorWrites returns an io.Writer instance.
