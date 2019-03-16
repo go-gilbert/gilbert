@@ -22,7 +22,7 @@ type Plugin interface {
 	Cancel(*job.RunContext) error
 }
 
-// JobRunner runs jobs
+// JobRunner is the the interface that represents a current job caller.
 type JobRunner interface {
 	// PluginByName returns plugin constructor
 	PluginByName(pluginName string) (p PluginFactory, err error)
