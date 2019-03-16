@@ -11,7 +11,7 @@ import (
 type Jar map[string]Plugin
 
 // PluginFactory is plugin constructor
-type PluginFactory func(*scope.Scope, manifest.RawParams, logging.Logger) (Plugin, error)
+type PluginFactory func(*scope.Scope, manifest.RawParams, log.Logger) (Plugin, error)
 
 // Plugin represents Gilbert's plugin
 type Plugin interface {

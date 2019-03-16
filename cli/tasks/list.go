@@ -21,7 +21,7 @@ func ListTasksAction(_ *cli.Context) error {
 	}
 
 	if len(m.Tasks) == 0 {
-		logging.Log.Log("No tasks defined in '%s'", m.Location())
+		log.Log.Log("No tasks defined in '%s'", m.Location())
 		return nil
 	}
 
@@ -30,6 +30,6 @@ func ListTasksAction(_ *cli.Context) error {
 		msg += "\n  - " + k
 	}
 
-	logging.Log.Log(msg)
+	log.Log.Log(msg)
 	return nil
 }

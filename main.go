@@ -80,7 +80,7 @@ func main() {
 }
 
 func bootstrap(_ *cli.Context) error {
-	logging.Log = logging.NewConsoleLogger(logging.DefaultPadding, scope.Debug)
+	log.Log = log.NewConsoleLogger(log.DefaultPadding, scope.Debug)
 	return nil
 }
 

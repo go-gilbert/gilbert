@@ -23,8 +23,8 @@ type TaskRunner struct {
 	plugins          map[string]plugins.PluginFactory
 	manifest         *manifest.Manifest
 	CurrentDirectory string
-	log              logging.Logger
-	subLogger        logging.Logger
+	log              log.Logger
+	subLogger        log.Logger
 	context          context.Context
 	cancelFn         context.CancelFunc
 }
@@ -314,7 +314,7 @@ func (t *TaskRunner) shouldRunJob(job manifest.Job, ctx *scope.Scope) bool {
 }
 
 // NewTaskRunner creates a new task runner instance
-func NewTaskRunner(man *manifest.Manifest, cwd string, writer logging.Logger) *TaskRunner {
+func NewTaskRunner(man *manifest.Manifest, cwd string, writer log.Logger) *TaskRunner {
 	t := &TaskRunner{
 		plugins:          builtin.DefaultPlugins,
 		manifest:         man,

@@ -18,7 +18,7 @@ import (
 type Plugin struct {
 	scope   *scope.Scope
 	params  params
-	log     logging.Logger
+	log     log.Logger
 	stopped bool
 }
 
@@ -95,7 +95,7 @@ func (p *Plugin) Cancel(ctx *job.RunContext) error {
 }
 
 // NewPlugin creates a new plugin instance
-func NewPlugin(scope *scope.Scope, rawParams manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+func NewPlugin(scope *scope.Scope, rawParams manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
 	p := params{}
 	if err := mapstructure.Decode(rawParams, &p); err != nil {
 		return nil, manifest.NewPluginConfigError("build", err)

@@ -16,13 +16,13 @@ import (
 type Plugin struct {
 	params
 	scope  *scope.Scope
-	log    logging.Logger
+	log    log.Logger
 	done   chan bool
 	events chan notify.EventInfo
 	dead   *sync.Mutex
 }
 
-func newPlugin(s *scope.Scope, p params, l logging.Logger) (*Plugin, error) {
+func newPlugin(s *scope.Scope, p params, l log.Logger) (*Plugin, error) {
 	return &Plugin{
 		params: p,
 		scope:  s,

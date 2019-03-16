@@ -16,7 +16,7 @@ import (
 type Plugin struct {
 	scope  *scope.Scope
 	params Params
-	log    logging.Logger
+	log    log.Logger
 	cmd    *exec.Cmd
 }
 

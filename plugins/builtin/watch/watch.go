@@ -8,7 +8,7 @@ import (
 )
 
 // NewWatchPlugin creates a new plugin instance
-func NewWatchPlugin(scope *scope.Scope, rawParams manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+func NewWatchPlugin(scope *scope.Scope, rawParams manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
 	params, err := parseParams(rawParams, scope)
 	if err != nil {
 		return nil, err

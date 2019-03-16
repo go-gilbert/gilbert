@@ -17,7 +17,7 @@ type Plugin struct {
 	scope  *scope.Scope
 	cmd    *exec.Cmd
 	params Params
-	log    logging.Logger
+	log    log.Logger
 }
 
 // Call calls a plugin
