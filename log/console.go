@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+
 	"github.com/fatih/color"
 )
 
@@ -9,13 +10,11 @@ const (
 	padChar = " "
 
 	// padding is default padding for each log level in consoleWriter
-	padding = uint(2)
+	padding = 2
 )
 
 // consoleLogWriter is console logger
-type consoleWriter struct {
-	level int
-}
+type consoleWriter struct{}
 
 func (c *consoleWriter) Write(level int, message string) {
 	switch level {
