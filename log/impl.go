@@ -13,7 +13,15 @@ type errorWriter struct {
 
 // Write writes raw contents
 func (w *errorWriter) Write(d []byte) (int, error) {
-	w.log.Log(LevelError, d)
+	lines := strings.Split(string(d), lineBreak)
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		w.log.Error(line)
+	}
+
 	return len(d), nil
 }
 
