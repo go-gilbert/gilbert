@@ -2,7 +2,7 @@ package shell
 
 import (
 	"fmt"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
@@ -16,7 +16,7 @@ import (
 type Plugin struct {
 	scope  *scope.Scope
 	params Params
-	log    logging.Logger
+	log    log.Logger
 	cmd    *exec.Cmd
 }
 
@@ -27,8 +27,8 @@ func (p *Plugin) Call(tx *job.RunContext, r plugins.JobRunner) (err error) {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", p.params.Command, err)
 	}
 
-	p.log.Debug("command: '%s'", p.params.Command)
-	p.log.Debug(`starting process "%s"...`, strings.Join(p.cmd.Args, " "))
+	p.log.Debugf("command: '%s'", p.params.Command)
+	p.log.Debugf(`starting process "%s"...`, strings.Join(p.cmd.Args, " "))
 
 	// Add std listeners when silent is off
 	if !p.params.Silent {
@@ -67,7 +67,7 @@ func (p *Plugin) Cancel(ctx *job.RunContext) error {
 
 	p.log.Debug("received stop signal")
 	if err := shell.KillProcessGroup(p.cmd); err != nil {
-		p.log.Debug("process killed with error: %s", err)
+		p.log.Debugf("process killed with error: %s", err)
 	}
 
 	return nil

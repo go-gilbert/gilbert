@@ -2,13 +2,13 @@ package scaffold
 
 import (
 	"fmt"
+	"github.com/x1unix/gilbert/log"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/scope"
 	"gopkg.in/yaml.v2"
@@ -46,7 +46,7 @@ func RunScaffoldManifest(c *cli.Context) (err error) {
 		return fmt.Errorf("cannot get current working directory, %s", err)
 	}
 
-	logging.Log.Debug("current working directory is '%s'", cwd)
+	log.Default.Debugf("current working directory is '%s'", cwd)
 	ensureGoPath(cwd)
 
 	out, err := yaml.Marshal(boilerplate)
@@ -60,19 +60,19 @@ func RunScaffoldManifest(c *cli.Context) (err error) {
 		return fmt.Errorf("failed to write '%s': %s", destFile, err)
 	}
 
-	logging.Log.Success("File '%s' successfully created", destFile)
-	logging.Log.Info("Use 'gilbert run build' to build the project")
+	log.Default.Successf("File '%s' successfully created", destFile)
+	log.Default.Info("Use 'gilbert run build' to build the project")
 	return nil
 }
 
 func ensureGoPath(cwd string) {
 	goPath := os.Getenv("GOPATH")
 	if goPath == "" {
-		logging.Log.Warn("Warning: GOPATH environment variable is not defined")
+		log.Default.Warn("Warning: GOPATH environment variable is not defined")
 		return
 	}
 
 	if !strings.Contains(cwd, goPath) {
-		logging.Log.Warn("Current directory is outside GOPATH (%s)", goPath)
+		log.Default.Warnf("Current directory is outside GOPATH (%s)", goPath)
 	}
 }

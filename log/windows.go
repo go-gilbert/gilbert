@@ -1,5 +1,5 @@
 // +build windows
 
-package logging
+package log
 
 const lineBreak = "\r\n"

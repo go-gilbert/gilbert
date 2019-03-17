@@ -1,5 +1,5 @@
 // +build !windows,!js,!nacl
 
-package logging
+package log
 
 const lineBreak = "\n"

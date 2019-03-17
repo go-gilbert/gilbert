@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 )
 
 // ListTasksAction handles 'ls' command
@@ -21,7 +21,7 @@ func ListTasksAction(_ *cli.Context) error {
 	}
 
 	if len(m.Tasks) == 0 {
-		logging.Log.Log("No tasks defined in '%s'", m.Location())
+		log.Default.Logf("No tasks defined in '%s'", m.Location())
 		return nil
 	}
 
@@ -30,6 +30,6 @@ func ListTasksAction(_ *cli.Context) error {
 		msg += "\n  - " + k
 	}
 
-	logging.Log.Log(msg)
+	log.Default.Logf(msg)
 	return nil
 }

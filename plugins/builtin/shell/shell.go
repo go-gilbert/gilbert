@@ -3,7 +3,7 @@ package shell
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
@@ -75,7 +75,7 @@ func newParams(ctx *scope.Scope) Params {
 }
 
 // NewShellPlugin creates a new shell plugin instance
-func NewShellPlugin(scope *scope.Scope, params manifest.RawParams, log logging.Logger) (plugins.Plugin, error) {
+func NewShellPlugin(scope *scope.Scope, params manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
 	p := newParams(scope)
 
 	if err := mapstructure.Decode(params, &p); err != nil {

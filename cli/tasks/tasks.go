@@ -3,7 +3,7 @@ package tasks
 import (
 	"fmt"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/runner"
 	"os"
@@ -50,14 +50,14 @@ func getRunner() (*runner.TaskRunner, error) {
 		return nil, err
 	}
 
-	return runner.NewTaskRunner(m, dir, logging.Log), nil
+	return runner.NewTaskRunner(m, dir, log.Default), nil
 }
 
 func handleShutdown() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	for range c {
-		logging.Log.Log("Shutting down...")
+		log.Default.Log("Shutting down...")
 		r.Stop()
 	}
 }
@@ -68,6 +68,6 @@ func runTask(taskName string) error {
 		return err
 	}
 
-	logging.Log.Success("Task '%s' ran successfully\n", taskName)
+	log.Default.Successf("Task '%s' ran successfully\n", taskName)
 	return nil
 }

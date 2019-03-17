@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/scope"
 )
 
@@ -15,7 +15,7 @@ type RunContext struct { // nolint: maligned
 	finished bool
 
 	// Logger is sub-logger instance for the job
-	Logger logging.Logger
+	Logger log.Logger
 
 	// Context is context.Context instance for current job.
 	Context context.Context
@@ -115,7 +115,7 @@ func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				r.Logger.Error("Bug: failed to return job result, %v", rec)
+				r.Logger.Errorf("Bug: failed to return job result, %v", rec)
 				if r.wg != nil {
 					r.wg.Done()
 				}
@@ -132,7 +132,7 @@ func (r *RunContext) Result(err error) {
 }
 
 // NewRunContext creates a new job context instance
-func NewRunContext(parentCtx context.Context, rootVars scope.Vars, log logging.Logger) *RunContext {
+func NewRunContext(parentCtx context.Context, rootVars scope.Vars, log log.Logger) *RunContext {
 	ctx, cancelFn := context.WithCancel(parentCtx)
 	return &RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1), cancelFn: cancelFn}
 }

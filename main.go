@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli"
 	"github.com/x1unix/gilbert/cli/scaffold"
 	"github.com/x1unix/gilbert/cli/tasks"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/scope"
 )
 
@@ -80,7 +80,12 @@ func main() {
 }
 
 func bootstrap(_ *cli.Context) error {
-	logging.Log = logging.NewConsoleLogger(logging.DefaultPadding, scope.Debug)
+	level := log.LevelInfo
+	if scope.Debug {
+		level = log.LevelDebug
+	}
+
+	log.UseConsoleLogger(level)
 	return nil
 }
 
