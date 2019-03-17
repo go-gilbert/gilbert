@@ -37,7 +37,7 @@ func (c *logger) logf(level int, format string, args ...interface{}) {
 		return
 	}
 
-	c.writer.Write(level, c.formatter.Format(format, args...))
+	c.writer.Write(level, c.formatter.Format(format, args...)+lineBreak)
 }
 
 func (c *logger) SubLogger() Logger {
