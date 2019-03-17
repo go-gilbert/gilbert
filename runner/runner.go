@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/x1unix/gilbert/log"
 	"strings"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
 
-	"github.com/x1unix/gilbert/logging"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin"
 	"github.com/x1unix/gilbert/runner/job"
@@ -55,7 +55,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		return fmt.Errorf("task '%s' doesn't exists", taskName)
 	}
 
-	t.log.Log("Running task '%s'...", taskName)
+	t.log.Logf("Running task '%s'...", taskName)
 	steps := len(task)
 
 	t.context, t.cancelFn = context.WithCancel(context.Background())
@@ -65,14 +65,14 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
-		t.subLogger.Debug("%d async jobs in task", asyncJobsCount)
+		t.subLogger.Debugf("%d async jobs in task", asyncJobsCount)
 		tracker = newAsyncJobTracker(t.context, t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
 			// Wait for unfinished async tasks
 			// and collect results from async jobs
-			t.subLogger.Log("Waiting for %d async job(s) to complete", asyncJobsCount)
+			t.subLogger.Logf("Waiting for %d async job(s) to complete", asyncJobsCount)
 			if asyncErr := tracker.wait(); asyncErr != nil {
 				if err == nil {
 					// Report error only if no previous errors.
@@ -88,9 +88,9 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 		descr := j.FormatDescription()
 		if steps > 1 {
 			// show total steps count only if more than one step provided
-			t.subLogger.Info("- [%d/%d] %s", currentStep, steps, descr)
+			t.subLogger.Infof("- [%d/%d] %s", currentStep, steps, descr)
 		} else {
-			t.subLogger.Info("- %s", descr)
+			t.subLogger.Infof("- %s", descr)
 		}
 		var err error
 		ctx := job.NewRunContext(t.context, nil, sl)
@@ -148,7 +148,7 @@ func (t *TaskRunner) handleJob(j manifest.Job, ctx *job.RunContext) {
 
 	// Wait if necessary
 	if j.Delay > 0 {
-		ctx.Logger.Debug("Job delay defined, waiting %dms...", j.Delay)
+		ctx.Logger.Debugf("Job delay defined, waiting %dms...", j.Delay)
 		time.Sleep(j.Delay.ToDuration())
 	}
 
@@ -187,7 +187,7 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j manifest.Job, ctx *job.Run
 	go func() {
 		select {
 		case <-ctx.Context.Done():
-			ctx.Logger.Debug("sent stop signal to '%s' plugin", j.PluginName)
+			ctx.Logger.Debugf("sent stop signal to '%s' plugin", j.PluginName)
 			ctx.Result(plugin.Cancel(ctx))
 		}
 	}()
@@ -208,7 +208,7 @@ func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.R
 	}
 
 	// Create a task from mixin and job params
-	ctx.Logger.Debug("create sub-task from mixin '%s'", j.MixinName)
+	ctx.Logger.Debugf("create sub-task from mixin '%s'", j.MixinName)
 	task := mx.ToTask(s.Variables)
 	if err := t.runSubTask(task, s, ctx); err != nil {
 		ctx.Result(err)
@@ -231,14 +231,14 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
-		parentCtx.Logger.Debug("%d async jobs in sub-task", asyncJobsCount)
+		parentCtx.Logger.Debugf("%d async jobs in sub-task", asyncJobsCount)
 		tracker = newAsyncJobTracker(parentCtx.Context, t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
 			// Wait for unfinished async tasks
 			// and collect results from async jobs
-			t.subLogger.Log("Waiting for %d async job(s) to complete", asyncJobsCount)
+			t.subLogger.Logf("Waiting for %d async job(s) to complete", asyncJobsCount)
 			if asyncErr := tracker.wait(); asyncErr != nil {
 
 				if err == nil {
@@ -257,16 +257,16 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		// so we should try to parse it
 		descr := j.FormatDescription()
 		if parsed, perr := parentScope.ExpandVariables(descr); perr != nil {
-			parentCtx.Logger.Error("description parse error: %s", perr)
+			parentCtx.Logger.Errorf("description parse error: %s", perr)
 		} else {
 			descr = parsed
 		}
 
 		if steps > 1 {
 			// show total steps count only if more than one step provided
-			parentCtx.Logger.Info("- [%d/%d] %s", currentStep, steps, descr)
+			parentCtx.Logger.Infof("- [%d/%d] %s", currentStep, steps, descr)
 		} else {
-			parentCtx.Logger.Info("- %s", descr)
+			parentCtx.Logger.Infof("- %s", descr)
 		}
 
 		ctx := parentCtx.ChildContext()
@@ -299,7 +299,7 @@ func (t *TaskRunner) shouldRunJob(job manifest.Job, ctx *scope.Scope) bool {
 	}
 	cmd := shell.PrepareCommand(condCmd)
 
-	l.Debug("Assert command: '%s'", condCmd)
+	l.Debugf("Assert command: '%s'", condCmd)
 
 	// Return false if command failed to start or returned bad exit code
 	if err := cmd.Start(); err != nil {

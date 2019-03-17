@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/scope"
 )
 
@@ -115,7 +115,7 @@ func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				r.Logger.Error("Bug: failed to return job result, %v", rec)
+				r.Logger.Errorf("Bug: failed to return job result, %v", rec)
 				if r.wg != nil {
 					r.wg.Done()
 				}

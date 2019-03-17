@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
@@ -75,7 +75,7 @@ func (p *Plugin) getPackage(pkgName string, ctx *job.RunContext) (err error) {
 		}
 	}()
 
-	p.log.Info("Downloading package '%s'", pkgName)
+	p.log.Infof("Downloading package '%s'", pkgName)
 	p.log.Debug(strings.Join(proc.Args, " "))
 	if err := proc.Start(); err != nil {
 		return err

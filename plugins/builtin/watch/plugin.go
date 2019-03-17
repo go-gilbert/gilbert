@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rjeczalik/notify"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
@@ -60,12 +60,12 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 				fPath := event.Path()
 				ignored, err := p.pathIgnored(fPath)
 				if err != nil {
-					p.log.Error("path ignore check failed: %s", err)
+					p.log.Errorf("path ignore check failed: %s", err)
 					continue
 				}
 
 				if !ignored {
-					p.log.Debug("event: %v %s", event.Event(), fPath)
+					p.log.Debugf("event: %v %s", event.Event(), fPath)
 					t.Reset(interval)
 				}
 			case <-t.C:
@@ -81,7 +81,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 		}
 	}()
 
-	p.log.Info("watcher is watching for changes in '%s'", p.Path)
+	p.log.Infof("watcher is watching for changes in '%s'", p.Path)
 	<-p.done
 	return nil
 }
@@ -91,17 +91,17 @@ func (p *Plugin) invokeJob(ctx *job.RunContext, r plugins.JobRunner) {
 	p.dead.Lock()
 	ctx.Error = make(chan error, 1)
 	description := p.Job.FormatDescription()
-	p.log.Info("- Starting '%s'", description)
+	p.log.Infof("- Starting '%s'", description)
 	r.RunJob(*p.Job, ctx)
 	select {
 	case err := <-ctx.Error:
 		p.dead.Unlock()
 		if err != nil {
-			p.log.Error("- '%s' failed: %s", description, err)
+			p.log.Errorf("- '%s' failed: %s", description, err)
 			return
 		}
 
-		p.log.Success("- '%s' finished", description)
+		p.log.Successf("- '%s' finished", description)
 	}
 }
 

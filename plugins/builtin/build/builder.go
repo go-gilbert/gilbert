@@ -2,7 +2,7 @@ package build
 
 import (
 	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"

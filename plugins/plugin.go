@@ -1,7 +1,7 @@
 package plugins
 
 import (
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/x1unix/gilbert/logging"
+	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner/job"
 	"github.com/x1unix/gilbert/scope"
@@ -27,8 +27,8 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
 		return err
 	}
 
-	p.log.Debug("Target: %s %s", p.params.Target.Os, p.params.Target.Arch)
-	p.log.Debug("Command: '%s'", strings.Join(p.cmd.Args, " "))
+	p.log.Debugf("Target: %s %s", p.params.Target.Os, p.params.Target.Arch)
+	p.log.Debugf("Command: '%s'", strings.Join(p.cmd.Args, " "))
 	p.cmd.Stdout = p.log
 	p.cmd.Stderr = p.log.ErrorWriter()
 

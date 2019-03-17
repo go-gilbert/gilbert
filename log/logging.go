@@ -2,10 +2,35 @@ package log
 
 import "io"
 
-var (
-	// Log is a global logger instance
-	Log Logger
+const (
+	// LevelMsg is generic message log level
+	LevelMsg = iota
+
+	// LevelError is errors log level
+	LevelError
+
+	// LevelSuccess is success log level
+	LevelSuccess
+
+	// LevelWarn is warning log level
+	LevelWarn
+
+	// LevelInfo is info message log level
+	LevelInfo
+
+	// LevelDebug is debug messages log level
+	LevelDebug
 )
+
+type Formatter interface {
+	Next() Formatter
+	Format(format string, args ...interface{}) string
+	WrapString(str string) string
+}
+
+type Writer interface {
+	Write(level int, message string)
+}
 
 // Logger is logger interface for logging messages
 type Logger interface {
@@ -13,7 +38,7 @@ type Logger interface {
 	SubLogger() Logger
 
 	// Formats formats a specified message
-	Format(message string, args ...interface{}) string
+	Format(format string, args ...interface{}) string
 
 	// Log logs a message
 	Log(args ...interface{})
@@ -46,7 +71,10 @@ type Logger interface {
 	Infof(message string, args ...interface{})
 
 	// Success logs an success message
-	Success(message string, args ...interface{})
+	Success(args ...interface{})
+
+	// Success formats and logs an success message
+	Successf(message string, args ...interface{})
 
 	// Write implements io.Writer interface
 	Write(data []byte) (int, error)

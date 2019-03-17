@@ -29,7 +29,7 @@ func (t *asyncJobTracker) trackAsyncJobs() {
 	select {
 	case err, ok := <-t.errors:
 		if ok && err != nil {
-			t.runner.subLogger.Error("ERROR: async job returned error: %s", err)
+			t.runner.subLogger.Errorf("ERROR: async job returned error: %s", err)
 		}
 	case <-t.ctx.Done():
 		return
