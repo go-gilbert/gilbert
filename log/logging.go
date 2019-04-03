@@ -32,6 +32,9 @@ type Formatter interface {
 
 	// WrapString wraps log string
 	WrapString(str string) string
+
+	// WrapMultiline wraps multiline string
+	WrapMultiline(str string) (out string)
 }
 
 // Writer is log writer

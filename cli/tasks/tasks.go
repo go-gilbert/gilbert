@@ -15,11 +15,6 @@ var (
 )
 
 func getManifest(dir string) (*manifest.Manifest, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get current working directory, %v", err)
-	}
-
 	return manifest.FromDirectory(dir)
 }
 
