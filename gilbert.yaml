@@ -30,6 +30,17 @@ tasks:
         'main.version': '{{ version }}'
         'main.commit': 'local'
 
+  cover:
+  - plugin: cover
+    params:
+      threshold: 80.0
+      sumBy: 'statements'
+      reportCoverage: true
+      fullReport: true
+      packages:
+        - ./manifest
+        - ./tools
+
   lint:
     - plugin: shell
       params:
@@ -43,6 +54,7 @@ tasks:
 
   build:
   - plugin: build
+    description: 🚢 building project
     params:
       variables:
         'main.version': '{{ version }}'

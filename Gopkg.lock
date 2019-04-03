@@ -2,6 +2,17 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:9058597b266993ad136b22ffd05a53a47afc5c19ce3e4d5a2ed6da19406eead6"
+  name = "github.com/axw/gocov"
+  packages = [
+    ".",
+    "gocovutil",
+  ]
+  pruneopts = ""
+  revision = "3a69a0d2a4ef1f263e2d92b041a69593d6964fe8"
+
+[[projects]]
   digest = "1:0deddd908b6b4b768cfc272c16ee61e7088a60f7fe2f06c547bd3d8e1f8b8e77"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -82,6 +93,14 @@
   revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c902d52616d954c30454d2713ba74e8eeef92736860a1f199f2fb2479fe85fb1"
+  name = "golang.org/x/tools"
+  packages = ["cover"]
+  pruneopts = ""
+  revision = "8a44e74612bcf51f0d4407df3d3a8377cb99c2d8"
+
+[[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -93,11 +112,14 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/axw/gocov",
+    "github.com/axw/gocov/gocovutil",
     "github.com/fatih/color",
     "github.com/mitchellh/mapstructure",
     "github.com/rjeczalik/notify",
     "github.com/stretchr/testify/assert",
     "github.com/urfave/cli",
+    "golang.org/x/tools/cover",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
