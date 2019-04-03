@@ -4,7 +4,7 @@ imports:
 
 vars:
   buildDir: './build'
-  version: '0.5.1'
+  version: '0.5.2'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
@@ -28,7 +28,7 @@ tasks:
       outputPath: '{{GOPATH}}/bin/gilbert'
       variables:
         'main.version': '{{ version }}'
-        'main.commit': '{{ commit }}'
+        'main.commit': 'local'
 
   lint:
     - plugin: shell
