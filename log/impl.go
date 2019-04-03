@@ -3,17 +3,19 @@ package log
 import (
 	"fmt"
 	"io"
-	"strings"
 )
 
 // errorWriter implements io.Writer and uses to write errors from stderr
 type errorWriter struct {
-	log Logger
+	formatter Formatter
+	writer    Writer
 }
 
 // Write writes raw contents
 func (w *errorWriter) Write(d []byte) (int, error) {
-	w.log.Log(LevelError, d)
+	// Trim line break from command line output
+	s := w.formatter.WrapMultiline(string(d))
+	w.writer.Write(LevelError, s)
 	return len(d), nil
 }
 
@@ -101,21 +103,12 @@ func (c *logger) Errorf(format string, args ...interface{}) {
 }
 
 func (c *logger) Write(data []byte) (int, error) {
-	lines := strings.Split(string(data), lineBreak)
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-
-		if !strings.Contains(line, lineBreak) {
-			line += lineBreak
-		}
-		c.writer.Write(LevelMsg, c.formatter.WrapString(line))
-	}
+	lines := c.formatter.WrapMultiline(string(data))
+	c.writer.Write(LevelMsg, lines)
 
 	return len(data), nil
 }
 
 func (c *logger) ErrorWriter() io.Writer {
-	return &errorWriter{log: c}
+	return &errorWriter{writer: c.writer, formatter: c.formatter}
 }
