@@ -19,14 +19,6 @@ type importNode struct {
 	imports  []*importNode
 }
 
-func (i *importNode) mergeWithParent() {
-	if i.parent == nil {
-		return
-	}
-
-	i.parent.manifest.includeParent(i.manifest)
-}
-
 func (i *importNode) mergeChildren() {
 	for _, child := range i.imports {
 		i.manifest.includeParent(child.manifest)

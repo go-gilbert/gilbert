@@ -185,11 +185,9 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j manifest.Job, ctx *job.Run
 	// Handle stop event
 	// Event may arrive on SIGKILL or when timeout reached
 	go func() {
-		select {
-		case <-ctx.Context.Done():
-			ctx.Logger.Debugf("sent stop signal to '%s' plugin", j.PluginName)
-			ctx.Result(plugin.Cancel(ctx))
-		}
+		<-ctx.Context.Done()
+		ctx.Logger.Debugf("sent stop signal to '%s' plugin", j.PluginName)
+		ctx.Result(plugin.Cancel(ctx))
 	}()
 
 	// Call plugin and send result
