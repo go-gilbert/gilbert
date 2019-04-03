@@ -107,6 +107,9 @@ func (c *logger) Write(data []byte) (int, error) {
 			continue
 		}
 
+		if !strings.Contains(line, lineBreak) {
+			line += lineBreak
+		}
 		c.writer.Write(LevelMsg, c.formatter.WrapString(line))
 	}
 
