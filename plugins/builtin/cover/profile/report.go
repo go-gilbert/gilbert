@@ -46,9 +46,9 @@ func (r *Report) CheckCoverage(threshold float64) error {
 func (r *Report) FormatFull() string {
 	b := strings.Builder{}
 	for pkgName, pkg := range r.Packages {
-		_, _ = fmt.Fprintf(&b, "Package '%s' - %.2f%%\n", pkgName, pkg.Percentage())
+		_, _ = fmt.Fprintf(&b, "  Package '%s' - %.2f%%\n", pkgName, pkg.Percentage())
 		for fnName, fn := range pkg.Functions {
-			_, _ = fmt.Fprintf(&b, "  - %s: %.2f%%\n", fnName, fn.Percentage())
+			_, _ = fmt.Fprintf(&b, "    - %s: %.2f%%\n", fnName, fn.Percentage())
 		}
 	}
 

@@ -36,6 +36,7 @@ tasks:
       threshold: 60
       sumBy: 'statements'
       reportCoverage: true
+      fullReport: false
       packages:
         - ./manifest
         - ./tools

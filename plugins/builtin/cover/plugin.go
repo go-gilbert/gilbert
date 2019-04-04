@@ -76,6 +76,7 @@ func (p *plugin) printReport(r *profile.Report) {
 	}
 
 	_, _ = p.log.Write([]byte(str))
+	p.log.Infof("Total coverage: %.2f%%", r.Percentage())
 }
 
 func (p *plugin) clean() {
