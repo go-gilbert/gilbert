@@ -33,10 +33,9 @@ tasks:
   cover:
   - plugin: cover
     params:
-      threshold: 80.0
+      threshold: 60
       sumBy: 'statements'
       reportCoverage: true
-      fullReport: false
       packages:
         - ./manifest
         - ./tools
