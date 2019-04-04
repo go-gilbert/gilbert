@@ -4,7 +4,7 @@ imports:
 
 vars:
   buildDir: './build'
-  version: '0.5.2'
+  version: '0.6.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
@@ -30,6 +30,18 @@ tasks:
         'main.version': '{{ version }}'
         'main.commit': 'local'
 
+  cover:
+  - plugin: cover
+    params:
+      threshold: 60
+      sumBy: 'statements'
+      reportCoverage: true
+      fullReport: false
+      packages:
+        - ./manifest
+        - ./tools
+        - ./plugins/...
+
   lint:
     - plugin: shell
       params:
@@ -43,6 +55,7 @@ tasks:
 
   build:
   - plugin: build
+    description: 🚢 building project
     params:
       variables:
         'main.version': '{{ version }}'

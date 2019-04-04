@@ -91,7 +91,7 @@ func (r *RunContext) Timeout(timeout time.Duration) {
 func (r *RunContext) Cancel() {
 	r.finished = true
 	if r.cancelFn == nil {
-		r.Logger.Error("Bug: context cancel function is nil")
+		r.Logger.Warn("Bug: context cancel function is nil")
 		return
 	}
 
@@ -115,7 +115,7 @@ func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				r.Logger.Errorf("Bug: failed to return job result, %v", rec)
+				r.Logger.Warnf("Bug: failed to return job result, %v", rec)
 				if r.wg != nil {
 					r.wg.Done()
 				}

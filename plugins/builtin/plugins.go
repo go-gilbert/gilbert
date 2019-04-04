@@ -3,6 +3,7 @@ package builtin
 import (
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin/build"
+	"github.com/x1unix/gilbert/plugins/builtin/cover"
 	"github.com/x1unix/gilbert/plugins/builtin/goget"
 	"github.com/x1unix/gilbert/plugins/builtin/shell"
 	"github.com/x1unix/gilbert/plugins/builtin/watch"
@@ -14,4 +15,5 @@ var DefaultPlugins = map[string]plugins.PluginFactory{
 	"shell":  shell.NewShellPlugin,
 	"go-get": goget.NewPlugin,
 	"watch":  watch.NewWatchPlugin,
+	"cover":  cover.NewPlugin,
 }

@@ -65,6 +65,7 @@ func (p *Plugin) Cancel(ctx *job.RunContext) error {
 		return nil
 	}
 
+	// TODO: use exec.CommandContext to kill process
 	p.log.Debug("received stop signal")
 	if err := shell.KillProcessGroup(p.cmd); err != nil {
 		p.log.Debugf("process killed with error: %s", err)
