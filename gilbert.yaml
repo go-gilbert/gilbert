@@ -39,6 +39,7 @@ tasks:
       packages:
         - ./manifest
         - ./tools
+        - ./plugins/...
 
   lint:
     - plugin: shell
