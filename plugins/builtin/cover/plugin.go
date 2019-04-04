@@ -68,11 +68,14 @@ func (p *plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
 
 func (p *plugin) printReport(r *profile.Report) {
 	p.log.Info("Coverage report:")
+	var str string
 	if p.params.FullReport {
-		p.log.Log(r.FormatFull())
+		str = r.FormatFull()
+	} else {
+		str = r.FormatSimple()
 	}
 
-	p.log.Log(r.FormatSimple())
+	_, _ = p.log.Write([]byte(str))
 }
 
 func (p *plugin) clean() {
