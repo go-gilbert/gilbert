@@ -83,12 +83,14 @@ func (p *plugin) clean() {
 		return
 	}
 
+	p.alive = false
 	fname := p.coverFile.Name()
 	if err := os.Remove(fname); err != nil {
 		p.log.Debugf("failed to remove cover file '%s': %s", fname, err)
+		return
 	}
 
-	p.alive = false
+	p.log.Debugf("removed cover file '%s'", fname)
 }
 
 func (p *plugin) createCoverCommand(ctx *job.RunContext) (*exec.Cmd, error) {
