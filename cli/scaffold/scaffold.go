@@ -26,6 +26,19 @@ var boilerplate = manifest.Manifest{
 				PluginName:  "build",
 			},
 		},
+		"cover": manifest.Task{
+			{
+				Description: "Check project coverage",
+				PluginName:  "cover",
+				Params: map[string]interface{}{
+					"threshold":      60.0,
+					"reportCoverage": true,
+					"packages": []string{
+						"./...",
+					},
+				},
+			},
+		},
 		"clean": manifest.Task{
 			{
 				Description: "Remove vendor files",
