@@ -33,6 +33,7 @@ func NewPlugin(scope *scope.Scope, params manifest.RawParams, log log.Logger) (p
 	return &plugin{
 		scope:     scope,
 		params:    p,
+		alive:     true,
 		coverFile: f,
 		log:       log,
 	}, nil

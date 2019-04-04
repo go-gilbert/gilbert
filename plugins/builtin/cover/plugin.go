@@ -23,7 +23,7 @@ type plugin struct {
 }
 
 func (p *plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
-	p.alive = true
+	defer p.clean()
 	cmd, err := p.createCoverCommand(ctx)
 	if err != nil {
 		return err
@@ -75,6 +75,19 @@ func (p *plugin) printReport(r *profile.Report) {
 	p.log.Log(r.FormatSimple())
 }
 
+func (p *plugin) clean() {
+	if !p.alive {
+		return
+	}
+
+	fname := p.coverFile.Name()
+	if err := os.Remove(fname); err != nil {
+		p.log.Debugf("failed to remove cover file '%s': %s", fname, err)
+	}
+
+	p.alive = false
+}
+
 func (p *plugin) createCoverCommand(ctx *job.RunContext) (*exec.Cmd, error) {
 	// pass package names as is, since '-coverpkg' doesn't recognise them in CSV format (go 1.11+)
 	args := make([]string, 0, len(p.params.Packages)+toolArgsPrefixSize)
@@ -96,5 +109,6 @@ func (p *plugin) createCoverCommand(ctx *job.RunContext) (*exec.Cmd, error) {
 }
 
 func (p *plugin) Cancel(ctx *job.RunContext) error {
+	p.clean()
 	return nil
 }
