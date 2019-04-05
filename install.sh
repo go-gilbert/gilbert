@@ -22,16 +22,27 @@ panic() {
     exit 1
 }
 
+contains() {
+    string="$1"
+    substring="$2"
+    if test "${string#*$substring}" != "$string"
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
 check_env() {
     if [ -z "${GOROOT}" ]; then
         panic "GOROOT environment variable is undefined"
     fi
 
-    if ! type "git"; then
+    if ! command -v "git" > /dev/null; then
         panic "Git is not installed"
     fi
 
-    if [ "$PATH" != *"${GOPATH}/bin"* ]; then
+    if ! contains "${PATH}" "${GOPATH}/bin"; then
         warn "Go binaries directory '${GOPATH}/bin' is not included in PATH variable!\nPlease run 'export PATH=\$PATH:\$GOPATH/bin' after installation"
         PATH="${PATH}:${GOPATH}/bin"
     fi
@@ -63,7 +74,7 @@ get_arch() {
 }
 
 compile_install() {
-    if ! type "go"; then
+    if ! command -v "go" > /dev/null; then
         panic "go compiler is not installed"
     fi
 
@@ -71,11 +82,11 @@ compile_install() {
         panic "GOPATH environment variable is undefined"
     fi
 
-    if ! type "dep"; then
+    if ! command -v "dep" > /dev/null; then
         warn "dep is not installed, downloading..."
         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
         local curl_result=$?
-        if [ $curl_result -ne 0 ]; then
+        if [ ${curl_result} -ne 0 ]; then
             panic "failed to install 'dep' (${curl_result})"
         fi
     fi
@@ -87,8 +98,8 @@ compile_install() {
     echo "-> Building..."
     go build -o ${GOPATH}/bin/gilbert .
     local build_result=$?
-    if [ $build_result -ne 0 ]; then
-        panic "build failed for $(uname -s) $(uname -s) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
+    if [ ${build_result} -ne 0 ]; then
+        panic "build failed for $(uname -s) $(uname -m) with error $build_result.\nPlease report the issue on ${ISSUE_URL}"
     fi
     echo "-> Installed to '${GOPATH}/bin/gilbert'"
     printf "${GREEN}Done!${NC}\n"
@@ -106,9 +117,7 @@ main() {
     local dest_file="${GOPATH}/bin/gilbert"
     local lnk=${URL_DOWNLOAD_PREFIX}/${gb_name}
     echo "-> Downloading '${lnk}'..."
-    wget ${lnk} -O "${dest_file}"
-    wget_result=$?
-    if [ $wget_result -ne 0 ]; then
+    if ! curl -sS -o "${dest_file}" ${lnk}; then
         warn "Download failed, trying to compile manually..."
         compile_install
     fi
