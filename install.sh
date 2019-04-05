@@ -117,7 +117,7 @@ main() {
     local dest_file="${GOPATH}/bin/gilbert"
     local lnk=${URL_DOWNLOAD_PREFIX}/${gb_name}
     echo "-> Downloading '${lnk}'..."
-    if ! curl -sS -o "${dest_file}" ${lnk}; then
+    if ! curl -sS -L -o "${dest_file}" ${lnk}; then
         warn "Download failed, trying to compile manually..."
         compile_install
     fi
