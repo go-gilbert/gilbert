@@ -111,6 +111,7 @@ param (
             $InstallationPath = (Join-Path -Path $env:GOPATH -ChildPath "bin")
         } else {
             $InstallationPath = (DefaultInstallationPath)
+            $env:Path += ";$InstallationPath"
             Write-Warning "Go installation not found"
         }
 
