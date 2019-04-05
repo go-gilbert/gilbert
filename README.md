@@ -22,9 +22,7 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 All release binaries are available on the [releases](https://github.com/x1unix/gilbert/releases) page.
 
-### Unix-based OS'es
-
-This installation is supported for **Linux**, **FreeBSD** and **MacOS**
+### Linux, macOS and FreeBSD
 
 ```bash
 curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh
@@ -45,21 +43,3 @@ Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/x1unix/g
 Run `gilbert init` to create a sample `gilbert.yaml` file in your project's directory with basic build task.
 
 To run specific task, use `gilbert run [taskname]`
-
-## Roadmap
-
-- [x] Core 
-  - [x] Task runner
-  - [x] Logging formatting
-  - [x] String and shell expressions
-  - [x] Variables
-- [ ] Built-in plugins
-  - [x] Build
-  - [x] Shell command eval
-  - [ ] Tests
-  - [ ] Package managers integration
-- [ ] Advanced
-  - [x] Scaffolding
-  - [ ] Third-party plugins
-    - [ ] Plugin support
-    - [ ] Windows support
