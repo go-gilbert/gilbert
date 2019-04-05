@@ -15,7 +15,6 @@ param (
         Write-Err "ERROR: $msg`n"
         Write-Err "`nIf you feel that this issue is an installation script failure,`nfeel free to create an issue here: $global:ISSUE_URL`n"
         Throw "Installation Failed"
-        exit 1
     }
 
     Function Write-Err($msg) {
@@ -24,6 +23,7 @@ param (
 
     Function Write-Success($msg) {
         Write-Host $msg -ForegroundColor Green
+        pause
         exit 0
     }
 
@@ -132,7 +132,6 @@ param (
                 if ($quiet -Or (AskBuildPrompt)) {
                     try {
                         TryBuild
-                        exit 0
                     } catch {
                         Panic "Failed to build Gilbert locally, $_"
                     }
