@@ -20,6 +20,8 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 ## Installation
 
+All release binaries are available on the [releases](https://github.com/x1unix/gilbert/releases) page.
+
 ### Unix-based OS'es
 
 This installation is supported for **Linux**, **FreeBSD** and **MacOS**
@@ -28,15 +30,15 @@ This installation is supported for **Linux**, **FreeBSD** and **MacOS**
 curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh
 ```
 
-### Other OS'es
+### Windows
 
-Release binaries are available on the [releases](https://github.com/x1unix/gilbert/releases) page.
+**Powershell**
 
-Also, you can install a development version using `go get`:
-
+```powershell
+Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/x1unix/gilbert/master/install.ps1' -UseBasicParsing).Content
 ```
-go get -u github.com/x1unix/gilbert
-```
+
+**Note**: You should run `Set-ExecutionPolicy Bypass` in PowerShell to be able to execute installation script.
 
 ## Usage
 
