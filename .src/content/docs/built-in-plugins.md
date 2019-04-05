@@ -206,7 +206,7 @@ tasks:
   <span class="param-required"></span> - Required parameter<br />
 </p>
 
-<h3 class="section-head" id="watch-plugin"><a href="#watch-plugin">Cover plugin</a></h3>
+<h3 class="section-head" id="watch-plugin"><a href="#cover-plugin">Cover plugin</a></h3>
 <p>
     Runs package tests and checks package code coverage. Task fails if code coverage is below specified threshold.
 </p>
