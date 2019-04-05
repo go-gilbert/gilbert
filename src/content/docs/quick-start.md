@@ -10,7 +10,7 @@ bref = "This article covers installation of Gilbert on your local machine"
 <h3 class="section-head" id="installation">
     <a href="#installation">Installation</a>
 </h3>
-<h4>Unix-like operating systems</h4>
+<h4>Linux, macOS and FreeBSD</h4>
 <p>
     Run this command to install Gilbert on your system:
 ```bash
@@ -20,11 +20,12 @@ curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh
 Default installation path is `$GOPATH/bin`
 <h4>Windows</h4>
 <p>
-    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or grab the development version using `go get`:
+    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or install using PowerShell script:
 </p>
+```powershell
+Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/x1unix/gilbert/master/install.ps1' -UseBasicParsing).Content
 ```
-go get -u github.com/x1unix/gilbert
-```
+<p><b>Note:</b> You should run <code>Set-ExecutionPolicy Bypass</code> in PowerShell to be able to execute installation script.</p>
 
 
 <h3 class="section-head" id="project-integration">
