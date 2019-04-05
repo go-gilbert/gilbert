@@ -1,0 +1,64 @@
+/** https://themes.gohugo.io/kube/ **/
+
+.x-logo {
+	display: inline-block;
+	background-color: #1c86f2;
+	border-radius: 50%;
+	overflow: hidden;
+	width: 280px;
+	margin-bottom: 32px;
+}
+
+@keyframes logo-anim {
+	0% {
+		opacity: 0;
+		top: 72px;
+	}
+
+	50% {
+		opacity: 1;
+		top: 10px;
+	}
+
+	100% {
+		opacity: 1;
+		top: 15px;
+	}
+}
+
+.x-logo__img {
+	max-width: 256px;
+	position: relative;
+	animation: logo-anim 1.5s;
+	top: 15px;
+}
+
+pre code {
+	font-style: normal;
+}
+
+.param-optional:after {
+	content: '?';
+	color: blue;
+	font-size: 0.8em;
+	position: relative;
+	top: -8px;
+	left: 2px;
+}
+
+.param-required:after {
+	content: '*';
+	color: red;
+	font-size: 1em;
+	position: relative;
+	top: -2px;
+	left: 2px;
+}
+
+#top-brand {
+	background: #1c86f2 !important;
+	overflow: hidden;
+	height: 48px;
+	width: 48px;
+	border-radius: 50%;
+}
