@@ -23,8 +23,6 @@ param (
 
     Function Write-Success($msg) {
         Write-Host $msg -ForegroundColor Green
-        pause
-        exit 0
     }
 
     Function ToolInstalled($name) {
@@ -105,7 +103,6 @@ param (
         }
 
         Write-Success "Gilbert successfully built and installed to '$env:GOPATH\\bin'"
-        exit 0
     }
 
     Function Main {
@@ -123,6 +120,26 @@ param (
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
             Write-Host "Downloading from '$downloadUrl' ..."
             Invoke-WebRequest $downloadUrl -OutFile "$outFile"
+
+            Write-Debug "Download finished ($outFile)"
+            Write-Debug "Installation directory: '$InstallationPath'"
+            if (!(Test-Path -Path "$InstallationPath")) {
+                Write-Debug "Installation directory not exists, creating a new one..."
+                try {
+                    New-Item -Force -ItemType directory -Path "$InstallationPath"
+                } catch {
+                    Panic "Failed to create installation path '$InstallationPath': $_"
+                }
+            }
+
+            try {
+                Write-Debug "Moving downloaded file to destination"
+                Move-Item -Path "$outFile" -Destination $InstallationPath -Force
+            } catch {
+                Panic "Failed to copy file to destination path '$InstallationPath': $_"
+            }
+
+            Write-Success "Gilbert successfully installed to '$InstallationPath'"
         } catch {
             Write-Debug "Dowload failed: $_"
             # If download failed, but user has Go installation
@@ -140,26 +157,6 @@ param (
 
             Panic "Failed to download Gilbert: $_"
         }
-
-        Write-Debug "Download finished ($outFile)"
-        Write-Debug "Installation directory: '$InstallationPath'"
-        if (!(Test-Path -Path "$InstallationPath")) {
-            Write-Debug "Installation directory not exists, creating a new one..."
-            try {
-                New-Item -Force -ItemType directory -Path "$InstallationPath"
-            } catch {
-                Panic "Failed to create installation path '$InstallationPath': $_"
-            }
-        }
-
-        try {
-            Write-Debug "Moving downloaded file to destination"
-            Move-Item -Path "$outFile" -Destination $InstallationPath -Force
-        } catch {
-            Panic "Failed to copy file to destination path '$InstallationPath': $_"
-        }
-
-        Write-Success "Gilbert successfully installed to '$InstallationPath'"
     }
 
     if($PSVersionTable.PSVersion.Major -lt 3){
