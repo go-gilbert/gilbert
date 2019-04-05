@@ -134,7 +134,7 @@ headingSelector: 'h3'
     <p><h3 class="section-head" id="installation">
     <a href="#installation">Installation</a>
 </h3>
-<h4>Unix-like operating systems</h4>
+<h4>Linux, macOS and FreeBSD</h4>
 <p>
     Run this command to install Gilbert on your system:</p>
 
@@ -144,11 +144,13 @@ headingSelector: 'h3'
 <p>Default installation path is <code>$GOPATH/bin</code>
 <h4>Windows</h4>
 <p>
-    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or grab the development version using <code>go get</code>:
+    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or install using PowerShell script:
 </p></p>
 
-<pre><code>go get -u github.com/x1unix/gilbert
+<pre><code class="language-powershell">Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/x1unix/gilbert/master/install.ps1' -UseBasicParsing).Content
 </code></pre>
+
+<p><b>Note:</b> You should run <code>Set-ExecutionPolicy Bypass</code> in PowerShell to be able to execute installation script.</p>
 
 <p><h3 class="section-head" id="project-integration">
     <a href="#project-integration">Project integration</a>
