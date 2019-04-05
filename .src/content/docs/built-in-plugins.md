@@ -205,6 +205,59 @@ tasks:
 <p>
   <span class="param-required"></span> - Required parameter<br />
 </p>
+
+<h3 class="section-head" id="watch-plugin"><a href="#watch-plugin">Cover plugin</a></h3>
+<p>
+    Runs package tests and checks package code coverage. Task fails if code coverage is below specified threshold.
+</p>
+<h4>Configuration sample</h4>
+```
+version: 1.0
+tasks:
+  coverage:
+  - plugin: cover
+    params:
+      threshold: 60.5       # minimal coverage percent
+      reportCoverage: true  # show coverage report in output
+      fullReport: false     # display coverage for each function
+      packages:
+      - ./controllers
+      - ./src/...
+```
+<h4>Configuration params</h4>
+<p>
+	    <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>packages</code></td>
+            <td><i>[]string</i></td>
+            <td>List of packages to check</td>
+        </tr>
+        <tr>
+            <td class="param-required"><code>threshold</code></td>
+            <td><i>double</i></td>
+            <td>Minimal coverage percent</td>
+        </tr>
+        <tr>
+            <td><code>reportCoverage</code></td>
+            <td><i>boolean</i></td>
+            <td>Display coverage summary</td>
+        </tr>
+        <tr>
+            <td><code>fullReport</code></td>
+            <td><i>boolean</i></td>
+            <td>Display coverage for each function in package</td>
+        </tr>
+    </table>
+</p>
+<p>
+  <span class="param-required"></span> - Required parameter<br />
+</p>
+
 <h3 class="section-head" id="go-get-plugin"><a href="#go-get-plugin">Go-Get plugin</a></h3>
 <p>
 	Installs libraries using `go get` tool
