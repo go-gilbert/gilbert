@@ -17,6 +17,10 @@ tasks:
     - plugin: shell
       params:
         command: 'ping -c 5 localhost'
+  win-test-async:
+    - plugin: shell
+      params:
+        command: ping google.com
   test-async:
     - mixin: async-test
     - plugin: shell
