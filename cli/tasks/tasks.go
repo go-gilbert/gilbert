@@ -5,7 +5,9 @@ import (
 	"github.com/urfave/cli"
 	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
+	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner"
+	"github.com/x1unix/gilbert/scope"
 	"os"
 	"os/signal"
 )
@@ -45,7 +47,27 @@ func getRunner() (*runner.TaskRunner, error) {
 		return nil, err
 	}
 
+	if err := importProjectPlugins(m, dir); err != nil {
+		return nil, err
+	}
+
 	return runner.NewTaskRunner(m, dir, log.Default), nil
+}
+
+func importProjectPlugins(m *manifest.Manifest, cwd string) error {
+	s := scope.CreateScope(cwd, m.Vars)
+	for _, uri := range m.Plugins {
+		expanded, err := s.ExpandVariables(uri)
+		if err != nil {
+			return fmt.Errorf("failed to load plugins from manifest, %s", err)
+		}
+
+		if err := plugins.Import(expanded); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func handleShutdown() {

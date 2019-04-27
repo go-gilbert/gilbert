@@ -2,6 +2,9 @@ version: 1.0
 imports:
   - ./docs/test_jobs.yaml
 
+plugins:
+  - file:///{{PROJECT}}/build/lib.dll
+
 vars:
   buildDir: './build'
   version: '0.6.0'

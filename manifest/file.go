@@ -14,6 +14,9 @@ type RawParams map[string]interface{}
 
 // Manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
+	// Plugins is plugins import list
+	Plugins []string `yaml:"plugins"`
+
 	// Version is gilbert file format version
 	Version string `yaml:"version"`
 
