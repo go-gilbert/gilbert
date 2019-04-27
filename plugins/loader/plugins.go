@@ -1,13 +1,14 @@
-package plugins
+package loader
 
 import (
 	"fmt"
 	"github.com/x1unix/gilbert/log"
+	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin"
 	"net/url"
 )
 
-var registry = make(map[string]PluginFactory)
+var registry = make(map[string]plugins.PluginFactory)
 
 func Import(pluginUrl string) error {
 	if err := registerPluginFromUrl(pluginUrl); err != nil {
@@ -18,7 +19,7 @@ func Import(pluginUrl string) error {
 	return nil
 }
 
-func Get(pluginName string) (PluginFactory, error) {
+func Get(pluginName string) (plugins.PluginFactory, error) {
 	if plug, ok := registry[pluginName]; ok {
 		return plug, nil
 	}

@@ -1,4 +1,4 @@
-package plugins
+package loader
 
 import (
 	"net/url"
