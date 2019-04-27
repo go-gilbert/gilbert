@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
+	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -15,8 +17,8 @@ const (
 	pluginNameProc = "GetPluginName"
 )
 
-func wrapPluginDll(fnPtr uintptr) PluginFactory {
-	return func(scope *scope.Scope, params manifest.RawParams, logger log.Logger) (plug Plugin, err error) {
+func wrapPluginDll(fnPtr uintptr) plugins.PluginFactory {
+	return func(scope *scope.Scope, params manifest.RawParams, logger log.Logger) (plug plugins.Plugin, err error) {
 		sPtr := (uintptr)(unsafe.Pointer(scope))
 		pPtr := (uintptr)(unsafe.Pointer(&params))
 		lPtr := (uintptr)(unsafe.Pointer(&logger))
@@ -49,10 +51,13 @@ func getDllPluginName(handle syscall.Handle) (string, error) {
 	return name, nil
 }
 
-func loadLibrary(libPath string) (PluginFactory, string, error) {
+func loadLibrary(libPath string) (plugins.PluginFactory, string, error) {
+	// Remove '\' prefix from URL for Windows
+	libPath = strings.TrimPrefix(libPath, `\`)
+
 	lib, err := syscall.LoadLibrary(libPath)
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("failed to load DLL from '%s' (%s)", libPath, err)
 	}
 
 	plugName, err := getDllPluginName(lib)
