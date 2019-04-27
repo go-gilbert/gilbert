@@ -16,6 +16,10 @@ var (
 	r *runner.TaskRunner
 )
 
+func wrapManifestError(parent error) error {
+	return fmt.Errorf("%s\n\nCheck if 'gilbert.yaml' file exists or has correct syntax and check all import statements", parent)
+}
+
 func getManifest(dir string) (*manifest.Manifest, error) {
 	return manifest.FromDirectory(dir)
 }
@@ -44,11 +48,11 @@ func getRunner() (*runner.TaskRunner, error) {
 
 	m, err := getManifest(dir)
 	if err != nil {
-		return nil, err
+		return nil, wrapManifestError(err)
 	}
 
 	if err := importProjectPlugins(m, dir); err != nil {
-		return nil, err
+		return nil, wrapManifestError(err)
 	}
 
 	return runner.NewTaskRunner(m, dir, log.Default), nil
