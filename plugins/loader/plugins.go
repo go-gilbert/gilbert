@@ -15,7 +15,6 @@ func Import(pluginUrl string) error {
 		return fmt.Errorf("failed to load plugin '%s', %s", pluginUrl, err)
 	}
 
-	log.Default.Debugf("found plugin '%s'", pluginUrl)
 	return nil
 }
 
@@ -51,6 +50,7 @@ func registerPluginFromUrl(pluginUrl string) error {
 		return fmt.Errorf("failed to import plugin: %s", err)
 	}
 
+	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginUrl)
 	registry[pName] = pf
 	return nil
 }
