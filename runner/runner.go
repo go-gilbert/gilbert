@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/x1unix/gilbert/log"
+	"github.com/x1unix/gilbert/plugins/loader"
 	"strings"
 	"time"
 
@@ -31,14 +32,7 @@ type TaskRunner struct {
 
 // PluginByName gets plugin by name
 func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, err error) {
-	p, ok := t.plugins[pluginName]
-
-	if !ok {
-		err = fmt.Errorf("plugin '%s' not found", pluginName)
-		return
-	}
-
-	return
+	return loader.Get(pluginName)
 }
 
 // Stop stops task runner
