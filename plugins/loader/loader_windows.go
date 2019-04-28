@@ -12,6 +12,10 @@ import (
 	"github.com/x1unix/gilbert/scope"
 )
 
+//////////////////////////////////////////////
+// Plugin loader implementation for Windows //
+//////////////////////////////////////////////
+
 const (
 	nArgs              = 5 // scopePtr, paramsPtr, logPtr, resultPtr, errPtr
 	newPluginProc      = "NewPlugin"
