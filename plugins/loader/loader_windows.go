@@ -2,19 +2,21 @@ package loader
 
 import (
 	"fmt"
+	"strings"
+	"syscall"
+	"unsafe"
+
 	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
-	"strings"
-	"syscall"
-	"unsafe"
 )
 
 const (
-	nArgs          = 5 // scopePtr, paramsPtr, logPtr, resultPtr, errPtr
-	newPluginProc  = "NewPlugin"
-	pluginNameProc = "GetPluginName"
+	nArgs              = 5 // scopePtr, paramsPtr, logPtr, resultPtr, errPtr
+	newPluginProc      = "NewPlugin"
+	pluginNameProc     = "GetPluginName"
+	supportsWindowsDLL = false
 )
 
 // wrapPluginDLL creates a plugin factory that wraps arguments for GCO DLL call
@@ -57,6 +59,10 @@ func getDllPluginName(handle syscall.Handle) (string, error) {
 
 // loadLibrary loads plugin DLL library
 func loadLibrary(libPath string) (plugins.PluginFactory, string, error) {
+	if !supportsWindowsDLL {
+		return nil, "", errors.New("plugins are not supported yet on Windows :(")
+	}
+
 	// Remove '\' prefix from URL for Windows
 	libPath = strings.TrimPrefix(libPath, `\`)
 
