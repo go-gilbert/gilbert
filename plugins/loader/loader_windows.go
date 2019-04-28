@@ -17,6 +17,9 @@ const (
 	pluginNameProc = "GetPluginName"
 )
 
+// wrapPluginDLL creates a plugin factory that wraps arguments for GCO DLL call
+//
+// see: https://github.com/x1unix/gilbert-plugin-example/blob/master/win32/bridge.go
 func wrapPluginDll(fnPtr uintptr) plugins.PluginFactory {
 	return func(scope *scope.Scope, params manifest.RawParams, logger log.Logger) (plug plugins.Plugin, err error) {
 		sPtr := (uintptr)(unsafe.Pointer(scope))
@@ -36,6 +39,7 @@ func wrapPluginDll(fnPtr uintptr) plugins.PluginFactory {
 	}
 }
 
+// getDllPluginName calls GetPluginName() procedure from plugin's DLL
 func getDllPluginName(handle syscall.Handle) (string, error) {
 	var name string
 	fnPtr, err := syscall.GetProcAddress(handle, pluginNameProc)
@@ -51,6 +55,7 @@ func getDllPluginName(handle syscall.Handle) (string, error) {
 	return name, nil
 }
 
+// loadLibrary loads plugin DLL library
 func loadLibrary(libPath string) (plugins.PluginFactory, string, error) {
 	// Remove '\' prefix from URL for Windows
 	libPath = strings.TrimPrefix(libPath, `\`)
