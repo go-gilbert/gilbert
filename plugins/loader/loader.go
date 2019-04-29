@@ -1,6 +1,6 @@
 // +build !windows,!js,!nacl
 
-package plugins
+package loader
 
 import (
 	"fmt"
@@ -17,7 +17,8 @@ func badSymbolTypeErr(symName string, expected, got interface{}) error {
 	return fmt.Errorf("invalid %s() symbol signature (want %T, but got %T)", symName, expected, got)
 }
 
-func loadLibrary(libPath string) (sdk.PluginFactory, string, error) {
+// LoadLibrary loads library from provided source
+func LoadLibrary(libPath string) (sdk.PluginFactory, string, error) {
 	handle, err := plugin.Open(libPath)
 
 	if err != nil {
