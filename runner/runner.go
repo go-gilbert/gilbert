@@ -3,12 +3,11 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/x1unix/gilbert/plugins"
 	"strings"
 	"time"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/x1unix/gilbert/plugins/loader"
-
 	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
@@ -32,7 +31,7 @@ type TaskRunner struct {
 
 // PluginByName gets plugin by name
 func (t *TaskRunner) PluginByName(pluginName string) (p sdk.PluginFactory, err error) {
-	return loader.Get(pluginName)
+	return plugins.Get(pluginName)
 }
 
 // Stop stops task runner

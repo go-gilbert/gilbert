@@ -5,7 +5,7 @@ import (
 	"github.com/urfave/cli"
 	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins/loader"
+	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/runner"
 	"github.com/x1unix/gilbert/scope"
 	"os"
@@ -66,7 +66,7 @@ func importProjectPlugins(m *manifest.Manifest, cwd string) error {
 			return fmt.Errorf("failed to load plugins from manifest, %s", err)
 		}
 
-		if err := loader.Import(expanded); err != nil {
+		if err := plugins.Import(expanded); err != nil {
 			return err
 		}
 	}

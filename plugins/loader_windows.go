@@ -1,4 +1,4 @@
-package loader
+package plugins
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/scope"
 )
 
@@ -26,8 +25,8 @@ const (
 // wrapPluginDLL creates a plugin factory that wraps arguments for GCO DLL call
 //
 // see: https://github.com/x1unix/gilbert-plugin-example/blob/master/win32/bridge.go
-func wrapPluginDll(fnPtr uintptr) plugins.PluginFactory {
-	return func(scope *scope.Scope, params manifest.RawParams, logger log.Logger) (plug plugins.Plugin, err error) {
+func wrapPluginDll(fnPtr uintptr) PluginFactory {
+	return func(scope *scope.Scope, params manifest.RawParams, logger log.Logger) (plug Plugin, err error) {
 		sPtr := (uintptr)(unsafe.Pointer(scope))
 		pPtr := (uintptr)(unsafe.Pointer(&params))
 		lPtr := (uintptr)(unsafe.Pointer(&logger))
@@ -62,7 +61,7 @@ func getDllPluginName(handle syscall.Handle) (string, error) {
 }
 
 // loadLibrary loads plugin DLL library
-func loadLibrary(libPath string) (plugins.PluginFactory, string, error) {
+func loadLibrary(libPath string) (PluginFactory, string, error) {
 	if !supportsWindowsDLL {
 		return nil, "", errors.New("plugins are not supported yet on Windows :(")
 	}

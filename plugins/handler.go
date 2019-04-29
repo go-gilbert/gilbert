@@ -1,4 +1,4 @@
-package loader
+package plugins
 
 import (
 	"github.com/go-gilbert/gilbert-sdk"

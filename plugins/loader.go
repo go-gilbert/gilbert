@@ -1,6 +1,6 @@
 // +build !windows,!js,!nacl
 
-package loader
+package plugins
 
 import (
 	"fmt"
