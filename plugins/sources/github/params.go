@@ -33,6 +33,12 @@ var (
 	errBadUrl = errors.New("bad GitHub repo path format (expected: 'github.com/owner/repo_name')")
 )
 
+type downloadContext struct {
+	ghClient   *github.Client
+	httpClient *http.Client
+	pkg        packageQuery
+}
+
 type packageQuery struct {
 	owner    string
 	repo     string
@@ -61,38 +67,41 @@ func getHttpClient(ctx context.Context, uri *url.URL) *http.Client {
 	return &http.Client{}
 }
 
-func readUrl(ctx context.Context, uri *url.URL) (client *github.Client, pkg packageQuery, err error) {
+func readUrl(ctx context.Context, uri *url.URL) (*downloadContext, error) {
 	if uri.Host == "" {
-		return nil, pkg, errNoHost
+		return nil, errNoHost
 	}
 
 	// Trim slashes around package path and split path
 	pkgPath := strings.Split(strings.Trim(uri.Path, pathDelimiter), pathDelimiter)
 	if len(pkgPath) < pkgPathSize {
-		return nil, pkg, errBadUrl
+		return nil, errBadUrl
 	}
 
-	httpClient := getHttpClient(ctx, uri)
+	dc := downloadContext{
+		httpClient: getHttpClient(ctx, uri),
+	}
+
+	var err error
 	if uri.Host != defaultDomain {
 		// Handle enterprise url if used non-default domain
 		var ghUrl string
-		ghUrl, pkg = parseEnterpriseUrl(uri, pkgPath)
-
-		client, err = github.NewEnterpriseClient(ghUrl, ghUrl, httpClient)
+		ghUrl, dc.pkg = parseEnterpriseUrl(uri, pkgPath)
+		dc.ghClient, err = github.NewEnterpriseClient(ghUrl, ghUrl, dc.httpClient)
 	} else {
-		pkg = parsePkgPath(pkgPath)
-		client = github.NewClient(httpClient)
+		dc.pkg = parsePkgPath(pkgPath)
+		dc.ghClient = github.NewClient(dc.httpClient)
 	}
 
-	pkg.location = path.Join(uri.Hostname(), uri.Path)
+	dc.pkg.location = path.Join(uri.Hostname(), uri.Path)
 
 	if ver := uri.Query().Get(versionParam); ver != "" {
-		pkg.version = ver
+		dc.pkg.version = ver
 	} else {
-		pkg.version = latestVersion
+		dc.pkg.version = latestVersion
 	}
 
-	return client, pkg, err
+	return &dc, err
 }
 
 func parsePkgPath(pkgPath []string) packageQuery {
