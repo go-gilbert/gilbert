@@ -3,7 +3,7 @@ package plugins
 import (
 	"context"
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/plugins/github"
+	"github.com/go-gilbert/gilbert/plugins/sources/github"
 	"net/url"
 	"path/filepath"
 )
