@@ -30,6 +30,7 @@ install:
   - set Path=c:\go\bin;c:\gopath\bin;%Path%
   - go version
   - go env
+  - go mod tidy
 
 build: false
 deploy: false
