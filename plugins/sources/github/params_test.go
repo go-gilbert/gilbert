@@ -2,11 +2,8 @@ package github
 
 import (
 	"context"
-	"net/http"
 	"net/url"
-	"reflect"
 	"testing"
-	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
@@ -34,8 +31,10 @@ func TestReadUrl(t *testing.T) {
 			url:  "github://github.com/foo/bar",
 			expected: expected{
 				pkg: packageQuery{
-					owner: "foo",
-					repo:  "bar",
+					owner:    "foo",
+					repo:     "bar",
+					version:  "latest",
+					location: "github.com/foo/bar/latest",
 				},
 			},
 		},
@@ -55,9 +54,10 @@ func TestReadUrl(t *testing.T) {
 			expected: expected{
 				token: testToken,
 				pkg: packageQuery{
-					owner:   "foo",
-					repo:    "bar",
-					version: "v1.0",
+					owner:    "foo",
+					repo:     "bar",
+					version:  "v1.0",
+					location: "github.com/foo/bar/v1.0",
 				},
 			},
 		},
@@ -68,9 +68,10 @@ func TestReadUrl(t *testing.T) {
 				ghUrl: "https://github.example.com:8888/",
 				token: testToken,
 				pkg: packageQuery{
-					owner:   "foo",
-					repo:    "bar",
-					version: "v1.0",
+					owner:    "foo",
+					repo:     "bar",
+					version:  "v1.0",
+					location: "github.example.com/foo/bar/v1.0",
 				},
 			},
 		},
@@ -81,9 +82,10 @@ func TestReadUrl(t *testing.T) {
 				ghUrl: "http://github.example.com/service/",
 				token: testToken,
 				pkg: packageQuery{
-					owner:   "foo",
-					repo:    "bar",
-					version: "v1.0",
+					owner:    "foo",
+					repo:     "bar",
+					version:  "v1.0",
+					location: "github.example.com/service/foo/bar/v1.0",
 				},
 			},
 		},
@@ -93,8 +95,10 @@ func TestReadUrl(t *testing.T) {
 			expected: expected{
 				ghUrl: "https://github.example.com/",
 				pkg: packageQuery{
-					owner: "foo",
-					repo:  "bar",
+					owner:    "foo",
+					repo:     "bar",
+					version:  "latest",
+					location: "github.example.com/foo/bar/latest",
 				},
 			},
 		},
@@ -117,7 +121,7 @@ func TestReadUrl(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client, pkg, err := readUrl(ctx, uri)
+			dc, err := readUrl(ctx, uri)
 			if c.err != "" {
 				assert.EqualError(t, err, c.err)
 				return
@@ -125,19 +129,19 @@ func TestReadUrl(t *testing.T) {
 
 			assert.NoError(t, err)
 			if c.expected.ghUrl != "" {
-				gotUrl := client.BaseURL.String()
+				gotUrl := dc.ghClient.BaseURL.String()
 				assert.Equal(t, c.expected.ghUrl, gotUrl)
 			}
 
 			// token check
 			if c.expected.token != "" {
 				// dirty hack to extract http client from gh client
-				clientPtr := reflect.ValueOf(client)
-				r := reflect.Indirect(clientPtr)
-				cf := r.FieldByName("client")
-				fieldPtr := (**http.Client)(unsafe.Pointer(cf.UnsafeAddr()))
+				//clientPtr := reflect.ValueOf(dc.ghClient)
+				//r := reflect.Indirect(clientPtr)
+				//cf := r.FieldByName("client")
+				//fieldPtr := (**http.Client)(unsafe.Pointer(cf.UnsafeAddr()))
 
-				httpClient := *fieldPtr
+				httpClient := dc.httpClient
 				if httpClient.Transport == nil {
 					t.Fatalf("token storage is nil but token was expected")
 				}
@@ -153,7 +157,7 @@ func TestReadUrl(t *testing.T) {
 				assert.Equal(t, c.expected.token, tkn.AccessToken)
 			}
 
-			assert.Equal(t, c.expected.pkg, pkg)
+			assert.Equal(t, c.expected.pkg, dc.pkg)
 		})
 	}
 }

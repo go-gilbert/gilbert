@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-gilbert/gilbert/plugins/support"
-	"github.com/go-gilbert/gilbert/storage"
 	"net/http"
 	"net/url"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/go-gilbert/gilbert/plugins/support"
 
 	"golang.org/x/oauth2"
 
@@ -26,6 +27,7 @@ const (
 	protocolParam   = "protocol"
 	versionParam    = "version"
 	tokenParam      = "token"
+	providerName    = "github"
 )
 
 var (
@@ -50,8 +52,8 @@ func (p *packageQuery) fileName() string {
 	return fmt.Sprintf("%s_%s-%s.%s", p.repo, runtime.GOOS, runtime.GOARCH, support.PluginExtension())
 }
 
-func (p *packageQuery) directory() (string, error) {
-	return storage.EnsurePath(storage.Plugins, p.location)
+func (p *packageQuery) directory() string {
+	return filepath.Join(providerName, url.PathEscape(p.location))
 }
 
 func getHttpClient(ctx context.Context, uri *url.URL) *http.Client {
@@ -93,14 +95,13 @@ func readUrl(ctx context.Context, uri *url.URL) (*downloadContext, error) {
 		dc.ghClient = github.NewClient(dc.httpClient)
 	}
 
-	dc.pkg.location = path.Join(uri.Hostname(), uri.Path)
-
 	if ver := uri.Query().Get(versionParam); ver != "" {
 		dc.pkg.version = ver
 	} else {
 		dc.pkg.version = latestVersion
 	}
 
+	dc.pkg.location = path.Join(uri.Hostname(), uri.Path, dc.pkg.version)
 	return &dc, err
 }
 

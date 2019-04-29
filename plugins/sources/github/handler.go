@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/go-gilbert/gilbert/storage"
 
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
@@ -23,7 +26,7 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 		return nil, "", err
 	}
 
-	dir, err := dc.pkg.directory()
+	dir, err := storage.Path(storage.Plugins, dc.pkg.directory())
 	if err != nil {
 		return nil, "", err
 	}
@@ -35,6 +38,11 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 	}
 
 	if !exists {
+		log.Default.Debugf("github: init plugin directory: '%s'", dir)
+		if err = os.MkdirAll(dir, 0644); err != nil {
+			return nil, "", err
+		}
+
 		asset, err := getPluginRelease(ctx, dc.ghClient, dc.pkg)
 		if err != nil {
 			return nil, "", err
@@ -45,7 +53,7 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 			return nil, "", errors.New("missing asset download URL")
 		}
 
-		log.Default.Debugf("Downloading plugin from '%s'...", assetUrl)
+		log.Default.Debugf("github: downloading plugin from '%s'...", assetUrl)
 		if err := web.ProgressDownloadFile(dc.httpClient, assetUrl, pluginPath); err != nil {
 			return nil, "", err
 		}
@@ -68,7 +76,7 @@ func getPluginRelease(ctx context.Context, client *github.Client, pkg packageQue
 	}
 
 	assetName := pkg.fileName()
-	log.Default.Debugf("Trying to find release asset '%s'", assetName)
+	log.Default.Debugf("github: trying to find release asset '%s'", assetName)
 	return findReleaseAsset(assetName, rel.Assets)
 }
 
