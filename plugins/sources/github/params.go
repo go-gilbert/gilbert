@@ -2,6 +2,8 @@ package github
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -53,7 +55,9 @@ func (p *packageQuery) fileName() string {
 }
 
 func (p *packageQuery) directory() string {
-	return filepath.Join(providerName, url.PathEscape(p.location))
+	hasher := md5.New()
+	hasher.Write([]byte(p.location))
+	return filepath.Join(providerName, hex.EncodeToString(hasher.Sum(nil)))
 }
 
 func getHttpClient(ctx context.Context, uri *url.URL) *http.Client {
