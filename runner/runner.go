@@ -12,7 +12,6 @@ import (
 	"github.com/go-gilbert/gilbert/scope"
 	"github.com/go-gilbert/gilbert/tools/shell"
 
-	"github.com/go-gilbert/gilbert/plugins/builtin"
 	"github.com/go-gilbert/gilbert/runner/job"
 )
 
@@ -20,7 +19,6 @@ var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task h
 
 // TaskRunner runs tasks
 type TaskRunner struct {
-	plugins          map[string]sdk.PluginFactory
 	manifest         *manifest.Manifest
 	CurrentDirectory string
 	log              sdk.Logger
@@ -315,7 +313,6 @@ func (t *TaskRunner) shouldRunJob(job sdk.Job, scp sdk.ScopeAccessor) bool {
 // NewTaskRunner creates a new task runner instance
 func NewTaskRunner(man *manifest.Manifest, cwd string, writer sdk.Logger) *TaskRunner {
 	t := &TaskRunner{
-		plugins:          builtin.DefaultPlugins,
 		manifest:         man,
 		CurrentDirectory: cwd,
 		log:              writer,
