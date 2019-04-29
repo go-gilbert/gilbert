@@ -29,6 +29,11 @@ type TaskRunner struct {
 	cancelFn         context.CancelFunc
 }
 
+func (t *TaskRunner) SetContext(ctx context.Context, fn context.CancelFunc) {
+	t.context = ctx
+	t.cancelFn = fn
+}
+
 // PluginByName gets plugin by name
 func (t *TaskRunner) PluginByName(pluginName string) (p sdk.PluginFactory, err error) {
 	return plugins.Get(pluginName)
@@ -51,8 +56,10 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	t.log.Logf("Running task '%s'...", taskName)
 	steps := len(task)
 
-	t.context, t.cancelFn = context.WithCancel(context.Background())
 	sl := t.subLogger.SubLogger()
+	if t.context == nil {
+		t.context, t.cancelFn = context.WithCancel(context.Background())
+	}
 
 	// Set waitgroup and buff channel for async jobs.
 	var tracker *asyncJobTracker
