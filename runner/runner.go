@@ -58,6 +58,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 
 	sl := t.subLogger.SubLogger()
 	if t.context == nil {
+		t.log.Warn("Warning: task context was not set")
 		t.context, t.cancelFn = context.WithCancel(context.Background())
 	}
 
