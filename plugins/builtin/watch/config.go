@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-gilbert/gilbert-sdk"
 
-	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/manifest"
 )
 
@@ -48,8 +47,8 @@ func parseParams(raw sdk.PluginParams, scope sdk.ScopeAccessor) (*params, error)
 	p := params{
 		DebounceTime: defaultDebounceTime,
 	}
-	if err := mapstructure.Decode(raw, &p); err != nil {
-		return nil, fmt.Errorf("failed to read configuration: %s", err)
+	if err := raw.Unmarshal(&p); err != nil {
+		return nil, err
 	}
 
 	if p.Job == nil {

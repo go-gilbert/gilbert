@@ -1,9 +1,7 @@
 package shell
 
 import (
-	"fmt"
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/tools/shell"
 	"os"
 	"os/exec"
@@ -75,8 +73,8 @@ func newParams(ctx sdk.ScopeAccessor) Params {
 func NewShellPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	p := newParams(scope)
 
-	if err := mapstructure.Decode(params, &p); err != nil {
-		return nil, fmt.Errorf("failed to read configuration: %s", err)
+	if err := params.Unmarshal(&p); err != nil {
+		return nil, err
 	}
 
 	return &Plugin{

@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/manifest"
 )
 
 const coverFilePattern = "gbcover*.out"
@@ -15,8 +13,8 @@ const coverFilePattern = "gbcover*.out"
 // NewPlugin creates a new cover plugin instance
 func NewPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	p := newParams()
-	if err := mapstructure.Decode(params, &p); err != nil {
-		return nil, manifest.NewPluginConfigError("cover", err)
+	if err := params.Unmarshal(&p); err != nil {
+		return nil, err
 	}
 
 	if p.Threshold > 100 || p.Threshold < 0 {

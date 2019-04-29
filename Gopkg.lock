@@ -30,11 +30,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bba2e650b12a3b95a3f0201683b3a56849ca20a99ae560f0c439327a2e8d94b4"
+  digest = "1:310d188a69e44982141e7294a865083629c5ac8525cc278d95519feaaa3ac9c9"
   name = "github.com/go-gilbert/gilbert-sdk"
   packages = ["."]
   pruneopts = ""
-  revision = "cea6d1e6576bdc6ac4043f9f72e438567501ea6f"
+  revision = "10fd7647eeaf7ac580f61ae39bb6841d484ee60d"
 
 [[projects]]
   digest = "1:9ea83adf8e96d6304f394d40436f2eb44c1dc3250d223b74088cc253a6cd0a1c"

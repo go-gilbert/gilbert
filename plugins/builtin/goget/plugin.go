@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/manifest"
 	"github.com/x1unix/gilbert/tools/shell"
 	"os/exec"
 	"strings"
@@ -94,8 +92,8 @@ func (p *Plugin) Cancel(_ sdk.JobContextAccessor) error {
 // NewPlugin creates a new plugin instance
 func NewPlugin(scope sdk.ScopeAccessor, rawParams sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	p := params{}
-	if err := mapstructure.Decode(rawParams, &p); err != nil {
-		return nil, manifest.NewPluginConfigError("build", err)
+	if err := rawParams.Unmarshal(&p); err != nil {
+		return nil, err
 	}
 
 	return &Plugin{
