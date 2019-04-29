@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-gilbert/gilbert/log"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/log"
 )
 
 // ListTasksAction handles 'ls' command

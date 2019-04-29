@@ -1,6 +1,6 @@
 package shell
 
-// Environment is map of predefined scope variables
+// environment is map of predefined scope variables
 type Environment map[string]string
 
 // Empty checks if predefined vars list is empty

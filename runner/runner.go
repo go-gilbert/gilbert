@@ -3,42 +3,35 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/x1unix/gilbert/log"
+	"github.com/go-gilbert/gilbert/plugins"
 	"strings"
 	"time"
 
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/scope"
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/scope"
+	"github.com/go-gilbert/gilbert/tools/shell"
 
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/plugins/builtin"
-	"github.com/x1unix/gilbert/runner/job"
+	"github.com/go-gilbert/gilbert/plugins/builtin"
+	"github.com/go-gilbert/gilbert/runner/job"
 )
 
 var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")
 
 // TaskRunner runs tasks
 type TaskRunner struct {
-	plugins          map[string]plugins.PluginFactory
+	plugins          map[string]sdk.PluginFactory
 	manifest         *manifest.Manifest
 	CurrentDirectory string
-	log              log.Logger
-	subLogger        log.Logger
+	log              sdk.Logger
+	subLogger        sdk.Logger
 	context          context.Context
 	cancelFn         context.CancelFunc
 }
 
 // PluginByName gets plugin by name
-func (t *TaskRunner) PluginByName(pluginName string) (p plugins.PluginFactory, err error) {
-	p, ok := t.plugins[pluginName]
-
-	if !ok {
-		err = fmt.Errorf("plugin '%s' not found", pluginName)
-		return
-	}
-
-	return
+func (t *TaskRunner) PluginByName(pluginName string) (p sdk.PluginFactory, err error) {
+	return plugins.Get(pluginName)
 }
 
 // Stop stops task runner
@@ -112,11 +105,11 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 // RunJob starts job in separate goroutine.
 //
 // Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
-func (t *TaskRunner) RunJob(j manifest.Job, ctx *job.RunContext) {
-	go t.handleJob(j, ctx)
+func (t *TaskRunner) RunJob(j sdk.Job, ctx sdk.JobContextAccessor) {
+	go t.handleJob(j, ctx.(*job.RunContext))
 }
 
-func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx *job.RunContext) error {
+func (t *TaskRunner) startJobAndWait(job sdk.Job, ctx *job.RunContext) error {
 	go t.handleJob(job, ctx)
 	// All child jobs (except async jobs) inherit parent job channel,
 	// so we should close channel only if parent job was finished.
@@ -126,7 +119,7 @@ func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx *job.RunContext) erro
 
 	err, ok := <-ctx.Error
 	if !ok {
-		ctx.Logger.Debug("Error: failed to read data from result channel")
+		ctx.Log().Debug("Error: failed to read data from result channel")
 		return nil
 	}
 
@@ -134,21 +127,21 @@ func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx *job.RunContext) erro
 }
 
 // handleJob handles specified job
-func (t *TaskRunner) handleJob(j manifest.Job, ctx *job.RunContext) {
+func (t *TaskRunner) handleJob(j sdk.Job, ctx *job.RunContext) {
 	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
 		AppendGlobals(t.manifest.Vars).
 		AppendVariables(ctx.RootVars)
 
 	// check if job should be run
 	if !t.shouldRunJob(j, s) {
-		ctx.Logger.Info("step was skipped")
+		ctx.Log().Info("step was skipped")
 		ctx.Success()
 		return
 	}
 
 	// Wait if necessary
 	if j.Delay > 0 {
-		ctx.Logger.Debugf("Job delay defined, waiting %dms...", j.Delay)
+		ctx.Log().Debugf("Job delay defined, waiting %dms...", j.Delay)
 		time.Sleep(j.Delay.ToDuration())
 	}
 
@@ -160,23 +153,23 @@ func (t *TaskRunner) handleJob(j manifest.Job, ctx *job.RunContext) {
 
 	execType := j.Type()
 	switch execType {
-	case manifest.ExecPlugin:
+	case sdk.ExecPlugin:
 		t.applyJobPlugin(s, j, ctx)
-	case manifest.ExecMixin:
+	case sdk.ExecMixin:
 		t.execJobWithMixin(j, s, ctx)
 	default:
 		ctx.Result(errNoTaskHandler)
 	}
 }
 
-func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j manifest.Job, ctx *job.RunContext) {
+func (t *TaskRunner) applyJobPlugin(s sdk.ScopeAccessor, j sdk.Job, ctx *job.RunContext) {
 	factory, err := t.PluginByName(j.PluginName)
 	if err != nil {
 		ctx.Result(err)
 		return
 	}
 
-	plugin, err := factory(s, j.Params, ctx.Logger)
+	plugin, err := factory(s, j.Params, ctx.Log())
 	if err != nil {
 		ctx.Result(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
 		return
@@ -185,8 +178,8 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j manifest.Job, ctx *job.Run
 	// Handle stop event
 	// Event may arrive on SIGKILL or when timeout reached
 	go func() {
-		<-ctx.Context.Done()
-		ctx.Logger.Debugf("sent stop signal to '%s' plugin", j.PluginName)
+		<-ctx.Context().Done()
+		ctx.Log().Debugf("sent stop signal to '%s' plugin", j.PluginName)
 		ctx.Result(plugin.Cancel(ctx))
 	}()
 
@@ -198,7 +191,7 @@ func (t *TaskRunner) applyJobPlugin(s *scope.Scope, j manifest.Job, ctx *job.Run
 // execJobWithMixin constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.RunContext) {
+func (t *TaskRunner) execJobWithMixin(j sdk.Job, s sdk.ScopeAccessor, ctx *job.RunContext) {
 	mx, ok := t.manifest.Mixins[j.MixinName]
 	if !ok {
 		ctx.Result(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
@@ -206,8 +199,8 @@ func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.R
 	}
 
 	// Create a task from mixin and job params
-	ctx.Logger.Debugf("create sub-task from mixin '%s'", j.MixinName)
-	task := mx.ToTask(s.Variables)
+	ctx.Log().Debugf("create sub-task from mixin '%s'", j.MixinName)
+	task := mx.ToTask(s.Vars())
 	if err := t.runSubTask(task, s, ctx); err != nil {
 		ctx.Result(err)
 		return
@@ -221,7 +214,7 @@ func (t *TaskRunner) execJobWithMixin(j manifest.Job, s *scope.Scope, ctx *job.R
 // parentCtx used to expand task base properties (like description, etc.)
 //
 // subLogger used to create stack of log lines
-func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, parentCtx *job.RunContext) (err error) {
+func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccessor, parentCtx *job.RunContext) (err error) {
 	// FIXME: drop copy-paste from RunTask
 	steps := len(task)
 
@@ -229,8 +222,8 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
-		parentCtx.Logger.Debugf("%d async jobs in sub-task", asyncJobsCount)
-		tracker = newAsyncJobTracker(parentCtx.Context, t, asyncJobsCount)
+		parentCtx.Log().Debugf("%d async jobs in sub-task", asyncJobsCount)
+		tracker = newAsyncJobTracker(parentCtx.Context(), t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
@@ -255,19 +248,19 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 		// so we should try to parse it
 		descr := j.FormatDescription()
 		if parsed, perr := parentScope.ExpandVariables(descr); perr != nil {
-			parentCtx.Logger.Errorf("description parse error: %s", perr)
+			parentCtx.Log().Errorf("description parse error: %s", perr)
 		} else {
 			descr = parsed
 		}
 
 		if steps > 1 {
 			// show total steps count only if more than one step provided
-			parentCtx.Logger.Infof("- [%d/%d] %s", currentStep, steps, descr)
+			parentCtx.Log().Infof("- [%d/%d] %s", currentStep, steps, descr)
 		} else {
-			parentCtx.Logger.Infof("- %s", descr)
+			parentCtx.Log().Infof("- %s", descr)
 		}
 
-		ctx := parentCtx.ChildContext()
+		ctx := parentCtx.ChildContext().(*job.RunContext)
 		if j.Async {
 			tracker.decorateJobContext(ctx)
 			go t.handleJob(j, ctx)
@@ -282,14 +275,14 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope *scope.Scope, pa
 	return err
 }
 
-func (t *TaskRunner) shouldRunJob(job manifest.Job, ctx *scope.Scope) bool {
+func (t *TaskRunner) shouldRunJob(job sdk.Job, scp sdk.ScopeAccessor) bool {
 	condCmd := strings.TrimSpace(job.Condition)
 	if condCmd == "" {
 		return true
 	}
 
 	l := t.subLogger.SubLogger()
-	condCmd, err := ctx.ExpandVariables(condCmd)
+	condCmd, err := scp.ExpandVariables(condCmd)
 	if err != nil {
 		l.Error(err.Error())
 		l.Warn("Failed to parse value inside 'if' expression, job will be skipped")
@@ -312,7 +305,7 @@ func (t *TaskRunner) shouldRunJob(job manifest.Job, ctx *scope.Scope) bool {
 }
 
 // NewTaskRunner creates a new task runner instance
-func NewTaskRunner(man *manifest.Manifest, cwd string, writer log.Logger) *TaskRunner {
+func NewTaskRunner(man *manifest.Manifest, cwd string, writer sdk.Logger) *TaskRunner {
 	t := &TaskRunner{
 		plugins:          builtin.DefaultPlugins,
 		manifest:         man,

@@ -1,5 +1,8 @@
 version: 1.0
 
+plugins:
+  - file://../gilbert-plugin-example/build/gilbert-plugin-example.so
+
 mixins:
   async-test:
     - plugin: shell
@@ -8,6 +11,10 @@ mixins:
         command: 'foo'
 
 tasks:
+  test-plugins:
+    - plugin: '@go-gilbert/example'
+      params:
+        message: "i love vodka"
   test-deadline-async:
     - plugin: shell
       deadline: 2000

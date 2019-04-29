@@ -5,20 +5,16 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/scope"
+	"github.com/go-gilbert/gilbert-sdk"
 )
 
 const coverFilePattern = "gbcover*.out"
 
 // NewPlugin creates a new cover plugin instance
-func NewPlugin(scope *scope.Scope, params manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
+func NewPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	p := newParams()
-	if err := mapstructure.Decode(params, &p); err != nil {
-		return nil, manifest.NewPluginConfigError("cover", err)
+	if err := params.Unmarshal(&p); err != nil {
+		return nil, err
 	}
 
 	if p.Threshold > 100 || p.Threshold < 0 {

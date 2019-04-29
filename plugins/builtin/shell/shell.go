@@ -1,13 +1,8 @@
 package shell
 
 import (
-	"fmt"
-	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/scope"
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/tools/shell"
 	"os"
 	"os/exec"
 )
@@ -38,7 +33,7 @@ type Params struct {
 	Env shell.Environment
 }
 
-func (p *Params) createProcess(ctx *scope.Scope) (*exec.Cmd, error) {
+func (p *Params) createProcess(ctx sdk.ScopeAccessor) (*exec.Cmd, error) {
 	// TODO: check if Shell or ShellExecParam are empty
 	cmdstr, err := ctx.ExpandVariables(p.preparedCommand())
 	if err != nil {
@@ -67,19 +62,19 @@ func (p *Params) createProcess(ctx *scope.Scope) (*exec.Cmd, error) {
 	return cmd, nil
 }
 
-func newParams(ctx *scope.Scope) Params {
+func newParams(ctx sdk.ScopeAccessor) Params {
 	p := defaultParams()
-	p.WorkDir = ctx.Environment.ProjectDirectory
+	p.WorkDir = ctx.Environment().ProjectDirectory
 
 	return p
 }
 
 // NewShellPlugin creates a new shell plugin instance
-func NewShellPlugin(scope *scope.Scope, params manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
+func NewShellPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	p := newParams(scope)
 
-	if err := mapstructure.Decode(params, &p); err != nil {
-		return nil, fmt.Errorf("failed to read configuration: %s", err)
+	if err := params.Unmarshal(&p); err != nil {
+		return nil, err
 	}
 
 	return &Plugin{
