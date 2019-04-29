@@ -38,6 +38,7 @@ func (m *Manifest) Location() string {
 	return m.location
 }
 
+// includeParent includes parent manifest into the current
 func (m *Manifest) includeParent(parent *Manifest) {
 	m.Vars = m.Vars.AppendNew(parent.Vars)
 
@@ -71,5 +72,10 @@ func (m *Manifest) includeParent(parent *Manifest) {
 
 			m.Tasks[k] = append(m.Tasks[k], mx...)
 		}
+	}
+
+	// append plugin declarations
+	if len(parent.Plugins) > 0 {
+		m.Plugins = append(m.Plugins, parent.Plugins...)
 	}
 }
