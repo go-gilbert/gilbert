@@ -3,14 +3,14 @@ package scaffold
 import (
 	"fmt"
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/x1unix/gilbert/log"
+	"github.com/go-gilbert/gilbert/log"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/go-gilbert/gilbert/manifest"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/manifest"
 	"gopkg.in/yaml.v2"
 )
 

@@ -3,8 +3,8 @@ package plugins
 import (
 	"fmt"
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/plugins/builtin"
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/plugins/builtin"
 	"net/url"
 )
 

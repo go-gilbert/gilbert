@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/tools/shell"
 )
 
 // Plugin represents Gilbert's plugin

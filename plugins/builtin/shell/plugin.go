@@ -3,7 +3,7 @@ package shell
 import (
 	"fmt"
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/tools/shell"
 	"os"
 	"os/exec"
 	"strings"

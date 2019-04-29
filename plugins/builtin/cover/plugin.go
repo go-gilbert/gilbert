@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/x1unix/gilbert/plugins/builtin/cover/profile"
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/plugins/builtin/cover/profile"
+	"github.com/go-gilbert/gilbert/tools/shell"
 )
 
 type plugin struct {

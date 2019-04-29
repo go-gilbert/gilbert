@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-gilbert/gilbert/runner/job"
 	"github.com/rjeczalik/notify"
-	"github.com/x1unix/gilbert/runner/job"
 )
 
 // Plugin implements plugins.Plugin interface

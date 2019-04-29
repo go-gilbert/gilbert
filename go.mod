@@ -1,4 +1,4 @@
-module github.com/x1unix/gilbert
+module github.com/go-gilbert/gilbert
 
 go 1.12
 

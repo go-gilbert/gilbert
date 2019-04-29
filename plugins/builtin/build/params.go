@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/x1unix/gilbert/tools"
+	"github.com/go-gilbert/gilbert/tools"
 )
 
 const (

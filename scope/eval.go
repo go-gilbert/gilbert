@@ -2,7 +2,7 @@ package scope
 
 import (
 	"fmt"
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/tools/shell"
 	"os/exec"
 )
 

@@ -2,7 +2,7 @@ package build
 
 import (
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/x1unix/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/manifest"
 )
 
 // NewBuildPlugin creates a new build plugin instance

@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-gilbert/gilbert-sdk"
 
-	"github.com/x1unix/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/manifest"
 )
 
 var defaultDebounceTime = sdk.Period(500)

@@ -6,9 +6,9 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/scope"
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/scope"
 )
 
 //////////////////////////////////////////////
@@ -24,7 +24,7 @@ const (
 
 // wrapPluginDLL creates a plugin factory that wraps arguments for GCO DLL call
 //
-// see: https://github.com/x1unix/gilbert-plugin-example/blob/master/win32/bridge.go
+// see: https://github.com/go-gilbert/gilbert-plugin-example/blob/master/win32/bridge.go
 func wrapPluginDll(fnPtr uintptr) PluginFactory {
 	return func(scope *scope.Scope, params manifest.RawParams, logger log.Logger) (plug Plugin, err error) {
 		sPtr := (uintptr)(unsafe.Pointer(scope))

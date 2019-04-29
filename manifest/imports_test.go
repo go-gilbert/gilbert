@@ -1,8 +1,8 @@
 package manifest
 
 import (
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/stretchr/testify/assert"
-	"github.com/x1unix/gilbert/scope"
 	"testing"
 )
 
@@ -16,32 +16,32 @@ func TestLoadManifest(t *testing.T) {
 			"./include/b.yaml",
 			"./include/c.yaml",
 		},
-		Vars: scope.Vars{
+		Vars: sdk.Vars{
 			"b": "b0",
 		},
 		Mixins: Mixins{
 			"b11mx": Mixin{
-				Job{PluginName: "build"},
+				sdk.Job{PluginName: "build"},
 			},
 		},
 		Tasks: TaskSet{
 			"build": Task{
-				Job{PluginName: "build"},
+				sdk.Job{PluginName: "build"},
 			},
 			"b": Task{
-				Job{PluginName: "shell"},
+				sdk.Job{PluginName: "shell"},
 			},
 			"b1": Task{
-				Job{PluginName: "shell"},
+				sdk.Job{PluginName: "shell"},
 			},
 			"b2": Task{
-				Job{PluginName: "shell"},
+				sdk.Job{PluginName: "shell"},
 			},
 			"b11": Task{
-				Job{PluginName: "shell"},
+				sdk.Job{PluginName: "shell"},
 			},
 			"c": Task{
-				Job{PluginName: "shell"},
+				sdk.Job{PluginName: "shell"},
 			},
 		},
 	}

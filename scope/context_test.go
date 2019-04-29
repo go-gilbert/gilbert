@@ -2,6 +2,7 @@ package scope
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert-sdk"
 	"strings"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 
 func TestVarsScan(t *testing.T) {
 	c := &Scope{
-		Variables: Vars{
+		Variables: sdk.Vars{
 			"foo": "bar",
 		},
 	}
@@ -23,12 +24,12 @@ func TestVarsScan(t *testing.T) {
 
 func TestVarsExtract(t *testing.T) {
 	c := &Scope{
-		Globals: Vars{
+		Globals: sdk.Vars{
 			"GOROOT": "/usr/local/go",
 			"GOPATH": "/home/root/go",
 		},
-		Variables: Vars{
-			"package": "github.com/x1unix/gorn",
+		Variables: sdk.Vars{
+			"package": "github.com/go-gilbert/gorn",
 			"nested":  "{{GOPATH}}/foo",
 		},
 	}

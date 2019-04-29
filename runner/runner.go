@@ -3,17 +3,17 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/x1unix/gilbert/plugins"
+	"github.com/go-gilbert/gilbert/plugins"
 	"strings"
 	"time"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/scope"
-	"github.com/x1unix/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/scope"
+	"github.com/go-gilbert/gilbert/tools/shell"
 
-	"github.com/x1unix/gilbert/plugins/builtin"
-	"github.com/x1unix/gilbert/runner/job"
+	"github.com/go-gilbert/gilbert/plugins/builtin"
+	"github.com/go-gilbert/gilbert/runner/job"
 )
 
 var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")

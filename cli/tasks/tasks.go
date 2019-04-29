@@ -2,12 +2,12 @@ package tasks
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/plugins"
+	"github.com/go-gilbert/gilbert/runner"
+	"github.com/go-gilbert/gilbert/scope"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/runner"
-	"github.com/x1unix/gilbert/scope"
 	"os"
 	"os/signal"
 )
