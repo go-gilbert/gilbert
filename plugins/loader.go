@@ -13,8 +13,8 @@ const (
 	pluginNameProc = "GetPluginName"
 )
 
-func badSymbolTypeErr(symName string, got, want interface{}) error {
-	return fmt.Errorf("invalid %s() symbol signature (want %T, but got %T)", symName, want, got)
+func badSymbolTypeErr(symName string, expected, got interface{}) error {
+	return fmt.Errorf("invalid %s() symbol signature (want %T, but got %T)", symName, expected, got)
 }
 
 func loadLibrary(libPath string) (sdk.PluginFactory, string, error) {
@@ -45,7 +45,7 @@ func getPluginFactory(handle *plugin.Plugin) (sdk.PluginFactory, error) {
 
 	fn, ok := procHandle.(func(sdk.ScopeAccessor, sdk.PluginParams, sdk.Logger) (sdk.Plugin, error))
 	if !ok {
-		return nil, badSymbolTypeErr(pluginNameProc, procHandle, fn)
+		return nil, badSymbolTypeErr(newPluginProc, fn, procHandle)
 	}
 
 	return fn, nil
@@ -59,7 +59,7 @@ func getPluginName(handle *plugin.Plugin) (string, error) {
 
 	nameFn, ok := procHandle.(func() string)
 	if !ok {
-		return "", badSymbolTypeErr(pluginNameProc, procHandle, nameFn())
+		return "", badSymbolTypeErr(pluginNameProc, nameFn, procHandle)
 	}
 
 	return nameFn(), nil
