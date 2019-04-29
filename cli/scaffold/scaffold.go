@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/x1unix/gilbert/log"
 	"io/ioutil"
 	"os"
@@ -10,13 +11,12 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/scope"
 	"gopkg.in/yaml.v2"
 )
 
 var boilerplate = manifest.Manifest{
 	Version: "1.0",
-	Vars: scope.Vars{
+	Vars: sdk.Vars{
 		"appVersion": "1.0.0",
 	},
 	Tasks: manifest.TaskSet{

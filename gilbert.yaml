@@ -3,7 +3,7 @@ imports:
   - ./docs/test_jobs.yaml
 
 plugins:
-  - file:///{{PROJECT}}/build/lib.dll
+  - file:///home/x1unix/Projects/gilbert-plugin-example/build/gilbert-plugin-example.so
 
 vars:
   buildDir: './build'
@@ -63,11 +63,6 @@ tasks:
       variables:
         'main.version': '{{ version }}'
         'main.commit': '{{ commit }}'
-  - if: 'uname -a'
-    description: "show a message only if job runs on UNIX"
-    plugin: shell
-    params:
-      command: 'echo This is UNIX machine'
 
   release:
   - mixin: platform-build

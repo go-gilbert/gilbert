@@ -1,16 +1,13 @@
 package manifest
 
 import (
-	"github.com/x1unix/gilbert/scope"
+	sdk "github.com/go-gilbert/gilbert-sdk"
 )
 
 const (
 	// FileName is default manifest filename
 	FileName = "gilbert.yaml"
 )
-
-// RawParams is raw plugin params
-type RawParams map[string]interface{}
 
 // Manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
@@ -24,7 +21,7 @@ type Manifest struct {
 	Imports []string `yaml:"imports,omitempty"`
 
 	// Vars is a set of global variables
-	Vars scope.Vars `yaml:"vars,omitempty"`
+	Vars sdk.Vars `yaml:"vars,omitempty"`
 
 	// Tasks is a set of tasks
 	Tasks TaskSet `yaml:"tasks,omitempty"`

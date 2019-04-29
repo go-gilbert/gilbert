@@ -1,7 +1,7 @@
 package builtin
 
 import (
-	"github.com/x1unix/gilbert/plugins"
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/x1unix/gilbert/plugins/builtin/build"
 	"github.com/x1unix/gilbert/plugins/builtin/cover"
 	"github.com/x1unix/gilbert/plugins/builtin/goget"
@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultPlugins is list of default plugins
-var DefaultPlugins = map[string]plugins.PluginFactory{
+var DefaultPlugins = map[string]sdk.PluginFactory{
 	"build":  build.NewBuildPlugin,
 	"shell":  shell.NewShellPlugin,
 	"go-get": goget.NewPlugin,

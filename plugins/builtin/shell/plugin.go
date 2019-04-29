@@ -2,10 +2,7 @@ package shell
 
 import (
 	"fmt"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/runner/job"
-	"github.com/x1unix/gilbert/scope"
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/x1unix/gilbert/tools/shell"
 	"os"
 	"os/exec"
@@ -14,14 +11,14 @@ import (
 
 // Plugin represents Gilbert's plugin
 type Plugin struct {
-	scope  *scope.Scope
+	scope  sdk.ScopeAccessor
 	params Params
-	log    log.Logger
+	log    sdk.Logger
 	cmd    *exec.Cmd
 }
 
 // Call calls a plugin
-func (p *Plugin) Call(tx *job.RunContext, r plugins.JobRunner) (err error) {
+func (p *Plugin) Call(tx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	p.cmd, err = p.params.createProcess(p.scope)
 	if err != nil {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", p.params.Command, err)
@@ -60,7 +57,7 @@ func (p *Plugin) decorateProcessOutput(cmd *exec.Cmd) {
 }
 
 // Cancel cancels shell command execution
-func (p *Plugin) Cancel(ctx *job.RunContext) error {
+func (p *Plugin) Cancel(ctx sdk.JobContextAccessor) error {
 	if p.cmd == nil {
 		return nil
 	}

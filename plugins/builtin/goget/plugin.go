@@ -3,12 +3,9 @@ package goget
 import (
 	"errors"
 	"fmt"
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/mitchellh/mapstructure"
-	"github.com/x1unix/gilbert/log"
 	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/runner/job"
-	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
 	"os/exec"
 	"strings"
@@ -16,14 +13,14 @@ import (
 
 // Plugin implements gilbert plugin
 type Plugin struct {
-	scope   *scope.Scope
+	scope   sdk.ScopeAccessor
 	params  params
-	log     log.Logger
+	log     sdk.Logger
 	stopped bool
 }
 
 // Call implements plugins.plugin
-func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
+func (p *Plugin) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
 	if len(p.params.Packages) == 0 {
 		return errors.New("no packages to install")
 	}
@@ -41,7 +38,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) error {
 	return nil
 }
 
-func (p *Plugin) getPackage(pkgName string, ctx *job.RunContext) (err error) {
+func (p *Plugin) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("failed to get package '%s', %s", pkgName, err)
@@ -69,7 +66,7 @@ func (p *Plugin) getPackage(pkgName string, ctx *job.RunContext) (err error) {
 
 	go func() {
 		select {
-		case <-ctx.Context.Done():
+		case <-ctx.Context().Done():
 			p.log.Debug("kill:", proc.Path)
 			_ = proc.Process.Kill()
 		}
@@ -89,13 +86,13 @@ func (p *Plugin) getPackage(pkgName string, ctx *job.RunContext) (err error) {
 }
 
 // Cancel cancels plugin execution
-func (p *Plugin) Cancel(ctx *job.RunContext) error {
+func (p *Plugin) Cancel(_ sdk.JobContextAccessor) error {
 	p.stopped = true
 	return nil
 }
 
 // NewPlugin creates a new plugin instance
-func NewPlugin(scope *scope.Scope, rawParams manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
+func NewPlugin(scope sdk.ScopeAccessor, rawParams sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	p := params{}
 	if err := mapstructure.Decode(rawParams, &p); err != nil {
 		return nil, manifest.NewPluginConfigError("build", err)

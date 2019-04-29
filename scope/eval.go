@@ -19,7 +19,7 @@ type shellEvaluator struct {
 func (e *shellEvaluator) prepareProcess(cmd string) (proc *exec.Cmd) {
 	proc = shell.PrepareCommand(cmd)
 	vars := shell.Environment(e.ctx.Variables)
-	proc.Dir = e.ctx.Environment.ProjectDirectory
+	proc.Dir = e.ctx.environment.ProjectDirectory
 
 	if !vars.Empty() {
 		proc.Env = vars.ToArray(e.ctx.Environ()...)

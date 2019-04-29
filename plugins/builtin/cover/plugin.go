@@ -2,34 +2,31 @@ package cover
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert-sdk"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin/cover/profile"
-	"github.com/x1unix/gilbert/runner/job"
-	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
 )
 
 type plugin struct {
-	scope     *scope.Scope
+	scope     sdk.ScopeAccessor
 	params    params
 	coverFile *os.File
-	log       log.Logger
+	log       sdk.Logger
 	alive     bool
 }
 
-func (p *plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
+func (p *plugin) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	defer p.clean()
 	cmd, err := p.createCoverCommand(ctx)
 	if err != nil {
 		return err
 	}
 
-	ctx.Logger.Debugf("cover command: '%s'", strings.Join(cmd.Args, " "))
+	ctx.Log().Debugf("cover command: '%s'", strings.Join(cmd.Args, " "))
 	if err = cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start cover tool, %s", err)
 	}
@@ -94,7 +91,7 @@ func (p *plugin) clean() {
 	p.log.Debugf("removed cover file '%s'", fname)
 }
 
-func (p *plugin) createCoverCommand(ctx *job.RunContext) (*exec.Cmd, error) {
+func (p *plugin) createCoverCommand(ctx sdk.JobContextAccessor) (*exec.Cmd, error) {
 	// pass package names as is, since '-coverpkg' doesn't recognise them in CSV format (go 1.11+)
 	args := make([]string, 0, len(p.params.Packages)+toolArgsPrefixSize)
 	args = append(args, "test", "-coverprofile="+p.coverFile.Name())
@@ -108,13 +105,13 @@ func (p *plugin) createCoverCommand(ctx *job.RunContext) (*exec.Cmd, error) {
 		args = append(args, val)
 	}
 
-	cmd := exec.CommandContext(ctx.Context, "go", args...)
-	cmd.Dir = p.scope.Environment.ProjectDirectory
-	cmd.Stderr = ctx.Logger.ErrorWriter()
+	cmd := exec.CommandContext(ctx.Context(), "go", args...)
+	cmd.Dir = p.scope.Environment().ProjectDirectory
+	cmd.Stderr = ctx.Log().ErrorWriter()
 	return cmd, nil
 }
 
-func (p *plugin) Cancel(ctx *job.RunContext) error {
+func (p *plugin) Cancel(ctx sdk.JobContextAccessor) error {
 	p.clean()
 	return nil
 }

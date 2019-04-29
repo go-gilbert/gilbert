@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/go-gilbert/gilbert-sdk"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/scope"
 )
 
-var defaultDebounceTime = manifest.Period(500)
+var defaultDebounceTime = sdk.Period(500)
 
 // additional ignore list with temporary and hidden files
 var ignoredDevItems = []string{
@@ -20,10 +21,10 @@ var ignoredDevItems = []string{
 }
 
 type params struct {
-	Path         string          `mapstructure:"path"`
-	Ignore       []string        `mapstructure:"ignore"`
-	DebounceTime manifest.Period `mapstructure:"debounceTime"`
-	Job          *manifest.Job   `mapstructure:"run"`
+	Path         string     `mapstructure:"path"`
+	Ignore       []string   `mapstructure:"ignore"`
+	DebounceTime sdk.Period `mapstructure:"debounceTime"`
+	Job          *sdk.Job   `mapstructure:"run"`
 	blacklist    []string
 }
 
@@ -43,7 +44,7 @@ func (p *params) pathIgnored(path string) (bool, error) {
 	return false, nil
 }
 
-func parseParams(raw manifest.RawParams, scope *scope.Scope) (*params, error) {
+func parseParams(raw sdk.PluginParams, scope sdk.ScopeAccessor) (*params, error) {
 	p := params{
 		DebounceTime: defaultDebounceTime,
 	}
@@ -72,7 +73,7 @@ func parseParams(raw manifest.RawParams, scope *scope.Scope) (*params, error) {
 
 	// Convert paths in ignore list from relative to absolute
 	p.blacklist = make([]string, len(p.Ignore))
-	rootPath := scope.Environment.ProjectDirectory
+	rootPath := scope.Environment().ProjectDirectory
 	for _, relPath := range p.Ignore {
 		// Expand variables in value
 		relPath, err := scope.ExpandVariables(relPath)

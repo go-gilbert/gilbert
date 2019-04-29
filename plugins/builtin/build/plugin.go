@@ -2,26 +2,23 @@ package build
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert-sdk"
 	"os/exec"
 	"strings"
 
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/runner/job"
-	"github.com/x1unix/gilbert/scope"
 	"github.com/x1unix/gilbert/tools/shell"
 )
 
 // Plugin represents Gilbert's plugin
 type Plugin struct {
-	scope  *scope.Scope
+	scope  sdk.ScopeAccessor
 	cmd    *exec.Cmd
 	params Params
-	log    log.Logger
+	log    sdk.Logger
 }
 
 // Call calls a plugin
-func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
+func (p *Plugin) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	p.cmd, err = p.params.newCompilerProcess(p.scope)
 	if err != nil {
 		return err
@@ -44,7 +41,7 @@ func (p *Plugin) Call(ctx *job.RunContext, r plugins.JobRunner) (err error) {
 }
 
 // Cancel cancels build process
-func (p *Plugin) Cancel(ctx *job.RunContext) error {
+func (p *Plugin) Cancel(ctx sdk.JobContextAccessor) error {
 	if p.cmd != nil {
 		if err := shell.KillProcessGroup(p.cmd); err != nil {
 			p.log.Debug(err.Error())

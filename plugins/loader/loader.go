@@ -4,12 +4,8 @@ package loader
 
 import (
 	"fmt"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/scope"
+	"github.com/go-gilbert/gilbert-sdk"
 	"plugin"
-
-	"github.com/x1unix/gilbert/plugins"
 )
 
 const (
@@ -18,10 +14,10 @@ const (
 )
 
 func badSymbolTypeErr(symName string, got, want interface{}) error {
-	return fmt.Errorf("invalid %s() symbol signature (want %T, but got %T)", want, got)
+	return fmt.Errorf("invalid %s() symbol signature (want %T, but got %T)", symName, want, got)
 }
 
-func loadLibrary(libPath string) (plugins.PluginFactory, string, error) {
+func loadLibrary(libPath string) (sdk.PluginFactory, string, error) {
 	handle, err := plugin.Open(libPath)
 
 	if err != nil {
@@ -41,13 +37,13 @@ func loadLibrary(libPath string) (plugins.PluginFactory, string, error) {
 	return factory, name, nil
 }
 
-func getPluginFactory(handle *plugin.Plugin) (plugins.PluginFactory, error) {
+func getPluginFactory(handle *plugin.Plugin) (sdk.PluginFactory, error) {
 	procHandle, err := handle.Lookup(newPluginProc)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get plugin factory (%s)", err)
 	}
 
-	fn, ok := procHandle.(func(*scope.Scope, manifest.RawParams, log.Logger) (plugins.Plugin, error))
+	fn, ok := procHandle.(func(sdk.ScopeAccessor, sdk.PluginParams, sdk.Logger) (sdk.Plugin, error))
 	if !ok {
 		return nil, badSymbolTypeErr(pluginNameProc, procHandle, fn)
 	}

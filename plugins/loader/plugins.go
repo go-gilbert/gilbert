@@ -2,13 +2,13 @@ package loader
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/plugins"
 	"github.com/x1unix/gilbert/plugins/builtin"
 	"net/url"
 )
 
-var registry = make(map[string]plugins.PluginFactory)
+var registry = make(map[string]sdk.PluginFactory)
 
 func Import(pluginUrl string) error {
 	if err := registerPluginFromUrl(pluginUrl); err != nil {
@@ -18,7 +18,7 @@ func Import(pluginUrl string) error {
 	return nil
 }
 
-func Get(pluginName string) (plugins.PluginFactory, error) {
+func Get(pluginName string) (sdk.PluginFactory, error) {
 	if plug, ok := registry[pluginName]; ok {
 		return plug, nil
 	}
