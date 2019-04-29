@@ -21,4 +21,6 @@ func Exists(location string) (bool, error) {
 
 		return false, err
 	}
+
+	return true, nil
 }
