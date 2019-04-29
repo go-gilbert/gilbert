@@ -19,6 +19,8 @@ import (
 	"github.com/google/go-github/v25/github"
 )
 
+var permission = os.FileMode(0755)
+
 // ImportHandler is GitHub source import handler for plugins
 func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string, error) {
 	dc, err := readUrl(ctx, uri)
@@ -39,7 +41,7 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 
 	if !exists {
 		log.Default.Debugf("github: init plugin directory: '%s'", dir)
-		if err = os.MkdirAll(dir, os.FileMode(0666)); err != nil {
+		if err = os.MkdirAll(dir, permission); err != nil {
 			return nil, "", err
 		}
 

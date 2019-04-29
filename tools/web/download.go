@@ -27,7 +27,7 @@ func ProgressDownloadFile(client *http.Client, uri, destination string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode != http.StatusOK {
 		return newDownloadErr(uri, resp.Status)
 	}
 
