@@ -8,7 +8,7 @@ param (
 )
 
 & {
-    $global:PKG_URL="github.com/x1unix/gilbert"
+    $global:PKG_URL="github.com/go-gilbert/gilbert"
     $global:ISSUE_URL="https://$global:PKG_URL/issues"
 
     Function Panic($msg){
