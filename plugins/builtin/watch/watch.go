@@ -1,14 +1,11 @@
 package watch
 
 import (
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/plugins"
-	"github.com/x1unix/gilbert/scope"
+	"github.com/go-gilbert/gilbert-sdk"
 )
 
 // NewWatchPlugin creates a new plugin instance
-func NewWatchPlugin(scope *scope.Scope, rawParams manifest.RawParams, log log.Logger) (plugins.Plugin, error) {
+func NewWatchPlugin(scope sdk.ScopeAccessor, rawParams sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
 	params, err := parseParams(rawParams, scope)
 	if err != nil {
 		return nil, err

@@ -1,76 +1,23 @@
 package scope
 
 import (
+	sdk "github.com/go-gilbert/gilbert-sdk"
 	"os"
 	"path/filepath"
 )
 
-// Vars is a set of declared variables
-type Vars map[string]string
-
-// Append appends variables from vars list
-func (v Vars) Append(newVars Vars) (out Vars) {
-	if v == nil {
-		return newVars.Clone()
-	}
-
-	out = v.Clone()
-	if newVars == nil || len(newVars) == 0 {
-		return out
-	}
-
-	for k, val := range newVars {
-		out[k] = val
-	}
-
-	return out
-}
-
-// AppendNew does the same as Append but doesn't overwrite existing values
-func (v Vars) AppendNew(newVars Vars) (out Vars) {
-	if v == nil {
-		return newVars.Clone()
-	}
-
-	out = v.Clone()
-	if newVars == nil || len(newVars) == 0 {
-		return out
-	}
-
-	for k, val := range newVars {
-		if _, ok := out[k]; ok {
-			continue
-		}
-		out[k] = val
-	}
-
-	return out
-}
-
-// Clone creates a copy of variables map
-func (v Vars) Clone() (out Vars) {
-	out = make(Vars, len(v))
-	for k, val := range v {
-		out[k] = val
-	}
-
-	return out
-}
-
 // Scope contains a set of globals and variables related to specific job
 type Scope struct {
-	Globals     Vars // Globals is set of global variables for all tasks
-	Variables   Vars // Variables is set of variables for specific job
+	Globals     sdk.Vars // Globals is set of global variables for all tasks
+	Variables   sdk.Vars // Variables is set of variables for specific job
 	processor   ExpressionProcessor
-	Environment struct {
-		ProjectDirectory string
-	}
+	environment sdk.ProjectEnvironment
 }
 
 // CreateScope creates a new context
-func CreateScope(projectDirectory string, vars Vars) (c *Scope) {
+func CreateScope(projectDirectory string, vars sdk.Vars) (c *Scope) {
 	c = &Scope{
-		Globals: Vars{
+		Globals: sdk.Vars{
 			"PROJECT": projectDirectory,
 			"BUILD":   filepath.Join(projectDirectory, "build"),
 			"GOPATH":  os.Getenv("GOPATH"),
@@ -79,18 +26,27 @@ func CreateScope(projectDirectory string, vars Vars) (c *Scope) {
 	}
 
 	c.processor = NewExpressionProcessor(c)
-	c.Environment.ProjectDirectory = projectDirectory
+	c.environment.ProjectDirectory = projectDirectory
 	return
 }
 
+func (c *Scope) Vars() sdk.Vars {
+	return c.Variables
+}
+
+// Environment returns information about project environment
+func (c *Scope) Environment() sdk.ProjectEnvironment {
+	return c.environment
+}
+
 // AppendGlobals appends global variables to the context
-func (c *Scope) AppendGlobals(globals Vars) *Scope {
+func (c *Scope) AppendGlobals(globals sdk.Vars) sdk.ScopeAccessor {
 	c.Globals = c.Globals.Append(globals)
 	return c
 }
 
 // AppendVariables appends local variables to the context
-func (c *Scope) AppendVariables(vars Vars) *Scope {
+func (c *Scope) AppendVariables(vars sdk.Vars) sdk.ScopeAccessor {
 	c.Variables = c.Variables.Append(vars)
 	return c
 }

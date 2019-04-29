@@ -2,10 +2,12 @@ package tasks
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/manifest"
+	"github.com/go-gilbert/gilbert/plugins"
+	"github.com/go-gilbert/gilbert/runner"
+	"github.com/go-gilbert/gilbert/scope"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/manifest"
-	"github.com/x1unix/gilbert/runner"
 	"os"
 	"os/signal"
 )
@@ -13,6 +15,10 @@ import (
 var (
 	r *runner.TaskRunner
 )
+
+func wrapManifestError(parent error) error {
+	return fmt.Errorf("%s\n\nCheck if 'gilbert.yaml' file exists or has correct syntax and check all import statements", parent)
+}
 
 func getManifest(dir string) (*manifest.Manifest, error) {
 	return manifest.FromDirectory(dir)
@@ -42,10 +48,30 @@ func getRunner() (*runner.TaskRunner, error) {
 
 	m, err := getManifest(dir)
 	if err != nil {
-		return nil, err
+		return nil, wrapManifestError(err)
+	}
+
+	if err := importProjectPlugins(m, dir); err != nil {
+		return nil, wrapManifestError(err)
 	}
 
 	return runner.NewTaskRunner(m, dir, log.Default), nil
+}
+
+func importProjectPlugins(m *manifest.Manifest, cwd string) error {
+	s := scope.CreateScope(cwd, m.Vars)
+	for _, uri := range m.Plugins {
+		expanded, err := s.ExpandVariables(uri)
+		if err != nil {
+			return fmt.Errorf("failed to load plugins from manifest, %s", err)
+		}
+
+		if err := plugins.Import(expanded); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func handleShutdown() {

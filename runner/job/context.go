@@ -2,11 +2,9 @@ package job
 
 import (
 	"context"
+	sdk "github.com/go-gilbert/gilbert-sdk"
 	"sync"
 	"time"
-
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/scope"
 )
 
 // RunContext used to store job state and communicate between task runner and job
@@ -14,11 +12,11 @@ type RunContext struct { // nolint: maligned
 	child    bool
 	finished bool
 
-	// Logger is sub-logger instance for the job
-	Logger log.Logger
+	// logger is sub-logger instance for the job
+	logger sdk.Logger
 
-	// Context is context.Context instance for current job.
-	Context context.Context
+	// context is context.context instance for current job.
+	context context.Context
 
 	// Error is job result channel
 	Error chan error
@@ -28,7 +26,7 @@ type RunContext struct { // nolint: maligned
 	once     sync.Once
 
 	// RootVars used to hold variables of root context
-	RootVars scope.Vars
+	RootVars sdk.Vars
 }
 
 // SetWaitGroup sets wait group instance for current job
@@ -43,12 +41,22 @@ func (r *RunContext) IsChild() bool {
 	return r.child
 }
 
+// Errors returns job errors channel
+func (r *RunContext) Errors() chan error {
+	return r.Error
+}
+
+// Log provides logger for current job context
+func (r *RunContext) Log() sdk.Logger {
+	return r.logger
+}
+
 // ForkContext creates a context copy, but creates a separate sub-logger
-func (r *RunContext) ForkContext() RunContext {
-	return RunContext{
+func (r *RunContext) ForkContext() sdk.JobContextAccessor {
+	return &RunContext{
 		RootVars: r.RootVars,
-		Logger:   r.Logger.SubLogger(),
-		Context:  r.Context,
+		logger:   r.logger.SubLogger(),
+		context:  r.context,
 		Error:    r.Error,
 		cancelFn: r.cancelFn,
 		child:    true,
@@ -57,13 +65,13 @@ func (r *RunContext) ForkContext() RunContext {
 }
 
 // ChildContext creates a new child context with separate Error channel and context
-func (r *RunContext) ChildContext() *RunContext {
-	ctx, cancelFn := context.WithCancel(r.Context)
+func (r *RunContext) ChildContext() sdk.JobContextAccessor {
+	ctx, cancelFn := context.WithCancel(r.context)
 
 	return &RunContext{
 		RootVars: r.RootVars,
-		Logger:   r.Logger.SubLogger(),
-		Context:  ctx,
+		logger:   r.logger.SubLogger(),
+		context:  ctx,
 		Error:    make(chan error, 1),
 		cancelFn: cancelFn,
 		child:    true,
@@ -78,10 +86,10 @@ func (r *RunContext) Timeout(timeout time.Duration) {
 		select {
 		case <-time.After(timeout):
 			if !r.finished {
-				r.Logger.Warn("Job deadline exceeded")
+				r.logger.Warn("Job deadline exceeded")
 				r.Cancel()
 			}
-		case <-r.Context.Done():
+		case <-r.context.Done():
 			return
 		}
 	}()
@@ -91,7 +99,7 @@ func (r *RunContext) Timeout(timeout time.Duration) {
 func (r *RunContext) Cancel() {
 	r.finished = true
 	if r.cancelFn == nil {
-		r.Logger.Warn("Bug: context cancel function is nil")
+		r.logger.Warn("Bug: context cancel function is nil")
 		return
 	}
 
@@ -110,12 +118,17 @@ func (r *RunContext) IsAlive() bool {
 	return !r.finished
 }
 
+// Context returns Go context instance assigned to the current job context
+func (r *RunContext) Context() context.Context {
+	return r.context
+}
+
 // Result reports job result and finished the context
 func (r *RunContext) Result(err error) {
 	r.once.Do(func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				r.Logger.Warnf("Bug: failed to return job result, %v", rec)
+				r.logger.Warnf("Bug: failed to return job result, %v", rec)
 				if r.wg != nil {
 					r.wg.Done()
 				}
@@ -124,7 +137,7 @@ func (r *RunContext) Result(err error) {
 
 		r.finished = true
 		r.Error <- err
-		r.Logger.Debug("result received")
+		r.logger.Debug("result received")
 		if r.wg != nil {
 			r.wg.Done()
 		}
@@ -132,7 +145,7 @@ func (r *RunContext) Result(err error) {
 }
 
 // NewRunContext creates a new job context instance
-func NewRunContext(parentCtx context.Context, rootVars scope.Vars, log log.Logger) *RunContext {
+func NewRunContext(parentCtx context.Context, rootVars sdk.Vars, log sdk.Logger) *RunContext {
 	ctx, cancelFn := context.WithCancel(parentCtx)
-	return &RunContext{RootVars: rootVars, Logger: log, Context: ctx, Error: make(chan error, 1), cancelFn: cancelFn}
+	return &RunContext{RootVars: rootVars, logger: log, context: ctx, Error: make(chan error, 1), cancelFn: cancelFn}
 }

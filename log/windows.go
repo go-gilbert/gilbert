@@ -2,4 +2,4 @@
 
 package log
 
-const lineBreak = "\r\n"
+const lineBreak = "\n"

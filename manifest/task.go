@@ -1,10 +1,12 @@
 package manifest
 
+import "github.com/go-gilbert/gilbert-sdk"
+
 // TaskSet is a set of tasks declared in a manifest file
 type TaskSet map[string]Task
 
 // Task is a group of jobs
-type Task []Job
+type Task []sdk.Job
 
 // AsyncJobsCount returns count of async jobs in the task
 func (t Task) AsyncJobsCount() (count int) {

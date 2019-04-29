@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	"github.com/x1unix/gilbert/scope"
+	sdk "github.com/go-gilbert/gilbert-sdk"
 )
 
 const (
@@ -9,11 +9,11 @@ const (
 	FileName = "gilbert.yaml"
 )
 
-// RawParams is raw plugin params
-type RawParams map[string]interface{}
-
 // Manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
+	// Plugins is plugins import list
+	Plugins []string `yaml:"plugins"`
+
 	// Version is gilbert file format version
 	Version string `yaml:"version"`
 
@@ -21,7 +21,7 @@ type Manifest struct {
 	Imports []string `yaml:"imports,omitempty"`
 
 	// Vars is a set of global variables
-	Vars scope.Vars `yaml:"vars,omitempty"`
+	Vars sdk.Vars `yaml:"vars,omitempty"`
 
 	// Tasks is a set of tasks
 	Tasks TaskSet `yaml:"tasks,omitempty"`
@@ -38,6 +38,7 @@ func (m *Manifest) Location() string {
 	return m.location
 }
 
+// includeParent includes parent manifest into the current
 func (m *Manifest) includeParent(parent *Manifest) {
 	m.Vars = m.Vars.AppendNew(parent.Vars)
 
@@ -71,5 +72,10 @@ func (m *Manifest) includeParent(parent *Manifest) {
 
 			m.Tasks[k] = append(m.Tasks[k], mx...)
 		}
+	}
+
+	// append plugin declarations
+	if len(parent.Plugins) > 0 {
+		m.Plugins = append(m.Plugins, parent.Plugins...)
 	}
 }

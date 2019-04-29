@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/x1unix/gilbert/runner/job"
+	"github.com/go-gilbert/gilbert/runner/job"
 )
 
 // asyncJobTracker tracks state of async jobs
