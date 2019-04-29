@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-gilbert/gilbert/log"
 	"github.com/go-gilbert/gilbert/manifest"
@@ -12,53 +13,49 @@ import (
 	"os/signal"
 )
 
-var (
-	r *runner.TaskRunner
-)
-
 func wrapManifestError(parent error) error {
 	return fmt.Errorf("%s\n\nCheck if 'gilbert.yaml' file exists or has correct syntax and check all import statements", parent)
 }
 
-func getManifest(dir string) (*manifest.Manifest, error) {
-	return manifest.FromDirectory(dir)
-}
-
 // RunTask is a handler for 'run' command
 func RunTask(c *cli.Context) (err error) {
+	// Read cmd args
 	if c.NArg() == 0 {
 		return fmt.Errorf("no task specified")
 	}
 
 	task := c.Args()[0]
 
-	r, err = getRunner()
+	// Get working dir and read manifest
+	cwd, err := os.Getwd()
 	if err != nil {
+		return fmt.Errorf("cannot get current working directory, %v", err)
+	}
+
+	man, err := manifest.FromDirectory(cwd)
+	if err != nil {
+		return wrapManifestError(err)
+	}
+
+	// Prepare context and import plugins
+	ctx, cancelFn := context.WithCancel(context.Background())
+	if err := importProjectPlugins(ctx, man, cwd); err != nil {
+		return wrapManifestError(err)
+	}
+
+	// Run the task
+	tr := runner.NewTaskRunner(man, cwd, log.Default)
+	go handleShutdown(cancelFn)
+
+	if err := tr.RunTask(task); err != nil {
 		return err
 	}
 
-	return runTask(task)
+	log.Default.Successf("Task '%s' ran successfully\n", task)
+	return nil
 }
 
-func getRunner() (*runner.TaskRunner, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get current working directory, %v", err)
-	}
-
-	m, err := getManifest(dir)
-	if err != nil {
-		return nil, wrapManifestError(err)
-	}
-
-	if err := importProjectPlugins(m, dir); err != nil {
-		return nil, wrapManifestError(err)
-	}
-
-	return runner.NewTaskRunner(m, dir, log.Default), nil
-}
-
-func importProjectPlugins(m *manifest.Manifest, cwd string) error {
+func importProjectPlugins(ctx context.Context, m *manifest.Manifest, cwd string) error {
 	s := scope.CreateScope(cwd, m.Vars)
 	for _, uri := range m.Plugins {
 		expanded, err := s.ExpandVariables(uri)
@@ -66,7 +63,7 @@ func importProjectPlugins(m *manifest.Manifest, cwd string) error {
 			return fmt.Errorf("failed to load plugins from manifest, %s", err)
 		}
 
-		if err := plugins.Import(expanded); err != nil {
+		if err := plugins.Import(ctx, expanded); err != nil {
 			return err
 		}
 	}
@@ -74,21 +71,11 @@ func importProjectPlugins(m *manifest.Manifest, cwd string) error {
 	return nil
 }
 
-func handleShutdown() {
+func handleShutdown(cancelFn context.CancelFunc) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	for range c {
 		log.Default.Log("Shutting down...")
-		r.Stop()
+		cancelFn()
 	}
-}
-
-func runTask(taskName string) error {
-	go handleShutdown()
-	if err := r.RunTask(taskName); err != nil {
-		return err
-	}
-
-	log.Default.Successf("Task '%s' ran successfully\n", taskName)
-	return nil
 }
