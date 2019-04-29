@@ -2,18 +2,18 @@ package github
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 )
 
 const (
-	testToken    = "810a5bdaafc6dd30b1d9979215935871"
-	defaultGhUrl = "api.github.com"
+	testToken = "810a5bdaafc6dd30b1d9979215935871"
 )
 
 type expected struct {
