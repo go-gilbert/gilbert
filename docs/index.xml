@@ -2,40 +2,40 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Docs on Gilbert</title>
-    <link>https://x1unix.github.io/gilbert/docs/</link>
+    <link>https://go-gilbert.github.io/gilbert/docs/</link>
     <description>Recent content in Docs on Gilbert</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     
-	<atom:link href="https://x1unix.github.io/gilbert/docs/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://go-gilbert.github.io/gilbert/docs/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Quick Start</title>
-      <link>https://x1unix.github.io/gilbert/docs/quick-start/</link>
+      <link>https://go-gilbert.github.io/gilbert/docs/quick-start/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://x1unix.github.io/gilbert/docs/quick-start/</guid>
+      <guid>https://go-gilbert.github.io/gilbert/docs/quick-start/</guid>
       <description>Installation  Linux, macOS and FreeBSD  Run this command to install Gilbert on your system:
-curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh  Default installation path is $GOPATH/bin Windows  You can download release binaries from releases page or install using PowerShell script: Invoke-Expression (Invoke-Webrequest &#39;https://raw.githubusercontent.com/x1unix/gilbert/master/install.ps1&#39; -UseBasicParsing).Content  Note: You should run Set-ExecutionPolicy Bypass in PowerShell to be able to execute installation script.
+curl https://raw.githubusercontent.com/go-gilbert/gilbert/master/install.sh | sh  Default installation path is $GOPATH/bin Windows  You can download release binaries from releases page or install using PowerShell script: Invoke-Expression (Invoke-Webrequest &#39;https://raw.githubusercontent.com/go-gilbert/gilbert/master/install.ps1&#39; -UseBasicParsing).Content  Note: You should run Set-ExecutionPolicy Bypass in PowerShell to be able to execute installation script.
 Project integration   Gilbert uses gilbert.yaml file to store list of tasks to run in project folder.</description>
     </item>
     
     <item>
       <title>Schema</title>
-      <link>https://x1unix.github.io/gilbert/docs/schema/</link>
+      <link>https://go-gilbert.github.io/gilbert/docs/schema/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://x1unix.github.io/gilbert/docs/schema/</guid>
+      <guid>https://go-gilbert.github.io/gilbert/docs/schema/</guid>
       <description>Manifest file  gilbert.yaml it&amp;rsquo;s a yaml file that contains all information about your tasks and tells Gilbert what to do when you try to run specific task.  This file should be located at the root folder of your codebase, or at least at the same location where you call gilbert command.  To create a sample file, use gilbert init command. Structure  gilbert.yaml consists of tasks, and tasks include a list of jobs to be done and rules.</description>
     </item>
     
     <item>
       <title>Built-in plugins</title>
-      <link>https://x1unix.github.io/gilbert/docs/built-in-plugins/</link>
+      <link>https://go-gilbert.github.io/gilbert/docs/built-in-plugins/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://x1unix.github.io/gilbert/docs/built-in-plugins/</guid>
+      <guid>https://go-gilbert.github.io/gilbert/docs/built-in-plugins/</guid>
       <description>Build plugin  Build plugin is abstraction over go build compile tool and simplifies build params pass. This plugin can operate without configuration. Configuration sample
 version: 1.0 tasks: build: - plugin: build params: source: &#39;github.com/foo/bar&#39; # default: current package buildMode: &#39;c-archive&#39; # default: &amp;quot;default&amp;quot; outputPath: &#39;./build/foo.exe&#39; # default: project directory params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &#39;-X main.foo=bar&#39; target: os: windows # default: current OS arch: &#39;386&#39; # default: current arch variables: # default: empty &#39;main.</description>
     </item>

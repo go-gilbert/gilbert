@@ -1,4 +1,4 @@
-baseURL = "https://x1unix.github.io/gilbert/"
+baseURL = "https://go-gilbert.github.io/gilbert/"
 languageCode = "en-us"
 title = "Gilbert"
 theme = "kube"
@@ -6,9 +6,9 @@ description = "Task runner for Go projects"
 Paginate = 4
 [Params]
   RSSLink = "/index.xml"
-  author = "x1unix" # add your company name
-  github = "https://github.com/x1unix/gilbert"
-  twitter = "@x1unix" # add your twitter profile
+  author = "go-gilbert" # add your company name
+  github = "https://github.com/go-gilbert/gilbert"
+  twitter = "@go-gilbert" # add your twitter profile
   email = "denis0051@gmail.com"
 
 [[menu.main]]
@@ -18,7 +18,7 @@ Paginate = 4
 [[menu.main]]
     name = "Source"
     weight = -100
-    url = "https://github.com/x1unix/gilbert"
+    url = "https://github.com/go-gilbert/gilbert"
 # [[menu.main]]
 #     name = "Blog"
 #     weight = -100

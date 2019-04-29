@@ -14,16 +14,16 @@ bref = "This article covers installation of Gilbert on your local machine"
 <p>
     Run this command to install Gilbert on your system:
 ```bash
-curl https://raw.githubusercontent.com/x1unix/gilbert/master/install.sh | sh
+curl https://raw.githubusercontent.com/go-gilbert/gilbert/master/install.sh | sh
 ```
 
 Default installation path is `$GOPATH/bin`
 <h4>Windows</h4>
 <p>
-    You can download release binaries from <a href="https://github.com/x1unix/gilbert/releases" target="_blank">releases page</a> or install using PowerShell script:
+    You can download release binaries from <a href="https://github.com/go-gilbert/gilbert/releases" target="_blank">releases page</a> or install using PowerShell script:
 </p>
 ```powershell
-Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/x1unix/gilbert/master/install.ps1' -UseBasicParsing).Content
+Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/go-gilbert/gilbert/master/install.ps1' -UseBasicParsing).Content
 ```
 <p><b>Note:</b> You should run <code>Set-ExecutionPolicy Bypass</code> in PowerShell to be able to execute installation script.</p>
 
@@ -90,6 +90,6 @@ gilbert run build
     We recommend to read about gilbert <a href="../schema">file syntax documentation</a> and take a look on <a href="../built-in-plugins">built-in plugins</a> for more information.
 </p>
 <p>
-    Also, you can find a good use-case example in <a href="https://github.com/x1unix/demo-go-plugins" target="_blank">this demo project</a>.<br />
+    Also, you can find a good use-case example in <a href="https://github.com/go-gilbert/demo-go-plugins" target="_blank">this demo project</a>.<br />
     That repo shows usage of mixins and a few built-in plugins for a real-world web-server example.
 </p>
