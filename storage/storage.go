@@ -85,7 +85,7 @@ func EnsurePath(storageType Type, paths ...string) (string, error) {
 	}
 
 	if !exists {
-		return loc, os.MkdirAll(loc, 0644)
+		return loc, os.MkdirAll(loc, 0666)
 	}
 
 	return loc, nil

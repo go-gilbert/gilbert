@@ -39,7 +39,7 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 
 	if !exists {
 		log.Default.Debugf("github: init plugin directory: '%s'", dir)
-		if err = os.MkdirAll(dir, 0644); err != nil {
+		if err = os.MkdirAll(dir, os.FileMode(0666)); err != nil {
 			return nil, "", err
 		}
 
@@ -63,7 +63,7 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 }
 
 func getPluginRelease(ctx context.Context, client *github.Client, pkg packageQuery) (asset *github.ReleaseAsset, err error) {
-	log.Default.Infof("Downloading release '%s' from '@%s/%s'", pkg.owner, pkg.repo)
+	log.Default.Infof("Downloading release '%s' from '@%s/%s'", pkg.version, pkg.owner, pkg.repo)
 	var rel *github.RepositoryRelease
 	if pkg.version == latestVersion {
 		rel, _, err = client.Repositories.GetLatestRelease(ctx, pkg.owner, pkg.repo)

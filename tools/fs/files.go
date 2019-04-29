@@ -14,13 +14,13 @@ func TrimFileExtension(fileName string) string {
 // Exists check if current file exists
 func Exists(location string) (bool, error) {
 	_, err := os.Stat(location)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-
-		return false, err
+	if err == nil {
+		return true, nil
 	}
 
-	return true, nil
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, err
 }
