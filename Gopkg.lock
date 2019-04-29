@@ -29,12 +29,12 @@
   version = "v1.7.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:310d188a69e44982141e7294a865083629c5ac8525cc278d95519feaaa3ac9c9"
+  digest = "1:3d2b2853c67f34e8fbd403e183375faf72e52f64570c7bf78c9db0c6daec52ab"
   name = "github.com/go-gilbert/gilbert-sdk"
   packages = ["."]
   pruneopts = ""
-  revision = "10fd7647eeaf7ac580f61ae39bb6841d484ee60d"
+  revision = "b09bd570f0bec8e69d0cef768c8cf75915df42c3"
+  version = "v0.7.0"
 
 [[projects]]
   digest = "1:9ea83adf8e96d6304f394d40436f2eb44c1dc3250d223b74088cc253a6cd0a1c"
@@ -124,7 +124,6 @@
     "github.com/axw/gocov/gocovutil",
     "github.com/fatih/color",
     "github.com/go-gilbert/gilbert-sdk",
-    "github.com/mitchellh/mapstructure",
     "github.com/rjeczalik/notify",
     "github.com/stretchr/testify/assert",
     "github.com/urfave/cli",
