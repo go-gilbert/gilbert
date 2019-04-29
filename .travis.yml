@@ -11,14 +11,7 @@ branches:
     - dev
 
 before_install:
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
-  - go get -u github.com/alexkohler/prealloc
-  - go get -u github.com/hypnoglow/durcheck
-  - go get -u github.com/m3db/build-tools/linters/badtime
-
-install:
-  - dep ensure
 
 script:
   - go vet ./...

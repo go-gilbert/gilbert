@@ -30,8 +30,6 @@ install:
   - set Path=c:\go\bin;c:\gopath\bin;%Path%
   - go version
   - go env
-  - choco install dep
-  - dep ensure
 
 build: false
 deploy: false
