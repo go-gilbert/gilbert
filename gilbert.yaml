@@ -2,9 +2,6 @@ version: 1.0
 imports:
   - ./docs/test_jobs.yaml
 
-plugins:
-  - file:///home/x1unix/Projects/gilbert-plugin-example/build/gilbert-plugin-example.so
-
 vars:
   buildDir: './build'
   version: '0.6.0'

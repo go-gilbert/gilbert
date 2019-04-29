@@ -12,7 +12,7 @@ var registry = make(map[string]sdk.PluginFactory)
 
 func Import(pluginUrl string) error {
 	if err := registerPluginFromUrl(pluginUrl); err != nil {
-		return fmt.Errorf("failed to load plugin '%s', %s", pluginUrl, err)
+		return fmt.Errorf("failed to load plugin '%s':\n%s", pluginUrl, err)
 	}
 
 	return nil
