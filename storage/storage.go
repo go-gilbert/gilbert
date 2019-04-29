@@ -3,9 +3,10 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"github.com/go-gilbert/gilbert/tools/fs"
 	"os"
-	"path"
+	"path/filepath"
+
+	"github.com/go-gilbert/gilbert/tools/fs"
 )
 
 const (
@@ -47,7 +48,7 @@ func home() (string, error) {
 		return "", fmt.Errorf("failed to get storage directory, %s", err)
 	}
 
-	return path.Join(home, homeDirName), nil
+	return filepath.Join(home, homeDirName), nil
 }
 
 // Path returns storage item path
@@ -62,10 +63,10 @@ func Path(storageType Type, paths ...string) (string, error) {
 		return "", errors.New("unknown storage type")
 	}
 
-	p := path.Join(home, dir)
+	p := filepath.Join(home, dir)
 
 	if len(paths) > 0 {
-		p += "/" + path.Join(paths...)
+		p += "/" + filepath.Join(paths...)
 	}
 
 	return p, nil
