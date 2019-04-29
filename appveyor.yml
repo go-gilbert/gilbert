@@ -2,7 +2,7 @@ version: "{build}"
 
 # Source Config
 
-clone_folder: c:\gopath\src\github.com\go-gilbert\gilbert
+clone_folder: c:\gilbert
 
 # Build host
 
@@ -36,5 +36,5 @@ build: false
 deploy: false
 
 test_script:
-  - go build github.com/go-gilbert/gilbert
+  - go build
   - for /f "" %%G in ('go list github.com/go-gilbert/gilbert/...') do ( go test %%G & IF ERRORLEVEL == 1 EXIT 1)
