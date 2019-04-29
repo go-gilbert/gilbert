@@ -25,4 +25,4 @@ script:
   - golangci-lint run
   - go test ./...
   - go build -o ./gilbert-dev
-  - ./gilbert-dev run release
+  - ./gilbert-dev run build
