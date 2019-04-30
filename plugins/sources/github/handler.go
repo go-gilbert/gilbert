@@ -40,7 +40,7 @@ func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string
 	}
 
 	if !exists {
-		log.Default.Debugf("github: plugin '%s' is not cached and need to be downloaded")
+		log.Default.Debugf("github: plugin is not cached and need to be downloaded")
 		log.Default.Debugf("github: init plugin directory: '%s'", dir)
 		if err = os.MkdirAll(dir, permission); err != nil {
 			return nil, "", err
