@@ -1,18 +1,20 @@
 package plugins
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
 	"github.com/go-gilbert/gilbert/plugins/builtin"
+	"github.com/go-gilbert/gilbert/plugins/loader"
 	"net/url"
 )
 
 var registry = make(map[string]sdk.PluginFactory)
 
-func Import(pluginUrl string) error {
-	if err := registerPluginFromUrl(pluginUrl); err != nil {
-		return fmt.Errorf("failed to load plugin '%s':\n%s", pluginUrl, err)
+func Import(ctx context.Context, pluginUrl string) error {
+	if err := registerPluginFromUrl(ctx, pluginUrl); err != nil {
+		return fmt.Errorf("failed to load plugin from '%s':\n%s", pluginUrl, err)
 	}
 
 	return nil
@@ -30,7 +32,13 @@ func Get(pluginName string) (sdk.PluginFactory, error) {
 	return nil, fmt.Errorf("plugin '%s' not found", pluginName)
 }
 
-func registerPluginFromUrl(pluginUrl string) error {
+// Loaded checks if plugin is already loaded
+func Loaded(name string) bool {
+	_, ok := registry[name]
+	return ok
+}
+
+func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 	uri, err := url.Parse(pluginUrl)
 	if err != nil {
 		return fmt.Errorf("invalid plugin import URL (%s)", err)
@@ -45,12 +53,21 @@ func registerPluginFromUrl(pluginUrl string) error {
 		return fmt.Errorf("unsupported plugin URL handler: '%s'", uri.Scheme)
 	}
 
-	pf, pName, err := importHandler(uri)
+	pluginPath, err := importHandler(ctx, uri)
 	if err != nil {
 		return fmt.Errorf("failed to import plugin: %s", err)
 	}
 
-	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginUrl)
+	pf, pName, err := loader.LoadLibrary(pluginPath)
+	if err != nil {
+		return fmt.Errorf("failed to load plugin: %s", err)
+	}
+
+	if Loaded(pName) {
+		return fmt.Errorf("plugin '%s' is already loaded", pName)
+	}
+
+	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginPath)
 	registry[pName] = pf
 	return nil
 }

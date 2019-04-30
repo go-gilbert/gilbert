@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/cli/maintenance"
 	"os"
 	"runtime"
 
@@ -71,11 +72,24 @@ func main() {
 				verboseFlag,
 			},
 		},
+		{
+			Name:        "clean",
+			Description: "Clean cached files and objects",
+			Usage:       "Clean cached files and objects",
+			Action:      maintenance.ClearCacheAction,
+			Before:      bootstrap,
+			Flags: []cli.Flag{
+				verboseFlag,
+				maintenance.ClearAllFlag,
+				maintenance.ClearPluginsFlag,
+			},
+		},
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
 		color.Red("ERROR: %v", err)
+		os.Exit(1)
 	}
 }
 
