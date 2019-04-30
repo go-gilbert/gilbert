@@ -2,11 +2,11 @@ package web
 
 import (
 	"fmt"
+	"gopkg.in/cheggaaa/pb.v1"
 	"io"
 	"net/http"
 	"os"
-
-	"gopkg.in/cheggaaa/pb.v1"
+	"strings"
 )
 
 func newDownloadErr(uri string, msg string) error {
@@ -35,7 +35,14 @@ func ProgressDownloadFile(client *http.Client, uri, destination string) error {
 	bar := pb.StartNew(total)
 	bar.SetUnits(pb.U_BYTES)
 	reader := bar.NewProxyReader(resp.Body)
-	defer bar.Finish()
+	defer func() {
+		bar.NotPrint = true
+		bar.Finish()
+
+		// Put cursor to the beginning and overwrite progress bar line with empty spaces
+		// to remove the bar
+		fmt.Fprint(os.Stdout, "\r\b", strings.Repeat(" ", bar.GetWidth()), "\r")
+	}()
 
 	_, err = io.Copy(out, reader)
 	if err != nil {
