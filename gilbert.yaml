@@ -45,7 +45,7 @@ tasks:
   lint:
     - plugin: shell
       params:
-        command: 'gometalinter ./...'
+        command: 'golangci-lint run'
 
   pre-install:
   - plugin: go-get
