@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli"
 	"os"
 	"os/signal"
+	"runtime"
 )
 
 func wrapManifestError(parent error) error {
@@ -39,6 +40,7 @@ func RunTask(c *cli.Context) (err error) {
 
 	// Prepare context and import plugins
 	ctx, cancelFn := context.WithCancel(context.Background())
+
 	if err := importProjectPlugins(ctx, man, cwd); err != nil {
 		return wrapManifestError(err)
 	}
@@ -57,6 +59,15 @@ func RunTask(c *cli.Context) (err error) {
 }
 
 func importProjectPlugins(ctx context.Context, m *manifest.Manifest, cwd string) error {
+	if len(m.Plugins) > 0 {
+		return nil
+	}
+
+	if runtime.GOOS == "windows" {
+		log.Default.Warn("Warning: plugins currently are not supported on this platform")
+		return nil
+	}
+
 	s := scope.CreateScope(cwd, m.Vars)
 	for _, uri := range m.Plugins {
 		expanded, err := s.ExpandVariables(uri)
