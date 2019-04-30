@@ -1,12 +1,18 @@
 package support
 
-import "runtime"
+import (
+	"os"
+	"runtime"
+)
 
-// PluginExtension returns plugin extension format
-func PluginExtension() string {
+// PluginPermissions is permissions for plugin assets
+var PluginPermissions = os.FileMode(0755)
+
+// PluginExtension adds plugin extension format to the provided plugin file
+func AddPluginExtension(fileName string) string {
 	if runtime.GOOS == "windows" {
-		return "dll"
+		return fileName + ".dll"
 	}
 
-	return "so"
+	return fileName + ".so"
 }

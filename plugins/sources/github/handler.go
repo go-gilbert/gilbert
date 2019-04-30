@@ -9,60 +9,58 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/go-gilbert/gilbert/plugins/support"
+
 	"github.com/go-gilbert/gilbert/storage"
 
-	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
-	"github.com/go-gilbert/gilbert/plugins/loader"
 	"github.com/go-gilbert/gilbert/tools/fs"
 	"github.com/go-gilbert/gilbert/tools/web"
 	"github.com/google/go-github/v25/github"
 )
 
-var permission = os.FileMode(0755)
-
-// ImportHandler is GitHub source import handler for plugins
-func ImportHandler(ctx context.Context, uri *url.URL) (sdk.PluginFactory, string, error) {
+// GetPlugin retrieves plugin from GitHub
+func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 	dc, err := readUrl(ctx, uri)
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
 
 	dir, err := storage.Path(storage.Plugins, dc.pkg.directory())
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
 
 	pluginPath := filepath.Join(dir, dc.pkg.fileName())
 	exists, err := fs.Exists(pluginPath)
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
 
 	if !exists {
 		log.Default.Debugf("github: plugin is not cached and need to be downloaded")
 		log.Default.Debugf("github: init plugin directory: '%s'", dir)
-		if err = os.MkdirAll(dir, permission); err != nil {
-			return nil, "", err
+		if err = os.MkdirAll(dir, support.PluginPermissions); err != nil {
+			return "", err
 		}
 
 		asset, err := getPluginRelease(ctx, dc.ghClient, dc.pkg)
 		if err != nil {
-			return nil, "", err
+			return "", err
 		}
 
 		assetUrl := asset.GetBrowserDownloadURL()
 		if assetUrl == "" {
-			return nil, "", errors.New("missing asset download URL")
+			return "", errors.New("missing asset download URL")
 		}
 
 		log.Default.Debugf("github: downloading plugin from '%s'...", assetUrl)
 		if err := web.ProgressDownloadFile(dc.httpClient, assetUrl, pluginPath); err != nil {
-			return nil, "", err
+			return "", err
 		}
 	}
 
-	return loader.LoadLibrary(pluginPath)
+	return pluginPath, nil
 }
 
 func getPluginRelease(ctx context.Context, client *github.Client, pkg packageQuery) (asset *github.ReleaseAsset, err error) {

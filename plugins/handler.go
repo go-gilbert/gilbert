@@ -2,21 +2,20 @@ package plugins
 
 import (
 	"context"
-	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/plugins/loader"
-	"github.com/go-gilbert/gilbert/plugins/sources/github"
 	"net/url"
 	"path/filepath"
+
+	"github.com/go-gilbert/gilbert/plugins/sources/github"
 )
 
-var importHandlers = map[string]ImportHandler{
-	"file":   localFileHandler,
-	"github": github.ImportHandler,
+var importHandlers = map[string]SourceProvider{
+	"file":              getLocalPlugin,
+	github.ProviderName: github.GetPlugin,
 }
 
-type ImportHandler func(context.Context, *url.URL) (sdk.PluginFactory, string, error)
+// SourceProvider provides and installs plugin from source
+type SourceProvider func(context.Context, *url.URL) (string, error)
 
-func localFileHandler(_ context.Context, uri *url.URL) (sdk.PluginFactory, string, error) {
-	libPath := filepath.Join(uri.Host, uri.Path)
-	return loader.LoadLibrary(libPath)
+func getLocalPlugin(_ context.Context, uri *url.URL) (string, error) {
+	return filepath.Join(uri.Host, uri.Path), nil
 }

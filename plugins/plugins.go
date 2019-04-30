@@ -6,6 +6,7 @@ import (
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
 	"github.com/go-gilbert/gilbert/plugins/builtin"
+	"github.com/go-gilbert/gilbert/plugins/loader"
 	"net/url"
 )
 
@@ -46,9 +47,14 @@ func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 		return fmt.Errorf("unsupported plugin URL handler: '%s'", uri.Scheme)
 	}
 
-	pf, pName, err := importHandler(ctx, uri)
+	pluginPath, err := importHandler(ctx, uri)
 	if err != nil {
 		return fmt.Errorf("failed to import plugin: %s", err)
+	}
+
+	pf, pName, err := loader.LoadLibrary(pluginPath)
+	if err != nil {
+		return fmt.Errorf("failed to load plugin: %s", err)
 	}
 
 	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginUrl)

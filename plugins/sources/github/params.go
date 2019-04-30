@@ -29,7 +29,9 @@ const (
 	protocolParam   = "protocol"
 	versionParam    = "version"
 	tokenParam      = "token"
-	providerName    = "github"
+
+	// ProviderName is GitHub provider name
+	ProviderName = "github"
 )
 
 var (
@@ -51,7 +53,8 @@ type packageQuery struct {
 }
 
 func (p *packageQuery) fileName() string {
-	return fmt.Sprintf("%s_%s-%s.%s", p.repo, runtime.GOOS, runtime.GOARCH, support.PluginExtension())
+	name := fmt.Sprintf("%s_%s-%s", p.repo, runtime.GOOS, runtime.GOARCH)
+	return support.AddPluginExtension(name)
 }
 
 func (p *packageQuery) directory() string {
