@@ -43,7 +43,8 @@ tasks:
         - ./plugins/...
 
   lint:
-    - plugin: shell
+    - description: lint
+      plugin: shell
       params:
         command: 'golangci-lint run'
 
