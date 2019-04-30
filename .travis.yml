@@ -9,13 +9,17 @@ branches:
     - master
     - stable
     - dev
+env:
+  - GO111MODULE=on
+
+install: true
 
 before_install:
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
 
 script:
-  - env GO111MODULE=on go vet ./...
-  - env GO111MODULE=on golangci-lint run
-  - env GO111MODULE=on go test ./...
-  - env GO111MODULE=on go build -o ./gilbert-dev
+  - go vet ./...
+  - golangci-lint run
+  - go test ./...
+  - go build -o ./gilbert-dev
   - ./gilbert-dev run build
