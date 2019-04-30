@@ -28,6 +28,7 @@ const (
 
 func getPluginDirectory(uri string) string {
 	hasher := md5.New()
+	// nolint:errcheck
 	hasher.Write([]byte(uri))
 	return filepath.Join(ProviderName, hex.EncodeToString(hasher.Sum(nil)))
 }

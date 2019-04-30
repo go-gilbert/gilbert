@@ -59,6 +59,7 @@ func (p *packageQuery) fileName() string {
 
 func (p *packageQuery) directory() string {
 	hasher := md5.New()
+	// nolint:errcheck
 	hasher.Write([]byte(p.location))
 	return filepath.Join(ProviderName, hex.EncodeToString(hasher.Sum(nil)))
 }

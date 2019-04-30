@@ -42,6 +42,7 @@ func RunTask(c *cli.Context) (err error) {
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	if err := importProjectPlugins(ctx, man, cwd); err != nil {
+		cancelFn()
 		return wrapManifestError(err)
 	}
 
