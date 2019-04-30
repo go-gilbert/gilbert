@@ -45,6 +45,7 @@ func RunTask(c *cli.Context) (err error) {
 
 	// Run the task
 	tr := runner.NewTaskRunner(man, cwd, log.Default)
+	tr.SetContext(ctx, cancelFn)
 	go handleShutdown(cancelFn)
 
 	if err := tr.RunTask(task); err != nil {
