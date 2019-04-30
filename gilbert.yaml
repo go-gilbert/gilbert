@@ -55,7 +55,7 @@ tasks:
 
   build:
   - plugin: build
-    description: 🚢 building project
+    description: building project
     params:
       variables:
         'main.version': '{{ version }}'
