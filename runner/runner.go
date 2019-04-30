@@ -12,7 +12,6 @@ import (
 	"github.com/go-gilbert/gilbert/scope"
 	"github.com/go-gilbert/gilbert/tools/shell"
 
-	"github.com/go-gilbert/gilbert/plugins/builtin"
 	"github.com/go-gilbert/gilbert/runner/job"
 )
 
@@ -20,13 +19,17 @@ var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task h
 
 // TaskRunner runs tasks
 type TaskRunner struct {
-	plugins          map[string]sdk.PluginFactory
 	manifest         *manifest.Manifest
 	CurrentDirectory string
 	log              sdk.Logger
 	subLogger        sdk.Logger
 	context          context.Context
 	cancelFn         context.CancelFunc
+}
+
+func (t *TaskRunner) SetContext(ctx context.Context, fn context.CancelFunc) {
+	t.context = ctx
+	t.cancelFn = fn
 }
 
 // PluginByName gets plugin by name
@@ -51,8 +54,11 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 	t.log.Logf("Running task '%s'...", taskName)
 	steps := len(task)
 
-	t.context, t.cancelFn = context.WithCancel(context.Background())
 	sl := t.subLogger.SubLogger()
+	if t.context == nil {
+		t.log.Warn("Warning: task context was not set")
+		t.context, t.cancelFn = context.WithCancel(context.Background())
+	}
 
 	// Set waitgroup and buff channel for async jobs.
 	var tracker *asyncJobTracker
@@ -307,7 +313,6 @@ func (t *TaskRunner) shouldRunJob(job sdk.Job, scp sdk.ScopeAccessor) bool {
 // NewTaskRunner creates a new task runner instance
 func NewTaskRunner(man *manifest.Manifest, cwd string, writer sdk.Logger) *TaskRunner {
 	t := &TaskRunner{
-		plugins:          builtin.DefaultPlugins,
 		manifest:         man,
 		CurrentDirectory: cwd,
 		log:              writer,

@@ -1,7 +1,7 @@
 version: 1.0
 
 plugins:
-  - file://../gilbert-plugin-example/build/gilbert-plugin-example.so
+  - github://github.com/go-gilbert/gilbert-plugin-example
 
 mixins:
   async-test:

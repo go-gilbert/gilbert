@@ -4,7 +4,7 @@ imports:
 
 vars:
   buildDir: './build'
-  version: '0.6.0'
+  version: '0.7.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
@@ -43,9 +43,10 @@ tasks:
         - ./plugins/...
 
   lint:
-    - plugin: shell
+    - description: lint
+      plugin: shell
       params:
-        command: 'gometalinter ./...'
+        command: 'golangci-lint run'
 
   pre-install:
   - plugin: go-get
@@ -55,7 +56,7 @@ tasks:
 
   build:
   - plugin: build
-    description: 🚢 building project
+    description: building project
     params:
       variables:
         'main.version': '{{ version }}'

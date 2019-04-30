@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/manifest"
 	"os"
 
 	"github.com/go-gilbert/gilbert/log"
@@ -15,7 +16,7 @@ func ListTasksAction(_ *cli.Context) error {
 		return fmt.Errorf("cannot get current working directory, %v", err)
 	}
 
-	m, err := getManifest(dir)
+	m, err := manifest.FromDirectory(dir)
 	if err != nil {
 		return err
 	}

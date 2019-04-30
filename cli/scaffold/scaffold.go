@@ -2,12 +2,13 @@ package scaffold
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/log"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/log"
 
 	"github.com/go-gilbert/gilbert/manifest"
 	"github.com/urfave/cli"
@@ -67,8 +68,8 @@ func RunScaffoldManifest(c *cli.Context) (err error) {
 		return fmt.Errorf("cannot create YAML file: %s", err)
 	}
 
-	destFile := path.Join(cwd, manifest.FileName)
-	err = ioutil.WriteFile(path.Join(cwd, manifest.FileName), out, 0655)
+	destFile := filepath.Join(cwd, manifest.FileName)
+	err = ioutil.WriteFile(filepath.Join(cwd, manifest.FileName), out, 0655)
 	if err != nil {
 		return fmt.Errorf("failed to write '%s': %s", destFile, err)
 	}
