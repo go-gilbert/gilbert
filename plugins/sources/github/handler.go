@@ -64,7 +64,7 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 }
 
 func getPluginRelease(ctx context.Context, client *github.Client, pkg packageQuery) (asset *github.ReleaseAsset, err error) {
-	log.Default.Infof("Downloading plugin from GitHub repo '%s/%s'", pkg.owner, pkg.repo)
+	log.Default.Logf("Downloading plugin from GitHub repo '%s/%s'", pkg.owner, pkg.repo)
 	var rel *github.RepositoryRelease
 	if pkg.version == latestVersion {
 		rel, _, err = client.Repositories.GetLatestRelease(ctx, pkg.owner, pkg.repo)

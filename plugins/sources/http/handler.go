@@ -53,7 +53,7 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 			return "", err
 		}
 
-		log.Default.Infof("Downloading plugin file from '%s'...", strUri)
+		log.Default.Logf("Downloading plugin file from '%s'...", strUri)
 		if err := web.ProgressDownloadFile(&http.Client{}, strUri, pluginPath); err != nil {
 			return "", err
 		}
