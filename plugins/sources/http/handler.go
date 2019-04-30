@@ -17,18 +17,23 @@ import (
 )
 
 const (
-	providerName       = "http"
+	// ProviderName is plugin provider name
+	ProviderName = "http"
+
+	// AltProviderName is alternative provider name
+	AltProviderName = "https"
+
 	defaultPluginFName = "plugin"
 )
 
 func getPluginDirectory(uri string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(uri))
-	return filepath.Join(providerName, hex.EncodeToString(hasher.Sum(nil)))
+	return filepath.Join(ProviderName, hex.EncodeToString(hasher.Sum(nil)))
 }
 
-// ImportHandler is web source handler for plugins
-func ImportHandler(ctx context.Context, uri *url.URL) (string, error) {
+// GetPlugin is web source handler for plugins
+func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 	strUri := uri.String()
 	dir, err := storage.Path(storage.Plugins, getPluginDirectory(strUri))
 	if err != nil {

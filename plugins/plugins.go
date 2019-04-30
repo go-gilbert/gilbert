@@ -14,7 +14,7 @@ var registry = make(map[string]sdk.PluginFactory)
 
 func Import(ctx context.Context, pluginUrl string) error {
 	if err := registerPluginFromUrl(ctx, pluginUrl); err != nil {
-		return fmt.Errorf("failed to load plugin '%s':\n%s", pluginUrl, err)
+		return fmt.Errorf("failed to load plugin from '%s':\n%s", pluginUrl, err)
 	}
 
 	return nil
@@ -67,7 +67,7 @@ func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 		return fmt.Errorf("plugin '%s' is already loaded", pName)
 	}
 
-	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginUrl)
+	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginPath)
 	registry[pName] = pf
 	return nil
 }

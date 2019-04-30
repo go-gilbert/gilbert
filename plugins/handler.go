@@ -5,12 +5,16 @@ import (
 	"net/url"
 	"path/filepath"
 
+	"github.com/go-gilbert/gilbert/plugins/sources/http"
+
 	"github.com/go-gilbert/gilbert/plugins/sources/github"
 )
 
 var importHandlers = map[string]SourceProvider{
-	"file":              getLocalPlugin,
-	github.ProviderName: github.GetPlugin,
+	"file":               getLocalPlugin,
+	github.ProviderName:  github.GetPlugin,
+	http.ProviderName:    http.GetPlugin,
+	http.AltProviderName: http.GetPlugin,
 }
 
 // SourceProvider provides and installs plugin from source
