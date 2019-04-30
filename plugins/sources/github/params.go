@@ -60,7 +60,7 @@ func (p *packageQuery) fileName() string {
 func (p *packageQuery) directory() string {
 	hasher := md5.New()
 	hasher.Write([]byte(p.location))
-	return filepath.Join(providerName, hex.EncodeToString(hasher.Sum(nil)))
+	return filepath.Join(ProviderName, hex.EncodeToString(hasher.Sum(nil)))
 }
 
 func getHttpClient(ctx context.Context, uri *url.URL) *http.Client {
