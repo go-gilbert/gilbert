@@ -32,6 +32,12 @@ func Get(pluginName string) (sdk.PluginFactory, error) {
 	return nil, fmt.Errorf("plugin '%s' not found", pluginName)
 }
 
+// Loaded checks if plugin is already loaded
+func Loaded(name string) bool {
+	_, ok := registry[name]
+	return ok
+}
+
 func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 	uri, err := url.Parse(pluginUrl)
 	if err != nil {
@@ -55,6 +61,10 @@ func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 	pf, pName, err := loader.LoadLibrary(pluginPath)
 	if err != nil {
 		return fmt.Errorf("failed to load plugin: %s", err)
+	}
+
+	if Loaded(pName) {
+		return fmt.Errorf("plugin '%s' is already loaded", pName)
 	}
 
 	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginUrl)
