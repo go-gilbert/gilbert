@@ -89,6 +89,7 @@ func main() {
 	err := app.Run(os.Args)
 	if err != nil {
 		color.Red("ERROR: %v", err)
+		os.Exit(1)
 	}
 }
 
