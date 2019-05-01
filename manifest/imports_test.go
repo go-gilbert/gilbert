@@ -21,27 +21,27 @@ func TestLoadManifest(t *testing.T) {
 		},
 		Mixins: Mixins{
 			"b11mx": Mixin{
-				sdk.Job{PluginName: "build"},
+				sdk.Job{ActionName: "build"},
 			},
 		},
 		Tasks: TaskSet{
 			"build": Task{
-				sdk.Job{PluginName: "build"},
+				sdk.Job{ActionName: "build"},
 			},
 			"b": Task{
-				sdk.Job{PluginName: "shell"},
+				sdk.Job{ActionName: "shell"},
 			},
 			"b1": Task{
-				sdk.Job{PluginName: "shell"},
+				sdk.Job{ActionName: "shell"},
 			},
 			"b2": Task{
-				sdk.Job{PluginName: "shell"},
+				sdk.Job{ActionName: "shell"},
 			},
 			"b11": Task{
-				sdk.Job{PluginName: "shell"},
+				sdk.Job{ActionName: "shell"},
 			},
 			"c": Task{
-				sdk.Job{PluginName: "shell"},
+				sdk.Job{ActionName: "shell"},
 			},
 		},
 	}
