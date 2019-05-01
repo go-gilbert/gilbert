@@ -2,43 +2,40 @@ package plugins
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/log"
-	"github.com/go-gilbert/gilbert/plugins/builtin"
-	"github.com/go-gilbert/gilbert/plugins/loader"
 	"net/url"
+	"strings"
+
+	"github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/actions"
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/plugins/loader"
 )
 
-var registry = make(map[string]sdk.PluginFactory)
+func formatPluginActionName(pluginName, actionName string) string {
+	return pluginName + ":" + actionName
+}
 
-func Import(ctx context.Context, pluginUrl string) error {
-	if err := registerPluginFromUrl(ctx, pluginUrl); err != nil {
-		return fmt.Errorf("failed to load plugin from '%s':\n%s", pluginUrl, err)
+func registerPluginAction(pName, hName string, handler sdk.HandlerFactory) error {
+	hName = strings.TrimSpace(hName)
+	actionName := formatPluginActionName(pName, hName)
+	if err := actions.HandleFunc(actionName, handler); err != nil {
+		return err
 	}
 
+	log.Default.Debugf("loader: registered action handler '%s'", actionName)
 	return nil
 }
 
-func Get(pluginName string) (sdk.PluginFactory, error) {
-	if plug, ok := registry[pluginName]; ok {
-		return plug, nil
-	}
+// Import imports plugin from URL and loads it
+func Import(ctx context.Context, pluginUrl string) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("failed to load plugin from '%s'\n:%s", pluginUrl, err)
+		}
+	}()
 
-	if plug, ok := builtin.DefaultPlugins[pluginName]; ok {
-		return plug, nil
-	}
-
-	return nil, fmt.Errorf("plugin '%s' not found", pluginName)
-}
-
-// Loaded checks if plugin is already loaded
-func Loaded(name string) bool {
-	_, ok := registry[name]
-	return ok
-}
-
-func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 	uri, err := url.Parse(pluginUrl)
 	if err != nil {
 		return fmt.Errorf("invalid plugin import URL (%s)", err)
@@ -58,16 +55,23 @@ func registerPluginFromUrl(ctx context.Context, pluginUrl string) error {
 		return fmt.Errorf("failed to import plugin: %s", err)
 	}
 
-	pf, pName, err := loader.LoadLibrary(pluginPath)
+	pluginName, handlers, err := loader.LoadPlugin(pluginPath)
 	if err != nil {
 		return fmt.Errorf("failed to load plugin: %s", err)
 	}
 
-	if Loaded(pName) {
-		return fmt.Errorf("plugin '%s' is already loaded", pName)
+	pluginName = strings.TrimSpace(pluginName)
+	if pluginName == "" {
+		return errors.New("plugin name should not be empty")
 	}
 
-	log.Default.Debugf("loaded plugin '%s' from '%s'", pName, pluginPath)
-	registry[pName] = pf
+	log.Default.Debugf("loader: loaded plugin '%s' from '%s'", pluginName, pluginPath)
+
+	// register plugin action handlers
+	for hName, handler := range handlers {
+		if err := registerPluginAction(pluginName, hName, handler); err != nil {
+			return fmt.Errorf("failed to register action handler, %s", err)
+		}
+	}
 	return nil
 }

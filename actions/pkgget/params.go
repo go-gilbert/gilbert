@@ -1,4 +1,4 @@
-package goget
+package pkgget
 
 type params struct {
 	Verbose      bool

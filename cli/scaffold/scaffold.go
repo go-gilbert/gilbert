@@ -24,13 +24,13 @@ var boilerplate = manifest.Manifest{
 		"build": manifest.Task{
 			{
 				Description: "Build project",
-				PluginName:  "build",
+				ActionName:  "build",
 			},
 		},
 		"cover": manifest.Task{
 			{
 				Description: "Check project coverage",
-				PluginName:  "cover",
+				ActionName:  "cover",
 				Params: map[string]interface{}{
 					"threshold":      60.0,
 					"reportCoverage": true,
@@ -44,7 +44,7 @@ var boilerplate = manifest.Manifest{
 			{
 				Description: "Remove vendor files",
 				Condition:   "file ./vendor",
-				PluginName:  "shell",
+				ActionName:  "shell",
 				Params: map[string]interface{}{
 					"command": "rm -rf ./vendor",
 				},
