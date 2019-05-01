@@ -12,7 +12,7 @@ mixins:
 
 tasks:
   test-plugins:
-    - action: 'example:hello-world'
+    - action: 'example-plugin:hello-world'
       params:
         message: "i love vodka"
   test-deadline-async:
