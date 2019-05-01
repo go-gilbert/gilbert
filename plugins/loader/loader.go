@@ -19,7 +19,7 @@ func badSymbolTypeErr(symName string, expected, got interface{}) error {
 }
 
 // LoadPlugin loads plugin from provided source
-func LoadPlugin(libPath string) (pluginName string, pluginActions sdk.Actions, err error) {
+func LoadPlugin(_ context.Context, libPath string) (pluginName string, pluginActions sdk.Actions, err error) {
 	handle, err := plugin.Open(libPath)
 
 	if err != nil {

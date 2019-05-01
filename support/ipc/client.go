@@ -30,6 +30,11 @@ func (c *Client) Connect() error {
 	return c.process.Start()
 }
 
+func (c *Client) Close() error {
+	c.Gateway.Close()
+	return c.process.Process.Kill()
+}
+
 func (c *Client) NewSession() *Session {
 	return NewSession(c.Gateway, c.ctx)
 }

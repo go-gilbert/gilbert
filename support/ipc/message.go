@@ -13,6 +13,8 @@ const (
 	Response
 )
 
+type Values map[string]interface{}
+
 // Message is IPC message
 type Message struct {
 	ID        uuid.UUID       `json:"id"`

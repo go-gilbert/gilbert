@@ -53,6 +53,7 @@ func (g *Gateway) Send(m *Message) (err error) {
 }
 
 func (g *Gateway) Close() {
+	g.MessageEmitter.RemoveAll()
 	close(g.Messages)
 }
 
