@@ -24,7 +24,7 @@ func registerPluginAction(pName, hName string, handler sdk.HandlerFactory) error
 		return err
 	}
 
-	log.Default.Debugf("loader: registered action handler '%s'", hName)
+	log.Default.Debugf("loader: registered action handler '%s'", actionName)
 	return nil
 }
 
