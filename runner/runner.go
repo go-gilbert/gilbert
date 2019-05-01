@@ -10,7 +10,7 @@ import (
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/manifest"
 	"github.com/go-gilbert/gilbert/scope"
-	"github.com/go-gilbert/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/support/shell"
 
 	"github.com/go-gilbert/gilbert/runner/job"
 )

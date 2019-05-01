@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-gilbert/gilbert/tools/fs"
+	"github.com/go-gilbert/gilbert/support/fs"
 )
 
 const (

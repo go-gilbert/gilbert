@@ -5,7 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/support/shell"
 )
 
 // Params contains params for shell plugin
