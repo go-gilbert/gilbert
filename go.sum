@@ -10,6 +10,10 @@ github.com/go-gilbert/gilbert-sdk v0.7.0 h1:EiYJ9AyclA6dZCGa/hCXCrWGynl+ksJFzN0u
 github.com/go-gilbert/gilbert-sdk v0.7.0/go.mod h1:u6Q5eVdx1SCUMCpn9XtcHktE/Adjy+Qjbyu6p3NNVNY=
 github.com/go-gilbert/gilbert-sdk v0.8.2 h1:45wKd2XfaCe7GFOaIFIZeshANN9w7s5lzXRQ+G6WJR4=
 github.com/go-gilbert/gilbert-sdk v0.8.2/go.mod h1:u6Q5eVdx1SCUMCpn9XtcHktE/Adjy+Qjbyu6p3NNVNY=
+github.com/go-gilbert/gilbert-sdk v0.8.3 h1:pPU+YrEO/UwOEe3XbKbKlokLuvd458fBNzpnBf0D9U0=
+github.com/go-gilbert/gilbert-sdk v0.8.3/go.mod h1:u6Q5eVdx1SCUMCpn9XtcHktE/Adjy+Qjbyu6p3NNVNY=
+github.com/go-gilbert/gilbert-sdk v0.8.4 h1:iYAjcOx0FqftDCqslC1h2uHvbO3+FTFRn7RSOJlJa4M=
+github.com/go-gilbert/gilbert-sdk v0.8.4/go.mod h1:u6Q5eVdx1SCUMCpn9XtcHktE/Adjy+Qjbyu6p3NNVNY=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/go-github/v25 v25.0.2 h1:MqXE7nOlIF91NJ/PXAcvS2dC+XXCDbY7RvJzjyEPAoU=
 github.com/google/go-github/v25 v25.0.2/go.mod h1:6z5pC69qHtrPJ0sXPsj4BLnd82b+r6sLB7qcBoRZqpw=
