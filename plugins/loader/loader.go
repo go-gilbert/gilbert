@@ -32,7 +32,7 @@ func LoadPlugin(libPath string) (pluginName string, pluginActions sdk.Actions, e
 	}
 
 	pluginActions, err = getPluginActions(handle)
-	return pluginName, pluginActions, nil
+	return pluginName, pluginActions, err
 }
 
 func getPluginActions(handle *plugin.Plugin) (actions sdk.Actions, err error) {
