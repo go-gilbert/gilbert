@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -47,6 +48,7 @@ func (s *Session) Call(out interface{}, methodName string, args ...interface{}) 
 
 	// subscribe for response
 	ch, err := s.emitter.Subscribe(msg.ID)
+	defer s.emitter.Unsubscribe(msg.ID) // nolint:errcheck
 	if err != nil {
 		return err
 	}
