@@ -1,16 +1,17 @@
-package goget
+package pkgget
 
 import (
 	"errors"
 	"fmt"
-	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/tools/shell"
 	"os/exec"
 	"strings"
+
+	"github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/tools/shell"
 )
 
-// Plugin implements gilbert plugin
-type Plugin struct {
+// Action implements sdk.Action
+type Action struct {
 	scope   sdk.ScopeAccessor
 	params  params
 	log     sdk.Logger
@@ -18,17 +19,17 @@ type Plugin struct {
 }
 
 // Call implements plugins.plugin
-func (p *Plugin) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
-	if len(p.params.Packages) == 0 {
+func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
+	if len(a.params.Packages) == 0 {
 		return errors.New("no packages to install")
 	}
 
-	for _, pkg := range p.params.Packages {
-		if p.stopped {
+	for _, pkg := range a.params.Packages {
+		if a.stopped {
 			return nil
 		}
 
-		if err := p.getPackage(pkg, ctx); err != nil {
+		if err := a.getPackage(pkg, ctx); err != nil {
 			return err
 		}
 	}
@@ -36,7 +37,7 @@ func (p *Plugin) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
 	return nil
 }
 
-func (p *Plugin) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err error) {
+func (a *Action) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("failed to get package '%s', %s", pkgName, err)
@@ -44,34 +45,34 @@ func (p *Plugin) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err err
 	}()
 
 	cmd := []string{"get"}
-	if p.params.DownloadOnly {
+	if a.params.DownloadOnly {
 		cmd = append(cmd, "-d")
 	}
 
-	if p.params.Update {
+	if a.params.Update {
 		cmd = append(cmd, "-u")
 	}
 
-	if p.params.Verbose {
+	if a.params.Verbose {
 		cmd = append(cmd, "-v")
 	}
 
 	cmd = append(cmd, pkgName)
 	proc := exec.Command("go", cmd...)
-	if p.params.Verbose {
-		proc.Stdout = p.log
+	if a.params.Verbose {
+		proc.Stdout = a.log
 	}
 
 	go func() {
 		select {
 		case <-ctx.Context().Done():
-			p.log.Debug("kill:", proc.Path)
+			a.log.Debug("kill:", proc.Path)
 			_ = proc.Process.Kill()
 		}
 	}()
 
-	p.log.Infof("Downloading package '%s'", pkgName)
-	p.log.Debug(strings.Join(proc.Args, " "))
+	a.log.Infof("Downloading package '%s'", pkgName)
+	a.log.Debug(strings.Join(proc.Args, " "))
 	if err := proc.Start(); err != nil {
 		return err
 	}
@@ -84,21 +85,20 @@ func (p *Plugin) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err err
 }
 
 // Cancel cancels plugin execution
-func (p *Plugin) Cancel(_ sdk.JobContextAccessor) error {
-	p.stopped = true
+func (a *Action) Cancel(_ sdk.JobContextAccessor) error {
+	a.stopped = true
 	return nil
 }
 
-// NewPlugin creates a new plugin instance
-func NewPlugin(scope sdk.ScopeAccessor, rawParams sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
+// NewAction creates a get-package action handler instance
+func NewAction(scope sdk.ScopeAccessor, rawParams sdk.ActionParams) (sdk.ActionHandler, error) {
 	p := params{}
 	if err := rawParams.Unmarshal(&p); err != nil {
 		return nil, err
 	}
 
-	return &Plugin{
+	return &Action{
 		scope:  scope,
 		params: p,
-		log:    log,
 	}, nil
 }

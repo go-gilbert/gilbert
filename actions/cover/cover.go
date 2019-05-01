@@ -10,8 +10,8 @@ import (
 
 const coverFilePattern = "gbcover*.out"
 
-// NewPlugin creates a new cover plugin instance
-func NewPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
+// NewAction creates a new cover action handler instance
+func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (sdk.ActionHandler, error) {
 	p := newParams()
 	if err := params.Unmarshal(&p); err != nil {
 		return nil, err
@@ -26,11 +26,10 @@ func NewPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger)
 		return nil, fmt.Errorf("failed to create coverage temporary file: %s", err)
 	}
 
-	return &plugin{
+	return &Action{
 		scope:     scope,
 		params:    p,
 		alive:     true,
 		coverFile: f,
-		log:       log,
 	}, nil
 }
