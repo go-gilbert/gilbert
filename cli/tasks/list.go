@@ -2,10 +2,11 @@ package tasks
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/manifest"
 	"os"
 
+	"github.com/go-gilbert/gilbert/log"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/log"
 )
 
 // ListTasksAction handles 'ls' command
@@ -15,7 +16,7 @@ func ListTasksAction(_ *cli.Context) error {
 		return fmt.Errorf("cannot get current working directory, %v", err)
 	}
 
-	m, err := getManifest(dir)
+	m, err := manifest.FromDirectory(dir)
 	if err != nil {
 		return err
 	}

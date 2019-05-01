@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	sdk "github.com/go-gilbert/gilbert-sdk"
 	"io"
 )
 
@@ -42,7 +43,7 @@ func (c *logger) logf(level int, format string, args ...interface{}) {
 	c.writer.Write(level, c.formatter.Format(format, args...)+lineBreak)
 }
 
-func (c *logger) SubLogger() Logger {
+func (c *logger) SubLogger() sdk.Logger {
 	return &logger{
 		level:     c.level,
 		formatter: c.formatter.Next(),

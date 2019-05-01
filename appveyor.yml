@@ -2,14 +2,14 @@ version: "{build}"
 
 # Source Config
 
-clone_folder: c:\gopath\src\github.com\x1unix\gilbert
+clone_folder: c:\gilbert
 
 # Build host
 
 environment:
   GOPATH: c:\gopath
   DEPTESTBYPASS501: 1
-  GOVERSION: 1.10
+  GOVERSION: 1.12
 
 init:
   - git config --global core.autocrlf input
@@ -30,12 +30,11 @@ install:
   - set Path=c:\go\bin;c:\gopath\bin;%Path%
   - go version
   - go env
-  - choco install dep
-  - dep ensure
+  - go mod tidy
 
 build: false
 deploy: false
 
 test_script:
-  - go build github.com/x1unix/gilbert
-  - for /f "" %%G in ('go list github.com/x1unix/gilbert/...') do ( go test %%G & IF ERRORLEVEL == 1 EXIT 1)
+  - go build
+  - for /f "" %%G in ('go list github.com/go-gilbert/gilbert/...') do ( go test %%G & IF ERRORLEVEL == 1 EXIT 1)

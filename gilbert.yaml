@@ -4,12 +4,12 @@ imports:
 
 vars:
   buildDir: './build'
-  version: '0.6.0'
+  version: '0.7.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
   platform-build:
-    - plugin: build
+    - action: build
       description: 'build for {{os}} {{arch}}'
       vars:
         ext: ''
@@ -23,7 +23,7 @@ mixins:
           'main.commit': '{{ commit }}'
 tasks:
   install:
-  - plugin: build
+  - action: build
     params:
       outputPath: '{{GOPATH}}/bin/gilbert'
       variables:
@@ -31,7 +31,7 @@ tasks:
         'main.commit': 'local'
 
   cover:
-  - plugin: cover
+  - action: cover
     params:
       threshold: 60
       sumBy: 'statements'
@@ -43,28 +43,24 @@ tasks:
         - ./plugins/...
 
   lint:
-    - plugin: shell
+    - description: lint
+      action: shell
       params:
-        command: 'gometalinter ./...'
+        command: 'golangci-lint run'
 
   pre-install:
-  - plugin: go-get
+  - action: go-get
     params:
       packages:
         - github.com/stretchr/testify
 
   build:
-  - plugin: build
-    description: 🚢 building project
+  - action: build
+    description: building project
     params:
       variables:
         'main.version': '{{ version }}'
         'main.commit': '{{ commit }}'
-  - if: 'uname -a'
-    description: "show a message only if job runs on UNIX"
-    plugin: shell
-    params:
-      command: 'echo This is UNIX machine'
 
   release:
   - mixin: platform-build

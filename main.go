@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/cli/maintenance"
 	"os"
 	"runtime"
 
 	"github.com/fatih/color"
+	"github.com/go-gilbert/gilbert/cli/scaffold"
+	"github.com/go-gilbert/gilbert/cli/tasks"
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/scope"
 	"github.com/urfave/cli"
-	"github.com/x1unix/gilbert/cli/scaffold"
-	"github.com/x1unix/gilbert/cli/tasks"
-	"github.com/x1unix/gilbert/log"
-	"github.com/x1unix/gilbert/scope"
 )
 
 var (
@@ -71,11 +72,24 @@ func main() {
 				verboseFlag,
 			},
 		},
+		{
+			Name:        "clean",
+			Description: "Clean cached files and objects",
+			Usage:       "Clean cached files and objects",
+			Action:      maintenance.ClearCacheAction,
+			Before:      bootstrap,
+			Flags: []cli.Flag{
+				verboseFlag,
+				maintenance.ClearAllFlag,
+				maintenance.ClearPluginsFlag,
+			},
+		},
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
 		color.Red("ERROR: %v", err)
+		os.Exit(1)
 	}
 }
 
