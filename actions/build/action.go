@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-gilbert/gilbert-sdk"
 
-	"github.com/go-gilbert/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/support/shell"
 )
 
 // Action represents Gilbert's plugin

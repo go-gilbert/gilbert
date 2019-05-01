@@ -39,7 +39,7 @@ tasks:
       fullReport: false
       packages:
         - ./manifest
-        - ./tools
+        - ./support
         - ./plugins/...
 
   lint:

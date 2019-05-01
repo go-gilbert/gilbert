@@ -9,7 +9,7 @@ import (
 	"github.com/go-gilbert/gilbert-sdk"
 
 	"github.com/go-gilbert/gilbert/actions/cover/profile"
-	"github.com/go-gilbert/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/support/shell"
 )
 
 type Action struct {
