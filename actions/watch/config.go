@@ -43,7 +43,7 @@ func (p *params) pathIgnored(path string) (bool, error) {
 	return false, nil
 }
 
-func parseParams(raw sdk.PluginParams, scope sdk.ScopeAccessor) (*params, error) {
+func parseParams(raw sdk.ActionParams, scope sdk.ScopeAccessor) (*params, error) {
 	p := params{
 		DebounceTime: defaultDebounceTime,
 	}

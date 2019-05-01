@@ -2,10 +2,11 @@ package build
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert-sdk"
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/go-gilbert/gilbert-sdk"
 
 	"github.com/go-gilbert/gilbert/tools"
 )
@@ -67,7 +68,7 @@ func (p *Params) linkerParams(ctx sdk.ScopeAccessor) (args []string, err error) 
 		}
 
 		// override package vars using linker:
-		// '-X main.Foo=Bar'
+		// '-X Foo=Bar'
 		args = append(args, "-X "+k+"="+expanded)
 	}
 

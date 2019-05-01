@@ -60,7 +60,7 @@ func RunTask(c *cli.Context) (err error) {
 }
 
 func importProjectPlugins(ctx context.Context, m *manifest.Manifest, cwd string) error {
-	if len(m.Plugins) > 0 {
+	if len(m.Plugins) == 0 {
 		return nil
 	}
 
