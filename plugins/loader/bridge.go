@@ -3,6 +3,7 @@ package loader
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	sdk "github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
 	"github.com/go-gilbert/gilbert/support/ipc"
@@ -83,14 +84,47 @@ func (b *pluginBridge) wrapHandlerFactory(actionName string) sdk.HandlerFactory 
 			return nil, err
 		}
 
-		proxyScopeCalls(s, scope)
-
-		return nil, nil
+		return &actionHandlerBridge{
+			session: s,
+			params:  params,
+			scope:   scope,
+		}, nil
 	}
 }
 
-func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
-	sess.HandleFunc("scope.AppendVariables", func(args json.RawMessage) (interface{}, error) {
+type actionHandlerBridge struct {
+	session *ipc.Session
+	params  sdk.ActionParams
+	scope   sdk.ScopeAccessor
+}
+
+func (b *actionHandlerBridge) Call(ctx sdk.JobContextAccessor, runner sdk.JobRunner) error {
+	b.proxyScopeCalls(b.scope)
+	b.proxyJobRunner(ctx, runner)
+	ctx.Log().Debugf("wrapper: wrap scope, job context and runner")
+	return nil
+}
+
+func (b *actionHandlerBridge) Cancel(ctx sdk.JobContextAccessor) error {
+	return nil
+}
+
+func (b *actionHandlerBridge) proxyContext(ctx sdk.JobContextAccessor) {
+
+}
+
+func (b *actionHandlerBridge) proxyJobRunner(ctx sdk.JobContextAccessor, runner sdk.JobRunner) {
+	// TODO: implement
+	b.session.HandleFunc("runner.RunJob", stubHandler)
+	b.session.HandleFunc("runner.ActionByName", stubHandler)
+}
+
+func stubHandler(args json.RawMessage) (interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (b *actionHandlerBridge) proxyScopeCalls(scope sdk.ScopeAccessor) {
+	b.session.HandleFunc("scope.AppendVariables", func(args json.RawMessage) (interface{}, error) {
 		var v sdk.Vars
 		if err := json.Unmarshal(args, v); err != nil {
 			return nil, err
@@ -100,7 +134,7 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		return nil, nil
 	})
 
-	sess.HandleFunc("scope.AppendGlobals", func(args json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.AppendGlobals", func(args json.RawMessage) (interface{}, error) {
 		var v sdk.Vars
 		if err := json.Unmarshal(args, v); err != nil {
 			return nil, err
@@ -110,7 +144,7 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		return nil, nil
 	})
 
-	sess.HandleFunc("scope.Global", func(args json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.Global", func(args json.RawMessage) (interface{}, error) {
 		var varName string
 		if err := json.Unmarshal(args, &varName); err != nil {
 			return nil, err
@@ -123,7 +157,7 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		}, nil
 	})
 
-	sess.HandleFunc("scope.Var", func(args json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.Var", func(args json.RawMessage) (interface{}, error) {
 		var varName string
 		if err := json.Unmarshal(args, &varName); err != nil {
 			return nil, err
@@ -137,11 +171,11 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		}, nil
 	})
 
-	sess.HandleFunc("scope.Vars", func(_ json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.Vars", func(_ json.RawMessage) (interface{}, error) {
 		return scope.Vars(), nil
 	})
 
-	sess.HandleFunc("scope.ExpandVariables", func(args json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.ExpandVariables", func(args json.RawMessage) (interface{}, error) {
 		var exp string
 		if err := json.Unmarshal(args, &exp); err != nil {
 			return nil, err
@@ -149,7 +183,7 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		return scope.ExpandVariables(exp)
 	})
 
-	sess.HandleFunc("scope.ExpandVariables", func(args json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.ExpandVariables", func(args json.RawMessage) (interface{}, error) {
 		var exp string
 		if err := json.Unmarshal(args, &exp); err != nil {
 			return nil, err
@@ -157,7 +191,7 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		return scope.ExpandVariables(exp)
 	})
 
-	sess.HandleFunc("scope.Scan", func(args json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.Scan", func(args json.RawMessage) (interface{}, error) {
 		var values []*string
 		if err := json.Unmarshal(args, &values); err != nil {
 			return nil, err
@@ -167,11 +201,11 @@ func proxyScopeCalls(sess *ipc.Session, scope sdk.ScopeAccessor) {
 		return values, err
 	})
 
-	sess.HandleFunc("scope.Environment", func(_ json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.Environment", func(_ json.RawMessage) (interface{}, error) {
 		return scope.Environment(), nil
 	})
 
-	sess.HandleFunc("scope.Environ", func(_ json.RawMessage) (interface{}, error) {
+	b.session.HandleFunc("scope.Environ", func(_ json.RawMessage) (interface{}, error) {
 		return scope.Environ(), nil
 	})
 }
