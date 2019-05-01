@@ -2,6 +2,7 @@ package ipc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/satori/go.uuid"
@@ -29,6 +30,68 @@ func (s *Session) Open() error {
 
 	go s.listen(ch)
 	return nil
+}
+
+// Call calls a method and returns response
+func (s *Session) Call(out interface{}, methodName string, args ...interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("call: panic - %s", r)
+		}
+	}()
+
+	msg, err := s.newMsgRequest(false, methodName, args...)
+	if err != nil {
+		return fmt.Errorf("call: failed to construct message: %s", err)
+	}
+
+	// subscribe for response
+	ch, err := s.emitter.Subscribe(msg.ID)
+	if err != nil {
+		return err
+	}
+
+	// send message
+	if err := s.gw.Send(msg); err != nil {
+		return fmt.Errorf("call: error on message send: %s", err)
+	}
+
+	result, ok := <-ch
+	if !ok {
+		return errors.New("call: cannot get response, result channel was closed")
+	}
+
+	if result.Error != nil {
+		return errors.New(*result.Error)
+	}
+
+	if err = json.Unmarshal(result.Result, out); err != nil {
+		return fmt.Errorf("call: failed to unmarshal response, %s", err)
+	}
+
+	return nil
+}
+
+func (s *Session) newMsgRequest(async bool, methodName string, args ...interface{}) (msg *Message, err error) {
+	msg = &Message{
+		ID:        uuid.NewV4(),
+		SessionID: s.id,
+		Method:    &methodName,
+	}
+
+	if async {
+		msg.Type = Notify
+	} else {
+		msg.Type = Request
+	}
+
+	if len(args) == 1 {
+		msg.Params, err = json.Marshal(args[1])
+	} else {
+		msg.Params, err = json.Marshal(args)
+	}
+
+	return msg, err
 }
 
 func (s *Session) listen(ch chan *Message) {

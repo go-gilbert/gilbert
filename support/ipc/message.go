@@ -9,6 +9,7 @@ import (
 
 const (
 	Request = iota
+	Notify
 	Response
 )
 
