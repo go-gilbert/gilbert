@@ -64,11 +64,9 @@ func (a *Action) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err err
 	}
 
 	go func() {
-		select {
-		case <-ctx.Context().Done():
-			a.log.Debug("kill:", proc.Path)
-			_ = proc.Process.Kill()
-		}
+		<-ctx.Context().Done()
+		a.log.Debug("kill:", proc.Path)
+		_ = proc.Process.Kill()
 	}()
 
 	a.log.Infof("Downloading package '%s'", pkgName)

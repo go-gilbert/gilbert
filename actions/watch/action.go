@@ -85,16 +85,15 @@ func (a *Action) invokeJob(ctx sdk.JobContextAccessor, r sdk.JobRunner) {
 	description := a.Job.FormatDescription()
 	ctx.Log().Infof("- Starting '%s'", description)
 	r.RunJob(*a.Job, ctx)
-	select {
-	case err := <-ctx.Errors():
-		a.dead.Unlock()
-		if err != nil {
-			ctx.Log().Errorf("- '%s' failed: %s", description, err)
-			return
-		}
 
-		ctx.Log().Successf("- '%s' finished", description)
+	err := <-ctx.Errors()
+	a.dead.Unlock()
+	if err != nil {
+		ctx.Log().Errorf("- '%s' failed: %s", description, err)
+		return
 	}
+
+	ctx.Log().Successf("- '%s' finished", description)
 }
 
 // Cancel stops watch plugin

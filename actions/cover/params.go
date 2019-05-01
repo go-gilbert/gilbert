@@ -7,7 +7,6 @@ const toolArgsPrefixSize = 2
 
 const (
 	sumByStatements = "statements"
-	sumByPercent    = "percent"
 )
 
 type params struct {
