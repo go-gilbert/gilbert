@@ -5,35 +5,35 @@ plugins:
 
 mixins:
   async-test:
-    - plugin: shell
+    - action: shell
       async: true
       params:
         command: 'foo'
 
 tasks:
   test-plugins:
-    - plugin: '@go-gilbert/example'
+    - action: 'example:hello-world'
       params:
         message: "i love vodka"
   test-deadline-async:
-    - plugin: shell
+    - action: shell
       deadline: 2000
       async: true
       params:
         command: 'sleep 4'
-    - plugin: shell
+    - action: shell
       params:
         command: 'ping -c 5 localhost'
   win-test-async:
-    - plugin: shell
+    - action: shell
       params:
         command: ping google.com
   test-async:
     - mixin: async-test
-    - plugin: shell
+    - action: shell
       params:
         command: 'uname -a'
-    - plugin: shell
+    - action: shell
       async: true
       params:
         command: 'ping -c 5 localhost'
