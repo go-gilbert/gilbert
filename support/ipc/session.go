@@ -33,6 +33,22 @@ func (s *Session) Open() error {
 	return nil
 }
 
+func (s *Session) Notify(methodName string, args ...interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("call: panic - %s", r)
+		}
+	}()
+
+	msg, err := s.newMsgRequest(false, methodName, args...)
+	if err != nil {
+		return err
+	}
+
+	// send message
+	return s.gw.Send(msg)
+}
+
 // Call calls a method and returns response
 func (s *Session) Call(out interface{}, methodName string, args ...interface{}) (err error) {
 	defer func() {
