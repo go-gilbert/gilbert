@@ -32,7 +32,7 @@ func registerPluginAction(pName, hName string, handler sdk.HandlerFactory) error
 func Import(ctx context.Context, pluginUrl string) (err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("failed to load plugin from '%s'\n:%s", pluginUrl, err)
+			err = fmt.Errorf("failed to load plugin from '%s':\n%s", pluginUrl, err)
 		}
 	}()
 
