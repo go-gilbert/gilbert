@@ -34,11 +34,11 @@ vars:
 tasks:
   build:
   - description: Build project
-    plugin: build
+    action: build
   clean:
   - if: file ./vendor
     description: Remove vendor files
-    plugin: shell
+    action: shell
     params:
       command: rm -rf ./vendor
 ```
@@ -50,9 +50,6 @@ tasks:
         </li>
         <li>
           <code>imports</code> - list of files to import. Imported files should share the same syntax as <code>gilbert.yaml</code> file.
-        </li>
-        <li>
-            <code>vars</code> - list of global variables that available for all tasks and jobs
         </li>
         <li>
             <code>vars</code> - list of global variables that available for all tasks and jobs
@@ -116,7 +113,7 @@ vars:
 </p>
 <h4>Job definiton</h4>
 <p>
-    Each job should be handled by specific plugin, contains it's own variables and arguments for handler plugin.
+    Each job should, contains action to execure, variables and action arguments.
     <br />
     Here is a full example of task with a few jobs. Most of parameters are <i>optional</i>.
 </p>
@@ -124,19 +121,19 @@ vars:
 ```yaml
 tasks:
     build_project:
-    - plugin: build                     # name of plugin that will handle this step, required!
+    - action: build                     # name of action to perform, required!
       description: "build the project"  # step description, optional
       delay: 500                        # delay before step start in milliseconds, optional
       vars:
         commit: "{% git log --format=%H -n 1 %}"     # Variables for current step, optional
         foo: "bar"
-      params:                                           # Arguments for plugin.
+      params:                                           # Arguments for action.
         variables:                                      # Those values are specific
-            'main.version': "{{ commit }}"           # to each plugin.
+            'main.version': "{{ commit }}"              # to each action.
             'main.stable': 'true'
     # Additional task:
     - if: 'uname -a'    # Condition for step run, contains a shell command, optional
-      plugin: shell
+      action: shell
       params:
         command: 'echo I am running on Unix machine'
 ```
@@ -160,14 +157,14 @@ tasks:
             <td>Contains step description and makes your job run status more informative</td>
         </tr>
         <tr>
-            <td class="param-required">`plugin`</td>
+            <td class="param-required">`action`</td>
             <td><i>string</i></td>
-            <td>Name of the plugin that will handle this step. See <a href="../built-in-plugins">built-in plugins</a> for more info</td>
+            <td>Name of action to execute. See <a href="../built-in-actions">built-in actions</a> for more info</td>
         </tr>
         <tr>
             <td class="param-required">`mixin`</td>
             <td><i>string</i></td>
-            <td>Name of the mixin to be called. <b>Cannot be together</b> with `plugin` in the same job.</td>
+            <td>Name of the mixin to be called. <b>Cannot be together</b> with `action` in the same job.</td>
         </tr>
         <tr>
             <td>`async`</td>
@@ -192,13 +189,13 @@ tasks:
         <tr>
             <td class="param-optional">`params`</td>
             <td><i>dict</i></td>
-            <td>Contains arguments for the plugin. See plugin docs for more info</td>
+            <td>Contains arguments for the action. See action docs for more info</td>
         </tr>
     </table>
 </p>
 <p>
   <span class="param-required"></span> - Required parameter<br />
-  <span class="param-optional"></span> - Optional parameter but depends on plugin<br />
+  <span class="param-optional"></span> - Optional parameter but depends on action<br />
 </p>
 <h3 class="section-head" id="mixins"><a href="#mixins">Mixins</a></h3>
 <p>
@@ -213,10 +210,10 @@ tasks:
   version: 1.0
   mixins:
     hello-world:
-      - plugin: shell
+      - action: shell
         params:
           command: 'echo "hello world"'
-      - plugin: build
+      - action: build
 ```
 <h4>Calling a mixin</h4>
 <p>
@@ -229,7 +226,7 @@ tasks:
 version: 1.0
 mixins:
   platform-build:
-  - plugin: build
+  - action: build
     description: 'build for {{os}} {{arch}}'
       vars:
         extension: '' # variable default value
@@ -240,7 +237,7 @@ mixins:
           arch: '{{arch}}'
   - if: 'type md5sum'
     description: 'generate checksum for {{buildDir}}/myproject_{{os}}-{{arch}}{{extension}}'
-    plugin: shell
+    action: shell
     vars:
       fileName: 'myproject_{{os}}-{{arch}}{{extension}}'
     params:
@@ -267,6 +264,6 @@ tasks:
 <h3 class="section-head" id="advanced-example"><a href="#advanced-example">Advanced examples</a></h3>
 <p>
   You can find a good use-case example in <a href="https://github.com/go-gilbert/demo-go-plugins" target="_blank">this demo project</a>.<br />
-  That repo demonstrates usage of mixins and a few built-in plugins for a real-world web-server example.
+  That repo demonstrates usage of mixins and a few built-in actions for a real-world web-server example.
 </p>
 <p><br /></p>
