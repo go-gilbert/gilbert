@@ -12,7 +12,7 @@
   </url>
   
   <url>
-    <loc>https://go-gilbert.github.io/gilbert/docs/schema/</loc>
+    <loc>https://go-gilbert.github.io/gilbert/docs/syntax/</loc>
   </url>
   
   <url>
@@ -25,7 +25,15 @@
   </url>
   
   <url>
-    <loc>https://go-gilbert.github.io/gilbert/docs/built-in-plugins/</loc>
+    <loc>https://go-gilbert.github.io/gilbert/docs/actions/</loc>
+  </url>
+  
+  <url>
+    <loc>https://go-gilbert.github.io/gilbert/docs/plugins/</loc>
+  </url>
+  
+  <url>
+    <loc>https://go-gilbert.github.io/gilbert/docs/plugin-development/</loc>
   </url>
   
   <url>

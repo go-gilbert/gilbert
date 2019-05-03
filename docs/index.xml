@@ -22,22 +22,44 @@ Project integration   Gilbert uses gilbert.yaml file to store list of tasks to r
     </item>
     
     <item>
-      <title>Schema</title>
-      <link>https://go-gilbert.github.io/gilbert/docs/schema/</link>
+      <title>Syntax</title>
+      <link>https://go-gilbert.github.io/gilbert/docs/syntax/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://go-gilbert.github.io/gilbert/docs/schema/</guid>
+      <guid>https://go-gilbert.github.io/gilbert/docs/syntax/</guid>
       <description>Manifest file  gilbert.yaml it&amp;rsquo;s a yaml file that contains all information about your tasks and tells Gilbert what to do when you try to run specific task.  This file should be located at the root folder of your codebase, or at least at the same location where you call gilbert command.  To create a sample file, use gilbert init command. Structure  gilbert.yaml consists of tasks, and tasks include a list of jobs to be done and rules.</description>
     </item>
     
     <item>
-      <title>Built-in plugins</title>
-      <link>https://go-gilbert.github.io/gilbert/docs/built-in-plugins/</link>
+      <title>Built-in actions</title>
+      <link>https://go-gilbert.github.io/gilbert/docs/actions/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://go-gilbert.github.io/gilbert/docs/built-in-plugins/</guid>
-      <description>Build plugin  Build plugin is abstraction over go build compile tool and simplifies build params pass. This plugin can operate without configuration. Configuration sample
-version: 1.0 tasks: build: - plugin: build params: source: &#39;github.com/foo/bar&#39; # default: current package buildMode: &#39;c-archive&#39; # default: &amp;quot;default&amp;quot; outputPath: &#39;./build/foo.exe&#39; # default: project directory params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &#39;-X main.foo=bar&#39; target: os: windows # default: current OS arch: &#39;386&#39; # default: current arch variables: # default: empty &#39;main.</description>
+      <guid>https://go-gilbert.github.io/gilbert/docs/actions/</guid>
+      <description>Build action  Build action is abstraction over go build compile tool and simplifies build params pass. This action can operate without configuration. Configuration sample
+version: 1.0 tasks: build: - action: build params: source: &#39;github.com/foo/bar&#39; # default: current package buildMode: &#39;c-archive&#39; # default: &amp;quot;default&amp;quot; outputPath: &#39;./build/foo.exe&#39; # default: project directory params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &#39;-X main.foo=bar&#39; target: os: windows # default: current OS arch: &#39;386&#39; # default: current arch variables: # default: empty &#39;main.</description>
+    </item>
+    
+    <item>
+      <title>Plugins</title>
+      <link>https://go-gilbert.github.io/gilbert/docs/plugins/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://go-gilbert.github.io/gilbert/docs/plugins/</guid>
+      <description>Importing a plugin  Before using a plugin, it should be imported into your gilbert.yaml file. Each import declaration should be in URL format
+Plugin will be download automatically at first start and you will be able to use all actions that it exports.
+plugins: - github://github.com/go-gilbert/gilbert-plugin-example # import URL tasks: hello-world: # each plugin action should be in format &#39;plugin-name:action-name&#39; - action: &#39;example-plugin:hello-world&#39; params: message: &#39;hello world&#39;</description>
+    </item>
+    
+    <item>
+      <title>Create a plugin</title>
+      <link>https://go-gilbert.github.io/gilbert/docs/plugin-development/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://go-gilbert.github.io/gilbert/docs/plugin-development/</guid>
+      <description>Intro  Plugins are generic Go libraries, compiled with plugin build mode. Current target requires Go version 1.12 with enabled modules support.
+ Plugins are currently supported only on Linux and macOS. Structure  Each plugin should export two methods:
+ func GetPluginName() string - returns plugin name func GetPluginActions() sdk.Actions - returns a map with action name as key and handler as value   Action lifecycle  Each time when job fires an action, Gilbert searches for handler factory that will return an action handler instance.</description>
     </item>
     
   </channel>

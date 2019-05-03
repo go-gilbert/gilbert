@@ -6,10 +6,10 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> Quick Start </title>
+  <title> Plugins </title>
 
   
-  <meta name="description" content="Up and running in under a minute"> 
+  <meta name="description" content="Extend functionality with third-party plugins"> 
   
   
   
@@ -21,10 +21,10 @@
   <meta name="author" content="go-gilbert">
 
 
-  <meta property="og:title" content="Quick Start" />
-<meta property="og:description" content="Up and running in under a minute" />
+  <meta property="og:title" content="Plugins" />
+<meta property="og:description" content="Extend functionality with third-party plugins" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://go-gilbert.github.io/gilbert/docs/quick-start/" />
+<meta property="og:url" content="https://go-gilbert.github.io/gilbert/docs/plugins/" />
 
 
   
@@ -38,7 +38,7 @@
   
   
 
-  <link rel="canonical" href="https://go-gilbert.github.io/gilbert/docs/quick-start/">  
+  <link rel="canonical" href="https://go-gilbert.github.io/gilbert/docs/plugins/">  
 
   <link rel="shortcut icon" type="image/png" href="https://go-gilbert.github.io/gilbert/img/icon.png">
 
@@ -104,9 +104,9 @@
   <main>
   <div id="main">
     <div id="hero">
-      <h1> Quick Start </h1>
+      <h1> Plugins </h1>
       <p class="hero-lead">
-           This article covers installation of Gilbert on your local machine.
+           Usage of third-party plugins to use custom actions.
       </p>
 
     </div> 
@@ -133,100 +133,99 @@ headingSelector: 'h3'
 
 
 
-    <p><h3 class="section-head" id="installation">
-    <a href="#installation">Installation</a>
-</h3>
-<h4>Linux, macOS and FreeBSD</h4>
+    <p><h3 class="section-head" id="plugin-import"><a href="#plugin-import">Importing a plugin</a></h3>
 <p>
-    Run this command to install Gilbert on your system:</p>
+    Before using a plugin, it should be imported into your <code>gilbert.yaml</code> file.
+  Each import declaration should be in URL format</p>
 
-<pre><code class="language-bash">curl https://raw.githubusercontent.com/go-gilbert/gilbert/master/install.sh | sh
-</code></pre>
+<p>Plugin will be download automatically at first start and you will be able to use all actions that it exports.</p>
 
-<p>Default installation path is <code>$GOPATH/bin</code>
-<h4>Windows</h4>
-<p>
-    You can download release binaries from <a href="https://github.com/go-gilbert/gilbert/releases" target="_blank">releases page</a> or install using PowerShell script:
-</p></p>
+<pre><code class="language-yaml">plugins:
+  - github://github.com/go-gilbert/gilbert-plugin-example # import URL
 
-<pre><code class="language-powershell">Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/go-gilbert/gilbert/master/install.ps1' -UseBasicParsing).Content
-</code></pre>
-
-<p><b>Note:</b> You should run <code>Set-ExecutionPolicy Bypass</code> in PowerShell to be able to execute installation script.</p>
-
-<p><h3 class="section-head" id="project-integration">
-    <a href="#project-integration">Project integration</a>
-</h3>
-<p>
-    <strong>Gilbert</strong> uses <code>gilbert.yaml</code> file to store list of tasks to run in project folder.
-</p>
-<p>
-    To generate a sample <code>gilbert.yaml</code> file, navigate to your project directory in terminal and run <code>gilbert init</code> command:
-</p></p>
-
-<pre><code>$ cd $GOPATH/src/github.com/user/myproject
-$ gilbert init
-</code></pre>
-
-<p>
-    This command will generate a sample file with <code>build</code>,<code>clean</code> and <code>cover</code> tasks:
-</p>
-
-<pre><code class="language-yaml">version: &quot;1.0&quot;
-vars:
-  appVersion: 1.0.0
 tasks:
-  build:
-  - description: Build project
-    action: build
-  clean:
-  - if: file ./vendor
-    description: Remove vendor files
-    action: shell
-    params:
-      command: rm -rf ./vendor
-  cover:
-  - description: Check project coverage
-    action: cover
-    params:
-      reportCoverage: true
-      threshold: 60
-      packages:
-      - ./...
+  hello-world:  # each plugin action should be in format 'plugin-name:action-name'
+    - action: 'example-plugin:hello-world'
+      params:
+        message: 'hello world'
 </code></pre>
 
-<p><h3 class="section-head" id="available-tasks">
-    <a href="#available-tasks">Available tasks</a>
-</h3>
+<p></p></p>
+
+<p><h3 class="section-head" id="import-sources"><a href="#import-sources">Import sources</a></h3>
 <p>
-    To get list of available tasks, run
+    Each plugin import URL starts with import handler as schema (e.g.: <code>github://</code>).
+  There are a few supported import sources:
 </p></p>
 
-<pre><code class="language-bash">gilbert ls
+<p><h4>Local file</h4>
+<p>
+  Import plugin locally by file path.</p>
+
+<pre><code class="language-yaml">plugins:
+  - file:///home/root/path/to/plugin.so
 </code></pre>
 
-<p><h3 class="section-head" id="running-tasks">
-    <a href="#running-tasks">Running tasks</a>
-</h3>
+<p></p></p>
+
+<p><h4>Web</h4>
 <p>
-    To run a task declared in <code>gilbert.yaml</code>, use <code>gilbert run</code> command.
+  Downloads plugin file from specified URL. Supported schemas are <code>http</code> and <code>https</code>.</p>
+
+<pre><code class="language-yaml">plugins:
+  - http://example.com/storage/my_plugin.so
+  - https://example.com/storage/my_plugin2.so
+</code></pre>
+
+<p></p></p>
+
+<p><h4>GitHub</h4>
+<p>
+  Plugins that are hosted on GitHub, can be downloaded by using special <code>github</code> handler.
+  Handler finds specified repo and downloads latest or specified plugin release.</p>
+
+<p>Plugin artifact should be present at repo&rsquo;s <strong>Releases</strong> page.
+  See <a href="../plugin-development#publishing">GitHub publishing</a> for more info.</p>
+
+<p>GitHub Enterprize and token auth are also supported.
 </p>
-<p>
-    <b>Example:</b></p>
-
-<pre><code class="language-bash">gilbert run build
-</code></pre>
-
 <p></p>
-<h3 class="section-head" id="next">
-    <a href="#next">Next steps</a>
-</h3>
+
+<pre><code class="language-yaml">plugins:
+  - github://github.com/owner/repo_name?version=v1.0.0&amp;token=AUTH_TOKEN
+</code></pre>
+
+<p><b>Optional URL parameters:</b>
+  <ul>
+    <li><code>version</code> - Release tag to download (default is <code>latest</code>)</li>
+    <li><code>token</code> - Your personal GitHub auth token</li>
+  </ul>
+</p></p>
+
+<p><h5>GitHub Enterprise</h5>
+<p></p>
+
+<pre><code class="language-yaml">plugins:
+  - github://company.domain.com:8888/custom_path/owner/repo_name?version=v1.0.0&amp;token=AUTH_TOKEN
+</code></pre>
+
+<p>To use custom GitHub host, just replace <code>github.com</code> to your GitHub Enterprise instance path.</p>
+
+<p>Path can contain hostname, port and path.</p>
+
+<p><b>Optional URL parameters:</b>
+  <ul>
+    <li><code>version</code> - Release tag to download (default is <code>latest</code>)</li>
+    <li><code>token</code> - Your personal GitHub auth token</li>
+    <li><code>protocol</code> - Protocol to use (<code>http</code> or <code>https</code>). <code>https</code> is default value.</li>
+  </ul>
+</p></p>
+
+<p><h3 class="section-head" id="explore-plugins"><a href="#explore-plugins">Explore plugins</a></h3>
 <p>
-    We recommend to read about gilbert <a href="../syntax">file syntax documentation</a> and take a look on <a href="../actions">built-in actions</a> for more information.
-</p>
-<p>
-    Also, you can find a good use-case example in <a href="https://github.com/go-gilbert/demo-go-plugins" target="_blank">this demo project</a>.<br />
-    That repo shows usage of mixins and a few built-in plugins for a real-world web-server example.
+  You can explore third-party plugins by searching on GitHub by <code><a href="https://github.com/topics/gilbert-plugin">gilbert-plugin</a></code> topic.</p>
+
+<p>Also you can explore our <a href="../plugin-development">plugin development docs</a> and create a plugin on your own.
 </p></p>
 
 

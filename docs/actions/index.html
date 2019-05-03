@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta name="generator" content="Hugo 0.54.0" />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> Built-in actions </title>
+
+  
+  <meta name="description" content="Information about built-in actions"> 
+  
+  
+  
+  
+  
+
+  
+
+  <meta name="author" content="go-gilbert">
+
+
+  <meta property="og:title" content="Built-in actions" />
+<meta property="og:description" content="Information about built-in actions" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://go-gilbert.github.io/gilbert/docs/actions/" />
+
+
+  
+
+
+
+
+  
+  
+  
+  
+  
+
+  <link rel="canonical" href="https://go-gilbert.github.io/gilbert/docs/actions/">  
+
+  <link rel="shortcut icon" type="image/png" href="https://go-gilbert.github.io/gilbert/img/icon.png">
+
+
+  <link href="/gilbert/css/font.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/kube.min.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/kube.legenda.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/highlight.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/master.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/kube.demo.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/hljs/atom-one-light.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+
+ <link href="/gilbert/css/custom.css" rel="stylesheet" type="text/css">
+ <link href="/gilbert/css/dark.css" rel="stylesheet" type="text/css">
+
+  <script src="/gilbert/js/jquery-2.1.4.min.js" type="text/javascript">
+  </script>
+  <script src="/gilbert/js/theming.js"></script>
+  <script type="text/javascript" src="/gilbert/js/tocbot.min.js"></script>
+</head>
+
+
+<body class="page-kube">
+  <header> <div class="show-sm">
+    <div id="nav-toggle-box">
+      <div id="nav-toggle-brand">
+        <a href="https://go-gilbert.github.io/gilbert/">Gilbert</a>
+      </div><a data-component="toggleme" data-target="#top" href="#" id="nav-toggle"><i class="kube-menu"></i></a>
+    </div>
+  </div>
+  <div class="hide-sm" id="top">
+    <div id="top-brand">
+      <a href="https://go-gilbert.github.io/gilbert/" title="Gilbert">
+        <img src="https://go-gilbert.github.io/gilbert/img/gilbert.png" class="head__logo--img" height="48" width="48" />
+      </a>
+    </div>
+    <nav id="top-nav-main">
+      <ul>
+       
+       
+    <li><a href="/gilbert/docs/quick-start" >Quick start</a></li>
+    
+    <li><a href="/gilbert/docs/" >Documentation</a></li>
+    
+    <li><a href="https://github.com/go-gilbert/gilbert" >Source</a></li>
+    
+      </ul>
+    </nav>
+    <nav id="top-nav-extra"> 
+      <ul>
+        <li>
+          <span id="theme-switcher" title="Switch theme">
+    <i class="far fa-sun" style="font-weight: bold"></i>
+    <i class="far fa-moon"></i>
+</span>
+        </li>
+          
+      </ul>
+    </nav>
+  </div>
+ </header>
+  <main>
+  <div id="main">
+    <div id="hero">
+      <h1> Built-in actions </h1>
+      <p class="hero-lead">
+           Gilbert contains a few core built-in actions. External actions are available through third-party plugins.
+      </p>
+
+    </div> 
+    <div id="kube-component" class="content">
+    
+<nav id="contents">
+    <ol class="js-toc">
+    </ol>
+</nav>
+<script type="text/javascript">
+document.addEventListener("DOMContentLoaded",
+function(){
+tocbot.init({
+
+tocSelector: '.js-toc',
+
+contentSelector: '.content',
+
+headingSelector: 'h3'
+})
+}
+);
+</script>
+
+
+
+    <p><h3 class="section-head" id="build-action"><a href="#build-action">Build action</a></h3>
+<p>
+    Build action is abstraction over <code>go build</code> compile tool and simplifies build params pass.
+    <br />
+    This action can operate without configuration.
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code class="language-yaml">version: 1.0
+tasks:
+    build:
+    - action: build
+      params:
+        source: 'github.com/foo/bar'        # default: current package
+        buildMode: 'c-archive'              # default: &quot;default&quot;
+        outputPath: './build/foo.exe'       # default: project directory
+        params:
+            stripDebugInfo: true            # removes debug info, default: false
+            linkerFlags:                    # custom linker flags, default: empty
+            - '-X main.foo=bar'
+        target:
+            os: windows     # default: current OS
+            arch: '386'     # default: current arch
+        variables:          # default: empty
+            'main.commit': '{% git log --format=%H -n 1 %}' 
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>source</code></td>
+            <td><i>string</i></td>
+            <td>Package name to be built</td>
+        </tr>
+        <tr>
+            <td><code>buildMode</code></td>
+            <td><i>string</i></td>
+            <td>Build mode, see <code>go help buildmode</code> for possible values</td>
+        </tr>
+        <tr>
+            <td><code>outputPath</code></td>
+            <td><i>string</i></td>
+            <td>Artifact output path</td>
+        </tr>
+        <tr>
+            <td><code>params</code></td>
+            <td><i>object</i></td>
+            <td>
+                Additional params related to linker:
+                <ul>
+                    <li><code>stripDebugInfo</code> - Remove all debug symbols</li>
+                    <li><code>linkerFlags</code> - Array of flags passed to linker</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td><code>target</code></td>
+            <td><i>object</i></td>
+            <td>
+                Defines build target:
+                <ul>
+                    <li><code>os</code> - Target operating system (<i>default: current OS</i>)</li>
+                    <li><code>arch</code> - Target architecture (<i>default: current architecture</i>)</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td><code>variables</code></td>
+            <td><i>dict</i></td>
+            <td>
+                Key-value pair of variables to replace in executable by linker (<code>main.version</code> for example).<br />
+                Can be useful to set application version or build commit.
+            </td>
+        </tr>
+    </table>
+</p></p>
+
+<p><h3 class="section-head" id="shell-action"><a href="#shell-action">Shell action</a></h3>
+<p>
+    Shell action allows to execute shell commands. If command returns non-zero exit code, task will fail.
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
+tasks:
+  run_something:
+  - action: shell
+    params:
+      command: 'scp root@localhost:/foo/bar ./bar'
+      silent: false           # optional, default: false
+      rawOutput: false        # optional, default: false
+      shell: '/bin/bash'      # optional, default: /bin/sh or cmd.exe
+      shellExecParam: '-c'    # optional, default: -c (or /c on windows for cmd.exe)
+      workDir: '/tmp'         # optional, default: project directory
+      env:                    # optional, default: use user's env vars
+        LC_LANG: 'en_UTF-8'
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>command</code></td>
+            <td><i>string</i></td>
+            <td>Command to run</td>
+        </tr>
+        <tr>
+            <td><code>silent</code></td>
+            <td><i>boolean</i></td>
+            <td>Hide command output</td>
+        </tr>
+        <tr>
+            <td><code>rawOutput</code></td>
+            <td><i>boolean</i></td>
+            <td>Do not decorate command output, can be useful if command output seems ugly</td>
+        </tr>
+        <tr>
+            <td><code>shell</code></td>
+            <td><i>string</i></td>
+            <td>Shell executable, not recommended to change on <b>Windows</b></td>
+        </tr>
+        <tr>
+            <td><code>shellExecParam</code></td>
+            <td><i>string</i></td>
+            <td>Shell command argument, not recommended to change</td>
+        </tr>
+        <tr>
+            <td><code>workDir</code></td>
+            <td><i>string</i></td>
+            <td>Working directory</td>
+        </tr>
+        <tr>
+            <td><code>env</code></td>
+            <td><i>dict</i></td>
+            <td>Custom environment variables</td>
+        </tr>
+    </table>
+</p>
+<h3 class="section-head" id="watch-action"><a href="#watch-action">Watch action</a></h3>
+<p>
+    Tracks file changes in specified path and restarts specified job on file/folder change.
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
+tasks:
+  watch:
+  - action: watch
+    params:
+      path: './src/...'   # path to watch, required
+      debounceTime: 300   # debounce time, optional
+      ignore:
+      - *.log             # list of entries to ignore, optional
+      job:
+        mixin: build-and-run-server # job to execure, similar to manifest job syntax. required.
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>path</code></td>
+            <td><i>string</i></td>
+            <td>Path to track for changes. Use <code>/...</code> to track changes in all sub-directories.</td>
+        </tr>
+        <tr>
+            <td><code>debounceTime</code></td>
+            <td><i>int</i></td>
+            <td>period to postpone job execution until after wait milliseconds have elapsed since the last time it was invoked</td>
+        </tr>
+        <tr>
+            <td><code>ignore</code></td>
+            <td><i>[]string</i></td>
+            <td>List of entries to ignore. All dotfiles are already included</td>
+        </tr>
+        <tr>
+            <td><code>job</code></td>
+            <td><i>object</i></td>
+            <td>Job to run. See <a href="../schema/#tasks">Job definition</a> for more info</td>
+        </tr>
+    </table>
+</p>
+<p>
+  <span class="param-required"></span> - Required parameter<br />
+</p></p>
+
+<p><h3 class="section-head" id="cover-action"><a href="#cover-action">Cover action</a></h3>
+<p>
+    Runs package tests and checks package code coverage. Task fails if code coverage is below specified threshold.
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
+tasks:
+  coverage:
+  - action: cover
+    params:
+      threshold: 60.5       # minimal coverage percent
+      reportCoverage: true  # show coverage report in output
+      fullReport: false     # display coverage for each function
+      packages:
+      - ./controllers
+      - ./src/...
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>packages</code></td>
+            <td><i>[]string</i></td>
+            <td>List of packages to check</td>
+        </tr>
+        <tr>
+            <td class="param-required"><code>threshold</code></td>
+            <td><i>double</i></td>
+            <td>Minimal coverage percent</td>
+        </tr>
+        <tr>
+            <td><code>reportCoverage</code></td>
+            <td><i>boolean</i></td>
+            <td>Display coverage summary</td>
+        </tr>
+        <tr>
+            <td><code>fullReport</code></td>
+            <td><i>boolean</i></td>
+            <td>Display coverage for each function in package</td>
+        </tr>
+    </table>
+</p>
+<p>
+  <span class="param-required"></span> - Required parameter<br />
+</p></p>
+
+<p><h3 class="section-head" id="get-package-action"><a href="#get-package-action">Get-Package action</a></h3>
+<p>
+    Installs libraries using <code>go get</code> tool
+</p>
+<h4>Configuration sample</h4></p>
+
+<pre><code>version: 1.0
+tasks:
+  watch:
+  - action: get-package
+    params:
+      update: false       # force update, optional
+      verbose: false      # debug output, optional
+      downloadOnly: false # download without build, optional
+      packages:
+      - github.com/stretchr/testify
+      - github.com/alecthomas/gometalinter
+</code></pre>
+
+<p><h4>Configuration params</h4>
+<p>
+        <table>
+        <tr>
+            <th>Param name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td class="param-required"><code>packages</code></td>
+            <td><i>[]string</i></td>
+            <td>List of packages to install</td>
+        </tr>
+        <tr>
+            <td><code>update</code></td>
+            <td><i>boolean</i></td>
+            <td>Force package update</td>
+        </tr>
+        <tr>
+            <td><code>downloadOnly</code></td>
+            <td><i>boolean</i></td>
+            <td>Download libraries without compilation</td>
+        </tr>
+        <tr>
+            <td><code>verbose</code></td>
+            <td><i>boolean</i></td>
+            <td>Debug output</td>
+        </tr>
+    </table>
+</p>
+<p>
+  <span class="param-required"></span> - Required parameter<br />
+</p>
+<h3 class="section-head" id="third-party-actions"><a href="#third-party-actions">Third-party actions</a></h3>
+<p>
+    Third party actions could be added with custom plugins.
+    See <a href="../plugins">plugins docs</a> for more info.
+</p></p>
+
+
+    <script src='/gilbert/js/highlight.pack.js'></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+    </div>
+    </div>
+</main>
+  <footer>   <footer id="footer">
+    <nav>
+      <ul>
+        <li><span>Gilbert</span></li>
+        <li>
+          <a href="/docs/">Docs</a>
+        </li>
+        <li>
+          <a href="https://github.com/go-gilbert/gilbert">Source</a>
+        </li>
+      </ul>
+    </nav>
+    <p>2019 &copy; Licence MIT.</p>
+  </footer> </footer>
+
+
+  <script src="/gilbert/js/kube.js" type="text/javascript">
+  </script>
+  <script src="/gilbert/js/kube.legenda.js" type="text/javascript">
+  </script>
+  <script src="/gilbert/js/master.js" type="text/javascript">
+  </script>
+</body>
+
+</html>

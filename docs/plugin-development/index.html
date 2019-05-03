@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta name="generator" content="Hugo 0.54.0" />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> Create a plugin </title>
+
+  
+  <meta name="description" content="Create and publish a custom plugin"> 
+  
+  
+  
+  
+  
+
+  
+
+  <meta name="author" content="go-gilbert">
+
+
+  <meta property="og:title" content="Create a plugin" />
+<meta property="og:description" content="Create and publish a custom plugin" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://go-gilbert.github.io/gilbert/docs/plugin-development/" />
+
+
+  
+
+
+
+
+  
+  
+  
+  
+  
+
+  <link rel="canonical" href="https://go-gilbert.github.io/gilbert/docs/plugin-development/">  
+
+  <link rel="shortcut icon" type="image/png" href="https://go-gilbert.github.io/gilbert/img/icon.png">
+
+
+  <link href="/gilbert/css/font.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/kube.min.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/kube.legenda.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/highlight.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/master.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/kube.demo.css" rel="stylesheet" type="text/css">
+  <link href="/gilbert/css/hljs/atom-one-light.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+
+ <link href="/gilbert/css/custom.css" rel="stylesheet" type="text/css">
+ <link href="/gilbert/css/dark.css" rel="stylesheet" type="text/css">
+
+  <script src="/gilbert/js/jquery-2.1.4.min.js" type="text/javascript">
+  </script>
+  <script src="/gilbert/js/theming.js"></script>
+  <script type="text/javascript" src="/gilbert/js/tocbot.min.js"></script>
+</head>
+
+
+<body class="page-kube">
+  <header> <div class="show-sm">
+    <div id="nav-toggle-box">
+      <div id="nav-toggle-brand">
+        <a href="https://go-gilbert.github.io/gilbert/">Gilbert</a>
+      </div><a data-component="toggleme" data-target="#top" href="#" id="nav-toggle"><i class="kube-menu"></i></a>
+    </div>
+  </div>
+  <div class="hide-sm" id="top">
+    <div id="top-brand">
+      <a href="https://go-gilbert.github.io/gilbert/" title="Gilbert">
+        <img src="https://go-gilbert.github.io/gilbert/img/gilbert.png" class="head__logo--img" height="48" width="48" />
+      </a>
+    </div>
+    <nav id="top-nav-main">
+      <ul>
+       
+       
+    <li><a href="/gilbert/docs/quick-start" >Quick start</a></li>
+    
+    <li><a href="/gilbert/docs/" >Documentation</a></li>
+    
+    <li><a href="https://github.com/go-gilbert/gilbert" >Source</a></li>
+    
+      </ul>
+    </nav>
+    <nav id="top-nav-extra"> 
+      <ul>
+        <li>
+          <span id="theme-switcher" title="Switch theme">
+    <i class="far fa-sun" style="font-weight: bold"></i>
+    <i class="far fa-moon"></i>
+</span>
+        </li>
+          
+      </ul>
+    </nav>
+  </div>
+ </header>
+  <main>
+  <div id="main">
+    <div id="hero">
+      <h1> Create a plugin </h1>
+      <p class="hero-lead">
+           Create and publish a custom plugin.
+      </p>
+
+    </div> 
+    <div id="kube-component" class="content">
+    
+<nav id="contents">
+    <ol class="js-toc">
+    </ol>
+</nav>
+<script type="text/javascript">
+document.addEventListener("DOMContentLoaded",
+function(){
+tocbot.init({
+
+tocSelector: '.js-toc',
+
+contentSelector: '.content',
+
+headingSelector: 'h3'
+})
+}
+);
+</script>
+
+
+
+    <p><h3 class="section-head" id="plugin-intro"><a href="#plugin-intro">Intro</a></h3>
+<p>
+  Plugins are generic Go libraries, compiled with <code>plugin</code> build mode.
+  Current target requires <strong>Go</strong> version <code>1.12</code> with enabled modules support.<br />
+</p>
+<p>
+  Plugins are currently supported only on <strong>Linux</strong> and <strong>macOS</strong>.
+</p></p>
+
+<p><h3 class="section-head" id="structure"><a href="#structure">Structure</a></h3>
+<p>
+  Each plugin should export two methods:</p>
+
+<ul>
+<li><code>func GetPluginName() string</code> - returns plugin name</li>
+<li><code>func GetPluginActions() sdk.Actions</code> - returns a map with action name as key and handler as value
+</p></li>
+</ul>
+
+<p><h3 class="section-head" id="action-lifecycle"><a href="#action-lifecycle">Action lifecycle</a></h3>
+<p>
+  Each time when job fires an action, Gilbert searches for <a href="https://github.com/go-gilbert/gilbert-sdk/blob/master/action.go#L29">handler factory</a> that will return an <a href="https://github.com/go-gilbert/gilbert-sdk/blob/master/action.go#L32">action handler</a> instance.
+  Gilbert calls action handler factory and passes a current job scope and action params from <code>gilbert.yaml</code>.</p>
+
+<p><img class="img--schema" src="../img/handler-call.svg" alt="action handle schema" /></p>
+
+<p>When factory returned action handler, Gilbert will call this action handler and pass job execution context and runner reference.
+</p></p>
+
+<p><h3 class="section-head" id="action-lifecycle"><a href="#action-lifecycle">Example</a></h3>
+<p>
+  Let&rsquo;s create some simplest plugin with one action handler that prints a message from action parameters.</p>
+
+<p>We will use a <a href="https://github.com/go-gilbert/gilbert-plugin-example">plugin example</a> from GitHub and <a href="https://github.com/go-gilbert/gilbert-sdk">SDK library</a> that provides all necessary types.
+</p>
+<h4>Exported functions</h4>
+<p>
+  First, our plugin should have two declared functions to be loaded by Gilbert:</p>
+
+<pre><code class="language-go">// GetPluginName returns plugin name
+func GetPluginName() string {
+	return &quot;example-plugin&quot;
+}
+
+// GetPluginActions returns available action handlers
+func GetPluginActions() sdk.Actions {
+	return sdk.Actions{
+		&quot;hello-world&quot;: NewHelloAction,
+	}
+}
+</code></pre>
+
+<p></p></p>
+
+<p><h4>Declaring a handler factory</h4>
+<p>
+  Handler factory creates a new action handler instance. It receives a job scope and action parameters.</p>
+
+<p>Scope used to retrieve variable values related to job and expand template expressions in action parameters.</p>
+
+<pre><code class="language-go">type Params struct {
+	Message string
+}
+
+// NewHelloAction is action constructor
+func NewHelloAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (sdk.ActionHandler, error) {
+  p := Params{}
+  
+  // extract params into our structure
+  if err := params.Unmarshal(&amp;p); err != nil {
+    return nil, err
+  }
+
+  // return action handler instance
+  return &amp;HelloAction{
+    scope:  scope,
+    params: p,
+  }, nil
+}
+</code></pre>
+
+<p></p></p>
+
+<p><h4>Action Handler</h4>
+<p>
+  Action handler is a structure that satisfies <code>sdk.ActionHandler</code> interface.
+  It has 2 methods:</p>
+
+<ul>
+<li><code>Call(sdk.JobContextAccessor, sdk.JobRunner) error</code> - action handle method. accepts execution context and task runner reference.</li>
+<li><code>Cancel(sdk.JobContextAccessor) error</code> - called when action execution must be aborted (e.g: job timeout reached or received a SIGKILL signal)</li>
+</ul>
+
+<pre><code class="language-go">package main
+
+import (
+	&quot;github.com/go-gilbert/gilbert-sdk&quot;
+)
+
+// HelloAction is an action handler
+type HelloAction struct {
+  scope  sdk.ScopeAccessor
+  params Params
+}
+
+func (p *HelloAction) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
+  // print message from action params and return no errors
+  ctx.Log().Info(p.params.Message)
+  return nil
+}
+
+func (p *HelloAction) Cancel(ctx sdk.JobContextAccessor) error {
+  ctx.Log().Info(&quot;Cancel callback call&quot;)
+  return nil
+}
+</code></pre>
+
+<p></p>
+<h3 class="section-head" id="plugin-deployment"><a href="#plugin-deployment">Plugin deployment</a></h3>
+<p>
+  We recommend a GitHub as a default source of plugin distribution.
+</p>
+<h4>GitHub</h4>
+<p>
+  <ul>
+    <li>
+      Build your library locally for all supported platforms (see: <a href="https://github.com/go-gilbert/gilbert-plugin-example/blob/master/gilbert.yaml">example</a>)
+    </li>
+    <li>Create a new <strong>Release</strong> on your repo and attach artifacts.</li>
+  </ul></p>
+
+<p><strong>Attention</strong>: your artifact should be in format <code>repo-name_GOOS-GOARCH.so</code> to be detectable by <code>github://</code> plugin handler.
+Example: <code>my-plugin_linux-386.so</code> or <code>my-plugin_darwin-amd64.so</code>.</p>
+
+<p>Also, we recommend to attach <a href="https://github.com/topics/gilbert-plugin"><code>gilbert-plugin</code></a> topic to your repo to help people easier to find your plugin
+</p></p>
+
+<p><h3 class="section-head" id="advanced-examples"><a href="#advanced-examples">Advanced examples</a></h3>
+<p>
+  We recommend to look at several resources for more information:</p>
+
+<ul>
+<li><a href="https://godoc.org/github.com/go-gilbert/gilbert-sdk">Plugin SDK Docs</a></li>
+<li><a href="https://github.com/go-gilbert/gilbert/tree/master/actions">Built-in actions source</a>
+</p></li>
+</ul>
+
+
+    <script src='/gilbert/js/highlight.pack.js'></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+    </div>
+    </div>
+</main>
+  <footer>   <footer id="footer">
+    <nav>
+      <ul>
+        <li><span>Gilbert</span></li>
+        <li>
+          <a href="/docs/">Docs</a>
+        </li>
+        <li>
+          <a href="https://github.com/go-gilbert/gilbert">Source</a>
+        </li>
+      </ul>
+    </nav>
+    <p>2019 &copy; Licence MIT.</p>
+  </footer> </footer>
+
+
+  <script src="/gilbert/js/kube.js" type="text/javascript">
+  </script>
+  <script src="/gilbert/js/kube.legenda.js" type="text/javascript">
+  </script>
+  <script src="/gilbert/js/master.js" type="text/javascript">
+  </script>
+</body>
+
+</html>
