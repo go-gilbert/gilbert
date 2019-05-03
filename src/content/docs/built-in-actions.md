@@ -1,24 +1,24 @@
 +++
-title = "Built-in plugins"
-description = "Information about plugins built-in Gilbert"
+title = "Built-in actions"
+description = "Information about actions built-in Gilbert"
 weight = 30
 draft = false
 toc = true
-bref = "Gilbert contains a few core built-in plugins. External plugins functionality is work in progress"
+bref = "Gilbert contains a few core built-in actions. External actions are available through third-party actions."
 +++
 
-<h3 class="section-head" id="build-plugin"><a href="#build-plugin">Build plugin</a></h3>
+<h3 class="section-head" id="build-action"><a href="#build-action">Build action</a></h3>
 <p>
-	Build plugin is abstraction over <code>go build</code> compile tool and simplifies build params pass.
+	Build action is abstraction over <code>go build</code> compile tool and simplifies build params pass.
 	<br />
-	This plugin can operate without configuration.
+	This action can operate without configuration.
 </p>
 <h4>Configuration sample</h4>
 ```yaml
 version: 1.0
 tasks:
 	build:
-	- plugin: build
+	- action: build
 	  params:
 	  	source: 'github.com/foo/bar' 		# default: current package
 		buildMode: 'c-archive' 				# default: "default"
@@ -89,16 +89,16 @@ tasks:
     </table>
 </p>
 
-<h3 class="section-head" id="shell-plugin"><a href="#shell-plugin">Shell plugin</a></h3>
+<h3 class="section-head" id="shell-action"><a href="#shell-action">Shell action</a></h3>
 <p>
-	Shell plugin allows to execute shell commands. If command returns non-zero exit code, task will fail.
+	Shell action allows to execute shell commands. If command returns non-zero exit code, task will fail.
 </p>
 <h4>Configuration sample</h4>
 ```
 version: 1.0
 tasks:
   run_something:
-  - plugin: shell
+  - action: shell
     params:
       command: 'scp root@localhost:/foo/bar ./bar'
       silent: false           # optional, default: false
@@ -154,7 +154,7 @@ tasks:
         </tr>
     </table>
 </p>
-<h3 class="section-head" id="watch-plugin"><a href="#watch-plugin">Watch plugin</a></h3>
+<h3 class="section-head" id="watch-action"><a href="#watch-action">Watch action</a></h3>
 <p>
 	Tracks file changes in specified path and restarts specified job on file/folder change.
 </p>
@@ -163,7 +163,7 @@ tasks:
 version: 1.0
 tasks:
   watch:
-  - plugin: watch
+  - action: watch
     params:
       path: './src/...'   # path to watch, required
       debounceTime: 300   # debounce time, optional
@@ -206,7 +206,7 @@ tasks:
   <span class="param-required"></span> - Required parameter<br />
 </p>
 
-<h3 class="section-head" id="cover-plugin"><a href="#cover-plugin">Cover plugin</a></h3>
+<h3 class="section-head" id="cover-action"><a href="#cover-action">Cover action</a></h3>
 <p>
     Runs package tests and checks package code coverage. Task fails if code coverage is below specified threshold.
 </p>
@@ -215,7 +215,7 @@ tasks:
 version: 1.0
 tasks:
   coverage:
-  - plugin: cover
+  - action: cover
     params:
       threshold: 60.5       # minimal coverage percent
       reportCoverage: true  # show coverage report in output
@@ -258,7 +258,7 @@ tasks:
   <span class="param-required"></span> - Required parameter<br />
 </p>
 
-<h3 class="section-head" id="go-get-plugin"><a href="#go-get-plugin">Go-Get plugin</a></h3>
+<h3 class="section-head" id="get-package-action"><a href="#get-package-action">Get-Package action</a></h3>
 <p>
 	Installs libraries using `go get` tool
 </p>
@@ -267,7 +267,7 @@ tasks:
 version: 1.0
 tasks:
   watch:
-  - plugin: go-get
+  - action: get-package
     params:
       update: false       # force update, optional
       verbose: false      # debug output, optional
