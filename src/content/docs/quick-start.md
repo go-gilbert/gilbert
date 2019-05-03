@@ -95,7 +95,7 @@ gilbert run build
     <a href="#next">Next steps</a>
 </h3>
 <p>
-    We recommend to read about gilbert <a href="../schema">file syntax documentation</a> and take a look on <a href="../built-in-actions">built-in actions</a> for more information.
+    We recommend to read about gilbert <a href="../syntax">file syntax documentation</a> and take a look on <a href="../built-in-actions">built-in actions</a> for more information.
 </p>
 <p>
     Also, you can find a good use-case example in <a href="https://github.com/go-gilbert/demo-go-plugins" target="_blank">this demo project</a>.<br />

@@ -1,5 +1,5 @@
 +++
-title = "Schema"
+title = "Syntax"
 description = "Creating tasks and pipelines in gilbert.yaml file"
 weight = 20
 draft = false
