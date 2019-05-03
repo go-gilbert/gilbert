@@ -1,6 +1,6 @@
 +++
 title = "Built-in actions"
-description = "Information about actions built-in Gilbert"
+description = "Information about built-in actions"
 weight = 30
 draft = false
 toc = true
@@ -308,4 +308,9 @@ tasks:
 </p>
 <p>
   <span class="param-required"></span> - Required parameter<br />
+</p>
+<h3 class="section-head" id="third-party-actions"><a href="#third-party-actions">Third-party actions</a></h3>
+<p>
+    Third party actions could be added with custom plugins.
+    See [plugins docs](../plugins) for more info.
 </p>

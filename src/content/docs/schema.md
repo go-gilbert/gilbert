@@ -159,7 +159,7 @@ tasks:
         <tr>
             <td class="param-required">`action`</td>
             <td><i>string</i></td>
-            <td>Name of action to execute. See <a href="../built-in-actions">built-in actions</a> for more info</td>
+            <td>Name of action to execute. See <a href="../actions">built-in actions</a> for more info</td>
         </tr>
         <tr>
             <td class="param-required">`mixin`</td>
