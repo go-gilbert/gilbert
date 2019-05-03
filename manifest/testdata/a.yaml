@@ -4,4 +4,4 @@ imports:
   - ./include/c.yaml
 tasks:
   build:
-    - plugin: build
+    - action: build

@@ -1,55 +1,59 @@
-// +build !windows,!js,!nacl
+// +build linux darwin
 
 package loader
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert-sdk"
 	"plugin"
+
+	"github.com/go-gilbert/gilbert-sdk"
 )
 
 const (
-	newPluginProc  = "NewPlugin"
-	pluginNameProc = "GetPluginName"
+	pluginActionsProc = "GetPluginActions"
+	pluginNameProc    = "GetPluginName"
 )
 
 func badSymbolTypeErr(symName string, expected, got interface{}) error {
 	return fmt.Errorf("invalid %s() symbol signature (want %T, but got %T)", symName, expected, got)
 }
 
-// LoadLibrary loads library from provided source
-func LoadLibrary(libPath string) (sdk.PluginFactory, string, error) {
+// LoadPlugin loads plugin from provided source
+func LoadPlugin(libPath string) (pluginName string, pluginActions sdk.Actions, err error) {
 	handle, err := plugin.Open(libPath)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to load plugin, %s (file '%s')", err, libPath)
+		return "", nil, fmt.Errorf("failed to load plugin, %s (file '%s')", err, libPath)
 	}
 
-	name, err := getPluginName(handle)
+	pluginName, err = getPluginName(handle)
 	if err != nil {
-		return nil, "", err
+		return "", nil, err
 	}
 
-	factory, err := getPluginFactory(handle)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return factory, name, nil
+	pluginActions, err = getPluginActions(handle)
+	return pluginName, pluginActions, err
 }
 
-func getPluginFactory(handle *plugin.Plugin) (sdk.PluginFactory, error) {
-	procHandle, err := handle.Lookup(newPluginProc)
+func getPluginActions(handle *plugin.Plugin) (actions sdk.Actions, err error) {
+	defer func() {
+		// panic handler, just in for safety
+		if r := recover(); r != nil {
+			err = fmt.Errorf("got panic when trying to get plugin actions: %s", r)
+		}
+	}()
+
+	procHandle, err := handle.Lookup(pluginActionsProc)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get plugin factory (%s)", err)
 	}
 
-	fn, ok := procHandle.(func(sdk.ScopeAccessor, sdk.PluginParams, sdk.Logger) (sdk.Plugin, error))
+	fn, ok := procHandle.(func() sdk.Actions)
 	if !ok {
-		return nil, badSymbolTypeErr(newPluginProc, fn, procHandle)
+		return nil, badSymbolTypeErr(pluginActionsProc, fn, procHandle)
 	}
 
-	return fn, nil
+	return fn(), nil
 }
 
 func getPluginName(handle *plugin.Plugin) (string, error) {

@@ -247,7 +247,7 @@ func (v *StmtVisitor) VisitStmt(s ast.Stmt) {
 		}
 		v.VisitStmt(s.Body)
 		if s.Else != nil {
-			// Code copied from go.tools/cmd/cover, to deal with "if x {} else if y {}"
+			// Code copied from go.support/cmd/cover, to deal with "if x {} else if y {}"
 			const backupToElse = token.Pos(len("else ")) // The AST doesn't remember the else location. We can make an accurate guess.
 			switch stmt := s.Else.(type) {
 			case *ast.IfStmt:

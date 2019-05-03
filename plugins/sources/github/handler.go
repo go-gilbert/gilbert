@@ -14,8 +14,8 @@ import (
 	"github.com/go-gilbert/gilbert/storage"
 
 	"github.com/go-gilbert/gilbert/log"
-	"github.com/go-gilbert/gilbert/tools/fs"
-	"github.com/go-gilbert/gilbert/tools/web"
+	"github.com/go-gilbert/gilbert/support/fs"
+	"github.com/go-gilbert/gilbert/support/web"
 	"github.com/google/go-github/v25/github"
 )
 

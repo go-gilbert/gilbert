@@ -3,14 +3,14 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/go-gilbert/gilbert/plugins"
+	"github.com/go-gilbert/gilbert/actions"
 	"strings"
 	"time"
 
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/manifest"
 	"github.com/go-gilbert/gilbert/scope"
-	"github.com/go-gilbert/gilbert/tools/shell"
+	"github.com/go-gilbert/gilbert/support/shell"
 
 	"github.com/go-gilbert/gilbert/runner/job"
 )
@@ -32,9 +32,9 @@ func (t *TaskRunner) SetContext(ctx context.Context, fn context.CancelFunc) {
 	t.cancelFn = fn
 }
 
-// PluginByName gets plugin by name
-func (t *TaskRunner) PluginByName(pluginName string) (p sdk.PluginFactory, err error) {
-	return plugins.Get(pluginName)
+// ActionByName returns action handler constructor
+func (t *TaskRunner) ActionByName(actionName string) (p sdk.HandlerFactory, err error) {
+	return actions.GetHandler(actionName)
 }
 
 // Stop stops task runner
@@ -159,25 +159,25 @@ func (t *TaskRunner) handleJob(j sdk.Job, ctx *job.RunContext) {
 
 	execType := j.Type()
 	switch execType {
-	case sdk.ExecPlugin:
-		t.applyJobPlugin(s, j, ctx)
+	case sdk.ExecAction:
+		t.handleActionCall(s, j, ctx)
 	case sdk.ExecMixin:
-		t.execJobWithMixin(j, s, ctx)
+		t.handleMixinCall(j, s, ctx)
 	default:
 		ctx.Result(errNoTaskHandler)
 	}
 }
 
-func (t *TaskRunner) applyJobPlugin(s sdk.ScopeAccessor, j sdk.Job, ctx *job.RunContext) {
-	factory, err := t.PluginByName(j.PluginName)
+func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx *job.RunContext) {
+	factory, err := t.ActionByName(j.ActionName)
 	if err != nil {
 		ctx.Result(err)
 		return
 	}
 
-	plugin, err := factory(s, j.Params, ctx.Log())
+	actionHandler, err := factory(s, j.Params)
 	if err != nil {
-		ctx.Result(fmt.Errorf("failed to apply plugin '%s': %v", j.PluginName, err))
+		ctx.Result(fmt.Errorf("failed to apply actionHandler '%s': %v", j.ActionName, err))
 		return
 	}
 
@@ -185,19 +185,19 @@ func (t *TaskRunner) applyJobPlugin(s sdk.ScopeAccessor, j sdk.Job, ctx *job.Run
 	// Event may arrive on SIGKILL or when timeout reached
 	go func() {
 		<-ctx.Context().Done()
-		ctx.Log().Debugf("sent stop signal to '%s' plugin", j.PluginName)
-		ctx.Result(plugin.Cancel(ctx))
+		ctx.Log().Debugf("sent stop signal to '%s' actionHandler", j.ActionName)
+		ctx.Result(actionHandler.Cancel(ctx))
 	}()
 
-	// Call plugin and send result
-	err = plugin.Call(ctx, t)
+	// Call actionHandler and send result
+	err = actionHandler.Call(ctx, t)
 	ctx.Result(err)
 }
 
-// execJobWithMixin constructs a task from job with mixin and runs it
+// handleMixinCall constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) execJobWithMixin(j sdk.Job, s sdk.ScopeAccessor, ctx *job.RunContext) {
+func (t *TaskRunner) handleMixinCall(j sdk.Job, s sdk.ScopeAccessor, ctx *job.RunContext) {
 	mx, ok := t.manifest.Mixins[j.MixinName]
 	if !ok {
 		ctx.Result(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))

@@ -2,4 +2,4 @@ version: 1.0
 
 tasks:
   b2:
-    - plugin: shell
+    - action: shell

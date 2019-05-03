@@ -2,12 +2,11 @@ package cover
 
 // toolArgsPrefixSize is prefix args count for 'go tool cover' command
 //
-// go test -coverprofile=/tmp/cover ./services/msgboard ./services/incidents ./services/pusersync
+// go test -coverprofile=/tmp/cover ./services/foo ./services/bar./services/baz
 const toolArgsPrefixSize = 2
 
 const (
 	sumByStatements = "statements"
-	sumByPercent    = "percent"
 )
 
 type params struct {

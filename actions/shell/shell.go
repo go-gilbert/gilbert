@@ -1,10 +1,11 @@
 package shell
 
 import (
-	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/tools/shell"
 	"os"
 	"os/exec"
+
+	"github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/support/shell"
 )
 
 // Params contains params for shell plugin
@@ -69,17 +70,16 @@ func newParams(ctx sdk.ScopeAccessor) Params {
 	return p
 }
 
-// NewShellPlugin creates a new shell plugin instance
-func NewShellPlugin(scope sdk.ScopeAccessor, params sdk.PluginParams, log sdk.Logger) (sdk.Plugin, error) {
+// NewAction creates a new shell action handler instance
+func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (sdk.ActionHandler, error) {
 	p := newParams(scope)
 
 	if err := params.Unmarshal(&p); err != nil {
 		return nil, err
 	}
 
-	return &Plugin{
+	return &Action{
 		scope:  scope,
 		params: p,
-		log:    log,
 	}, nil
 }

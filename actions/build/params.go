@@ -2,12 +2,13 @@ package build
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert-sdk"
 	"os/exec"
 	"runtime"
 	"strings"
 
-	"github.com/go-gilbert/gilbert/tools"
+	"github.com/go-gilbert/gilbert-sdk"
+
+	"github.com/go-gilbert/gilbert/support"
 )
 
 const (
@@ -67,19 +68,19 @@ func (p *Params) linkerParams(ctx sdk.ScopeAccessor) (args []string, err error) 
 		}
 
 		// override package vars using linker:
-		// '-X main.Foo=Bar'
+		// '-X Foo=Bar'
 		args = append(args, "-X "+k+"="+expanded)
 	}
 
 	return append(args, p.Params.LinkerFlags...), nil
 }
 
-// buildArgs returns arguments for Go tools to build the artifact
+// buildArgs returns arguments for Go support to build the artifact
 func (p *Params) buildArgs(ctx sdk.ScopeAccessor) (args []string, err error) {
 	args = []string{"build"}
 
 	// Add output file param
-	if !tools.StringEmpty(p.OutputPath) {
+	if !support.StringEmpty(p.OutputPath) {
 		output, err := ctx.ExpandVariables(p.OutputPath)
 		if err != nil {
 			return nil, err
@@ -99,12 +100,12 @@ func (p *Params) buildArgs(ctx sdk.ScopeAccessor) (args []string, err error) {
 	}
 
 	// Add build mode
-	if !tools.StringEmpty(p.BuildMode) {
+	if !support.StringEmpty(p.BuildMode) {
 		args = append(args, "-buildmode", p.BuildMode)
 	}
 
 	// Add package/file name to command
-	if !tools.StringEmpty(p.Source) {
+	if !support.StringEmpty(p.Source) {
 		source, err := ctx.ExpandVariables(p.Source)
 		if err != nil {
 			return nil, err

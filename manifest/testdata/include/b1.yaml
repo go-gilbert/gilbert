@@ -5,4 +5,4 @@ vars:
   b: b1
 tasks:
   b1:
-    - plugin: shell
+    - action: shell
