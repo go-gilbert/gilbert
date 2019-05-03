@@ -1,7 +1,7 @@
 +++
 title = "Plugins"
-description = "Extend functionality through third-party plugins"
-weight = 30
+description = "Extend functionality with third-party plugins"
+weight = 40
 draft = false
 toc = true
 bref = "Usage of third-party plugins to use custom actions"

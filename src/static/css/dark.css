@@ -50,6 +50,10 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--dark-primary-darker);
 }
 
+.ui-dark .img--schema {
+    filter: invert(100%);
+}
+
 .ui-dark #footer nav ul li span {
     color: var(--dark-accent-darker);
 }
