@@ -4,8 +4,8 @@ vars:
 
 mixins:
   b11mx:
-    - plugin: build
+    - action: build
 
 tasks:
   b11:
-    - plugin: shell
+    - action: shell
