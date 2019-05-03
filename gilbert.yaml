@@ -4,7 +4,7 @@ imports:
 
 vars:
   buildDir: './build'
-  version: '0.8.0'
+  version: '0.8.1'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
