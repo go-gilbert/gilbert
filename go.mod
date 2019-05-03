@@ -6,12 +6,11 @@ require (
 	github.com/axw/gocov v0.0.0-20170322000131-3a69a0d2a4ef
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.7.0
-	github.com/go-gilbert/gilbert-sdk v0.8.4
+	github.com/go-gilbert/gilbert-sdk v0.8.5
 	github.com/google/go-github/v25 v25.0.2
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/rjeczalik/notify v0.9.2
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
