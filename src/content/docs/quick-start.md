@@ -42,7 +42,7 @@ $ cd $GOPATH/src/github.com/user/myproject
 $ gilbert init
 ```
 <p>
-    This command will generate a sample file with <code>build</code> and <code>clean</code> tasks:
+    This command will generate a sample file with <code>build</code>,<code>clean</code> and <code>cover</code> tasks:
 </p>
 
 ```yaml
@@ -52,13 +52,21 @@ vars:
 tasks:
   build:
   - description: Build project
-    plugin: build
+    action: build
   clean:
   - if: file ./vendor
     description: Remove vendor files
-    plugin: shell
+    action: shell
     params:
       command: rm -rf ./vendor
+  cover:
+  - description: Check project coverage
+    action: cover
+    params:
+      reportCoverage: true
+      threshold: 60
+      packages:
+      - ./...
 ```
 
 <h3 class="section-head" id="available-tasks">
@@ -87,7 +95,7 @@ gilbert run build
     <a href="#next">Next steps</a>
 </h3>
 <p>
-    We recommend to read about gilbert <a href="../schema">file syntax documentation</a> and take a look on <a href="../built-in-plugins">built-in plugins</a> for more information.
+    We recommend to read about gilbert <a href="../schema">file syntax documentation</a> and take a look on <a href="../built-in-actions">built-in actions</a> for more information.
 </p>
 <p>
     Also, you can find a good use-case example in <a href="https://github.com/go-gilbert/demo-go-plugins" target="_blank">this demo project</a>.<br />
