@@ -4,12 +4,12 @@ vars:
 
 tasks:
   serve:
-  - plugin: shell
+  - action: shell
     params:
       rawOutput: true
       command: hugo server -D
   build:
-  - plugin: shell
+  - action: shell
     params:
       rawOutput: true
       command: hugo -d ../
