@@ -12,12 +12,16 @@ Paginate = 4
   email = "denis0051@gmail.com"
 
 [[menu.main]]
+    name = "Quick start"
+    weight = 10
+    url = "/docs/quick-start"
+[[menu.main]]
     name = "Documentation"
-    weight = -100
+    weight = 20
     url = "/docs/"
 [[menu.main]]
     name = "Source"
-    weight = -100
+    weight = 30
     url = "https://github.com/go-gilbert/gilbert"
 # [[menu.main]]
 #     name = "Blog"

@@ -4,7 +4,7 @@ description = "Information about built-in actions"
 weight = 30
 draft = false
 toc = true
-bref = "Gilbert contains a few core built-in actions. External actions are available through third-party actions."
+bref = "Gilbert contains a few core built-in actions. External actions are available through third-party plugins"
 +++
 
 <h3 class="section-head" id="build-action"><a href="#build-action">Build action</a></h3>
