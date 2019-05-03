@@ -88,17 +88,5 @@ tasks:
       arch: '386'
   - mixin: platform-build
     vars:
-      os: linux
-      arch: 'arm64'
-  - mixin: platform-build
-    vars:
-      os: linux
-      arch: 'arm'
-  - mixin: platform-build
-    vars:
-      os: freebsd
-      arch: '386'
-  - mixin: platform-build
-    vars:
       os: freebsd
       arch: 'amd64'
