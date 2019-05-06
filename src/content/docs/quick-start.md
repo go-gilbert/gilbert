@@ -98,6 +98,6 @@ gilbert run build
     We recommend to read about gilbert <a href="../syntax">file syntax documentation</a> and take a look on <a href="../actions">built-in actions</a> for more information.
 </p>
 <p>
-    Also, you can find a good use-case example in <a href="https://github.com/go-gilbert/demo-go-plugins" target="_blank">this demo project</a>.<br />
+    Also, you can find a good use-case example in <a href="https://github.com/x1unix/demo-go-plugins" target="_blank">this demo project</a>.<br />
     That repo shows usage of mixins and a few built-in plugins for a real-world web-server example.
 </p>
