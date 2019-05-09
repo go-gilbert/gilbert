@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/url"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -51,15 +52,15 @@ func TestGetPlugin(t *testing.T) {
 			uri: "go://foo/bar",
 			expects: expects{
 				build:    true,
-				pkgPath:  "foo/bar",
+				pkgPath:  filepath.Join("foo", "bar"),
 				fileName: support.AddPluginExtension("bar"),
 			},
 		},
 		"do not build plugin if it's cached": {
-			uri:          "go:///foo/bar",
+			uri:          "go://foo/bar",
 			pluginExists: true,
 			expects: expects{
-				pkgPath:  "/foo/bar",
+				pkgPath:  filepath.Join("foo", "bar"),
 				fileName: support.AddPluginExtension("bar"),
 			},
 		},
@@ -69,7 +70,7 @@ func TestGetPlugin(t *testing.T) {
 			expects: expects{
 				rebuild:  true,
 				build:    true,
-				pkgPath:  "foo/bar",
+				pkgPath:  filepath.Join("foo", "bar"),
 				fileName: support.AddPluginExtension("bar"),
 			},
 		},
@@ -78,7 +79,7 @@ func TestGetPlugin(t *testing.T) {
 			cmdError: errors.New("dump error"),
 			expects: expects{
 				build:    true,
-				pkgPath:  "foo/bar",
+				pkgPath:  filepath.Join("foo", "bar"),
 				err:      "failed to build plugin package (dump error)",
 				fileName: support.AddPluginExtension("bar"),
 			},
