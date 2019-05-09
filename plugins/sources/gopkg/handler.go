@@ -37,7 +37,9 @@ func newImportContext(uri *url.URL) (*importContext, error) {
 	fName := support.AddPluginExtension(filepath.Base(pkgPath))
 
 	hasher := md5.New()
-	hasher.Write([]byte(pkgPath))
+	if _, err := hasher.Write([]byte(pkgPath)); err != nil {
+		return nil, err
+	}
 	pluginDir, err := storage.LocalPath(storage.Plugins, hex.EncodeToString(hasher.Sum(nil)))
 	if err != nil {
 		return nil, err
