@@ -58,13 +58,8 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 		return "", err
 	}
 
-	// TODO: check if plugin source changed
-	exists, err := fs.Exists(ic.filePath)
-	if err != nil {
-		log.Default.Warnf("goloader: failed to check if plugin exists, %s", err)
-	}
-
-	if exists && err == nil && !ic.rebuild {
+	// TODO: automatically check if plugin source changed
+	if pluginCached(ic) && !ic.rebuild {
 		return ic.filePath, nil
 	}
 
@@ -85,6 +80,33 @@ func buildPlugin(ctx context.Context, ic *importContext) error {
 	cmd.Stderr = log.Default.ErrorWriter()
 	log.Default.Debugf("goloader: exec '%s'", strings.Join(cmd.Args, " "))
 
+	if err := runGoCommand(cmd); err != nil {
+		return err
+	}
+
+	log.Default.Debug("goloader: build successful")
+	return nil
+}
+
+////////////////////////////////////////
+// Functions represented as variables //
+// to make them mock-able.            //
+////////////////////////////////////////
+
+var pluginCached = func(ic *importContext) bool {
+	exists, err := fs.Exists(ic.filePath)
+	if err != nil {
+		log.Default.Warnf("goloader: failed to check if plugin exists, %s", err)
+	}
+
+	if exists && err == nil {
+		return true
+	}
+
+	return false
+}
+
+var runGoCommand = func(cmd *exec.Cmd) error {
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -93,6 +115,5 @@ func buildPlugin(ctx context.Context, ic *importContext) error {
 		return shell.FormatExitError(err)
 	}
 
-	log.Default.Debug("goloader: build successful")
 	return nil
 }
