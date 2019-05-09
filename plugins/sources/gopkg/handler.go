@@ -19,17 +19,17 @@ import (
 )
 
 type importContext struct {
-	pkgPath   string
-	fileName  string
-	filePath  string
-	buildOnce bool
+	pkgPath  string
+	fileName string
+	filePath string
+	rebuild  bool
 }
 
 const (
 	// ProviderName is handler protocol name
 	ProviderName = "go"
 
-	buildOnceParam = "buildOnce"
+	rebuildParam = "rebuild"
 )
 
 func newImportContext(uri *url.URL) (*importContext, error) {
@@ -43,12 +43,12 @@ func newImportContext(uri *url.URL) (*importContext, error) {
 		return nil, err
 	}
 
-	buildOnce, _ := strconv.ParseBool(uri.Query().Get(buildOnceParam))
+	rebuild, _ := strconv.ParseBool(uri.Query().Get(rebuildParam))
 	return &importContext{
-		pkgPath:   pkgPath,
-		fileName:  fName,
-		filePath:  filepath.Join(pluginDir, fName),
-		buildOnce: buildOnce,
+		pkgPath:  pkgPath,
+		fileName: fName,
+		filePath: filepath.Join(pluginDir, fName),
+		rebuild:  rebuild,
 	}, nil
 }
 
@@ -64,7 +64,7 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 		log.Default.Warnf("goloader: failed to check if plugin exists, %s", err)
 	}
 
-	if exists && err == nil && ic.buildOnce {
+	if exists && err == nil && !ic.rebuild {
 		return ic.filePath, nil
 	}
 
