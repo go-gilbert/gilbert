@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-gilbert/gilbert/log"
@@ -18,13 +19,18 @@ import (
 )
 
 type importContext struct {
-	pkgPath  string
-	fileName string
-	filePath string
+	pkgPath   string
+	fileName  string
+	filePath  string
+	buildOnce bool
 }
 
-// ProviderName is handler protocol name
-const ProviderName = "go"
+const (
+	// ProviderName is handler protocol name
+	ProviderName = "go"
+
+	buildOnceParam = "buildOnce"
+)
 
 func newImportContext(uri *url.URL) (*importContext, error) {
 	pkgPath := filepath.Clean(filepath.Join(uri.Host + "/" + uri.Path))
@@ -37,10 +43,12 @@ func newImportContext(uri *url.URL) (*importContext, error) {
 		return nil, err
 	}
 
+	buildOnce, _ := strconv.ParseBool(uri.Query().Get(buildOnceParam))
 	return &importContext{
-		pkgPath:  pkgPath,
-		fileName: fName,
-		filePath: filepath.Join(pluginDir, fName),
+		pkgPath:   pkgPath,
+		fileName:  fName,
+		filePath:  filepath.Join(pluginDir, fName),
+		buildOnce: buildOnce,
 	}, nil
 }
 
@@ -56,7 +64,7 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 		log.Default.Warnf("goloader: failed to check if plugin exists, %s", err)
 	}
 
-	if exists && err == nil {
+	if exists && err == nil && ic.buildOnce {
 		return ic.filePath, nil
 	}
 
