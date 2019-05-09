@@ -12,7 +12,6 @@ require (
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/rjeczalik/notify v0.9.2
-	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/urfave/cli v1.20.0
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
