@@ -5,15 +5,16 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"net/url"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/go-gilbert/gilbert/log"
 	"github.com/go-gilbert/gilbert/plugins/support"
 	"github.com/go-gilbert/gilbert/storage"
 	"github.com/go-gilbert/gilbert/support/fs"
 	"github.com/go-gilbert/gilbert/support/shell"
-	"net/url"
-	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
 type importContext struct {
