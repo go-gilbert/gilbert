@@ -56,7 +56,7 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 		log.Default.Warnf("goloader: failed to check if plugin exists, %s", err)
 	}
 
-	if exists && err != nil {
+	if exists && err == nil {
 		return ic.filePath, nil
 	}
 
