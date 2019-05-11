@@ -18,6 +18,9 @@ type Coverage struct {
 
 // Percentage gets coverage in percents
 func (c *Coverage) Percentage() float64 {
+	if c.Reached == 0 {
+		return 0
+	}
 	return float64(c.Reached*100) / float64(c.Total)
 }
 

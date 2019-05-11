@@ -64,15 +64,21 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 }
 
 func (a *Action) printReport(ctx sdk.JobContextAccessor, r *profile.Report) {
-	ctx.Log().Info("Coverage report:")
-	var str string
-	if a.params.FullReport {
-		str = r.FormatFull()
+	if r.Total <= 0 {
+		ctx.Log().Warnf("No test files found in packages")
 	} else {
-		str = r.FormatSimple()
+		// Print coverage report only if any data present
+		ctx.Log().Info("Coverage report:")
+		var str string
+		if a.params.FullReport {
+			str = r.FormatFull()
+		} else {
+			str = r.FormatSimple()
+		}
+
+		_, _ = ctx.Log().Write([]byte(str))
 	}
 
-	_, _ = ctx.Log().Write([]byte(str))
 	ctx.Log().Infof("Total coverage: %.2f%%", r.Percentage())
 }
 
