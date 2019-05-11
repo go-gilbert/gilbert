@@ -169,8 +169,8 @@ tasks:
       debounceTime: 300   # debounce time, optional
       ignore:
       - *.log             # list of entries to ignore, optional
-      job:
-        mixin: build-and-run-server # job to execure, similar to manifest job syntax. required.
+      run:
+        mixin: build-and-run-server # job or mixin to execute, similar to manifest job syntax. required.
 ```
 <h4>Configuration params</h4>
 <p>
@@ -186,6 +186,11 @@ tasks:
             <td>Path to track for changes. Use `/...` to track changes in all sub-directories.</td>
         </tr>
         <tr>
+            <td class="param-required"><code>run</code></td>
+            <td><i>object</i></td>
+            <td>Job or mixin to run on change. See <a href="../schema/#tasks">Job definition</a> for more info</td>
+        </tr>
+        <tr>
             <td><code>debounceTime</code></td>
             <td><i>int</i></td>
             <td>period to postpone job execution until after wait milliseconds have elapsed since the last time it was invoked</td>
@@ -194,11 +199,6 @@ tasks:
             <td><code>ignore</code></td>
             <td><i>[]string</i></td>
             <td>List of entries to ignore. All dotfiles are already included</td>
-        </tr>
-        <tr>
-            <td><code>job</code></td>
-            <td><i>object</i></td>
-            <td>Job to run. See <a href="../schema/#tasks">Job definition</a> for more info</td>
         </tr>
     </table>
 </p>
