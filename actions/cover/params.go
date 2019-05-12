@@ -11,7 +11,6 @@ const (
 
 type params struct {
 	Threshold  float64  `mapstructure:"threshold"`
-	SumBy      string   `mapstructure:"sumBy"`
 	Report     bool     `mapstructure:"reportCoverage"`
 	FullReport bool     `mapstructure:"fullReport"`
 	Packages   []string `mapstructure:"packages"`
@@ -20,7 +19,6 @@ type params struct {
 func newParams() params {
 	return params{
 		Threshold: 0.0,
-		SumBy:     sumByStatements,
 		Report:    false,
 	}
 }
