@@ -4,8 +4,36 @@ import (
 	"fmt"
 	"github.com/axw/gocov"
 	"github.com/axw/gocov/gocovutil"
+	"sort"
 	"strings"
 )
+
+type Packages map[string]*PackageReport
+
+// Names returns a slice of package names
+func (p Packages) Names() []string {
+	out := make([]string, 0, len(p))
+	for k := range p {
+		out = append(out, k)
+	}
+
+	return out
+}
+
+// Sort sorts packages by specified criteria
+func (p Packages) Sort(by string, asc bool) []string {
+	keys := p.Names()
+	var sortFn sortSelector
+	if by == ByCoverage {
+		sortFn = pkgByPercentage(p)
+	} else {
+		sortFn = byName
+	}
+
+	s := &packageSorter{asc: asc, keys: keys, by: sortFn}
+	sort.Sort(s)
+	return keys
+}
 
 // Coverage is coverage report with total and reached statements count
 type Coverage struct {
@@ -32,7 +60,7 @@ func (c *Coverage) add(cv Coverage) {
 // Report is coverage report from GoCov profile
 type Report struct {
 	Coverage
-	Packages map[string]*PackageReport
+	Packages Packages
 }
 
 // CheckCoverage checks if report satisfies coverage requirements
