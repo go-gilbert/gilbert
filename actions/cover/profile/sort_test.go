@@ -1,23 +1,15 @@
 package profile
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func cov2report(cov int) *PackageReport {
 	return &PackageReport{
 		Coverage: Coverage{Total: 100, Reached: cov},
 	}
-}
-
-func strReverse(in []string) []string {
-	out := make([]string, 0, len(in))
-	for k := range in {
-		out = append(out, in[k])
-	}
-
-	return out
 }
 
 func TestPackages_Sort(t *testing.T) {
@@ -56,6 +48,54 @@ func TestPackages_Sort(t *testing.T) {
 
 	for sortBy, c := range cases {
 		t.Run("sort by "+sortBy+"(asc)", func(t *testing.T) {
+			result := c.input.Sort(sortBy, c.asc)
+			assert.Equal(t, c.expect, result)
+		})
+	}
+}
+
+func pkgReportCov(fns map[string]int) *PackageReport {
+	out := &PackageReport{
+		Functions: make(map[string]*Coverage, len(fns)),
+	}
+
+	for c, i := range fns {
+		out.Functions[c] = &Coverage{Total: 100, Reached: i}
+	}
+
+	return out
+}
+
+func TestReport_Sort(t *testing.T) {
+	cases := map[string]struct {
+		asc    bool
+		input  *PackageReport
+		expect []string
+	}{
+		ByName: {
+			asc: true,
+			input: pkgReportCov(map[string]int{
+				"a": 0,
+				"c": 10,
+				"d": 60,
+				"b": 30,
+			}),
+			expect: []string{"a", "b", "c", "d"},
+		},
+		ByCoverage: {
+			asc: false,
+			input: pkgReportCov(map[string]int{
+				"a": 0,
+				"c": 10,
+				"d": 60,
+				"b": 30,
+			}),
+			expect: []string{"d", "b", "c", "a"},
+		},
+	}
+
+	for sortBy, c := range cases {
+		t.Run("sort by "+sortBy, func(t *testing.T) {
 			result := c.input.Sort(sortBy, c.asc)
 			assert.Equal(t, c.expect, result)
 		})

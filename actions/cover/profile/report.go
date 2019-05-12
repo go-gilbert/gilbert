@@ -30,7 +30,7 @@ func (p Packages) Sort(by string, asc bool) []string {
 		sortFn = byName
 	}
 
-	s := &packageSorter{asc: asc, keys: keys, by: sortFn}
+	s := &mapSorter{asc: asc, keys: keys, by: sortFn}
 	sort.Sort(s)
 	return keys
 }
@@ -100,6 +100,30 @@ func (r *Report) FormatSimple() string {
 type PackageReport struct {
 	Coverage
 	Functions map[string]*Coverage
+}
+
+func (p *PackageReport) names() []string {
+	out := make([]string, 0, len(p.Functions))
+	for k := range p.Functions {
+		out = append(out, k)
+	}
+
+	return out
+}
+
+// Sort sorts package report data by specified criteria
+func (p *PackageReport) Sort(by string, asc bool) []string {
+	keys := p.names()
+	var sortFn sortSelector
+	if by == ByCoverage {
+		sortFn = reportByPercentage(p)
+	} else {
+		sortFn = byName
+	}
+
+	s := &mapSorter{asc: asc, keys: keys, by: sortFn}
+	sort.Sort(s)
+	return keys
 }
 
 // Create creates a new report from GoCov profile
