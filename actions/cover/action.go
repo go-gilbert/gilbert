@@ -67,13 +67,15 @@ func (a *Action) printReport(ctx sdk.JobContextAccessor, r *profile.Report) {
 	if r.Total <= 0 {
 		ctx.Log().Warnf("No test files found in packages")
 	} else {
+		prop, desc := a.params.Sort.By, a.params.Sort.Desc
+
 		// Print coverage report only if any data present
 		ctx.Log().Info("Coverage report:")
 		var str string
 		if a.params.FullReport {
-			str = r.FormatFull()
+			str = r.FormatFull(prop, desc)
 		} else {
-			str = r.FormatSimple()
+			str = r.FormatSimple(prop, desc)
 		}
 
 		_, _ = ctx.Log().Write([]byte(str))
