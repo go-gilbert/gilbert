@@ -1,6 +1,10 @@
 package cover
 
-import "github.com/go-gilbert/gilbert/actions/cover/profile"
+import (
+	"fmt"
+
+	"github.com/go-gilbert/gilbert/actions/cover/profile"
+)
 
 // toolArgsPrefixSize is prefix args count for 'go tool cover' command
 //
@@ -13,6 +17,18 @@ type params struct {
 	FullReport bool      `mapstructure:"fullReport"`
 	Packages   []string  `mapstructure:"packages"`
 	Sort       sortParam `mapstructure:"sort"`
+}
+
+func (p *params) validate() error {
+	if p.Threshold > 100 || p.Threshold < 0 {
+		return fmt.Errorf("coverage threshold should be between 0 and 100 (got %f)", p.Threshold)
+	}
+
+	if p.Sort.By != profile.ByName && p.Sort.By != profile.ByCoverage {
+		return fmt.Errorf("unsupported sort key '%s' (expected %s or %s)", p.Sort.By, profile.ByCoverage, profile.ByName)
+	}
+
+	return nil
 }
 
 type sortParam struct {
