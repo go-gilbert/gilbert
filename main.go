@@ -50,6 +50,9 @@ func main() {
 			Before:      bootstrap,
 			Flags: []cli.Flag{
 				verboseFlag,
+				cli.StringSliceFlag{
+					Name: tasks.OverrideVarFlag,
+				},
 			},
 		},
 		{
