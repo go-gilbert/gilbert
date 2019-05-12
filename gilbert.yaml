@@ -36,9 +36,7 @@ tasks:
       threshold: 60
       reportCoverage: true
       packages:
-        - ./manifest
-        - ./support
-        - ./actions/...
+        - ./...
 
   lint:
     - description: lint
