@@ -92,7 +92,10 @@ func getOverrideVars(c *cli.Context) sdk.Vars {
 			continue
 		}
 
-		out[vals[0]] = vals[1]
+		key := strings.TrimSpace(vals[0])
+		val := vals[1]
+		log.Default.Debugf("cmd: set variable '%s' = '%s'", key, val)
+		out[key] = val
 	}
 
 	return out
