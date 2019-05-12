@@ -62,6 +62,7 @@ func RunTask(c *cli.Context) (err error) {
 	tr.SetContext(ctx, cancelFn)
 	go handleShutdown(cancelFn)
 
+	// get variables passed with '--var' flags
 	vars := getOverrideVars(c)
 	if err := tr.RunTask(task, vars); err != nil {
 		return err
