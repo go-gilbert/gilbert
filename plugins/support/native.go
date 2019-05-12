@@ -10,3 +10,6 @@ package support
 func AddPluginExtension(fileName string) string {
 	return fileName + ".so"
 }
+
+// BuildMode is build mode for plugins
+var BuildMode = "plugin"

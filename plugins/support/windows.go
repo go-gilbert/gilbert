@@ -6,3 +6,6 @@ package support
 func AddPluginExtension(fileName string) string {
 	return fileName + ".exe"
 }
+
+// BuildMode is build mode for plugins
+var BuildMode = "exe"

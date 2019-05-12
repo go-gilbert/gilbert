@@ -3,15 +3,26 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
+	"strings"
+
+	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
 	"github.com/go-gilbert/gilbert/manifest"
 	"github.com/go-gilbert/gilbert/plugins"
 	"github.com/go-gilbert/gilbert/runner"
 	"github.com/go-gilbert/gilbert/scope"
 	"github.com/urfave/cli"
-	"os"
-	"os/signal"
-	"runtime"
+)
+
+const (
+	// OverrideVarFlag is flag name for custom variable values
+	OverrideVarFlag = "var"
+
+	varDelimiter = "="
+	paramsCount  = 2
 )
 
 func wrapManifestError(parent error) error {
@@ -51,12 +62,43 @@ func RunTask(c *cli.Context) (err error) {
 	tr.SetContext(ctx, cancelFn)
 	go handleShutdown(cancelFn)
 
-	if err := tr.RunTask(task); err != nil {
+	// get variables passed with '--var' flags
+	vars := getOverrideVars(c)
+	if err := tr.RunTask(task, vars); err != nil {
 		return err
 	}
 
 	log.Default.Successf("Task '%s' ran successfully\n", task)
 	return nil
+}
+
+func getOverrideVars(c *cli.Context) sdk.Vars {
+	ss := c.StringSlice(OverrideVarFlag)
+	sLen := len(ss)
+
+	if sLen == 0 {
+		return nil
+	}
+
+	out := make(sdk.Vars, sLen)
+	for _, s := range ss {
+		if s == "" {
+			continue
+		}
+
+		// param=value
+		vals := strings.Split(s, varDelimiter)
+		if len(vals) < paramsCount {
+			continue
+		}
+
+		key := strings.TrimSpace(vals[0])
+		val := vals[1]
+		log.Default.Debugf("cmd: set variable '%s' = '%s'", key, val)
+		out[key] = val
+	}
+
+	return out
 }
 
 func importProjectPlugins(ctx context.Context, m *manifest.Manifest, cwd string) error {

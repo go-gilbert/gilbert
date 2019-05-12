@@ -72,6 +72,27 @@ func Path(storageType Type, paths ...string) (string, error) {
 	return p, nil
 }
 
+// LocalPath returns local project storage path by type
+func LocalPath(storageType Type, paths ...string) (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	dir, ok := storageTypes[storageType]
+	if !ok {
+		return "", errors.New("unknown storage type")
+	}
+
+	p := filepath.Join(wd, homeDirName, dir)
+
+	if len(paths) > 0 {
+		p += "/" + filepath.Join(paths...)
+	}
+
+	return p, nil
+}
+
 // EnsurePath returns specified storage folder and creates if it not exists
 func EnsurePath(storageType Type, paths ...string) (string, error) {
 	loc, err := Path(storageType, paths...)

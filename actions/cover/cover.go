@@ -17,8 +17,8 @@ func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (sdk.ActionHand
 		return nil, err
 	}
 
-	if p.Threshold > 100 || p.Threshold < 0 {
-		return nil, fmt.Errorf("coverage threshold should be between 0 and 100 (got %f)", p.Threshold)
+	if err := p.validate(); err != nil {
+		return nil, err
 	}
 
 	f, err := ioutil.TempFile(os.TempDir(), coverFilePattern)
