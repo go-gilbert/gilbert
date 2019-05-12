@@ -14,12 +14,12 @@ func cov2report(cov int) *PackageReport {
 
 func TestPackages_Sort(t *testing.T) {
 	cases := map[string]struct {
-		asc    bool
+		desc   bool
 		input  Packages
 		expect []string
 	}{
 		ByName: {
-			asc: true,
+			desc: false,
 			input: Packages{
 				"github.com/go-gilbert/gilbert/bcc/aaa": nil,
 				"github.com/go-gilbert/gilbert/fca":     nil,
@@ -34,7 +34,7 @@ func TestPackages_Sort(t *testing.T) {
 			},
 		},
 		ByCoverage: {
-			asc: false,
+			desc: true,
 			input: Packages{
 				"c": cov2report(30),
 				"d": cov2report(25),
@@ -47,8 +47,8 @@ func TestPackages_Sort(t *testing.T) {
 	}
 
 	for sortBy, c := range cases {
-		t.Run("sort by "+sortBy+"(asc)", func(t *testing.T) {
-			result := c.input.Sort(sortBy, c.asc)
+		t.Run("sort by "+sortBy+"(desc)", func(t *testing.T) {
+			result := c.input.Sort(sortBy, c.desc)
 			assert.Equal(t, c.expect, result)
 		})
 	}
@@ -68,12 +68,12 @@ func pkgReportCov(fns map[string]int) *PackageReport {
 
 func TestReport_Sort(t *testing.T) {
 	cases := map[string]struct {
-		asc    bool
+		desc   bool
 		input  *PackageReport
 		expect []string
 	}{
 		ByName: {
-			asc: true,
+			desc: false,
 			input: pkgReportCov(map[string]int{
 				"a": 0,
 				"c": 10,
@@ -83,7 +83,7 @@ func TestReport_Sort(t *testing.T) {
 			expect: []string{"a", "b", "c", "d"},
 		},
 		ByCoverage: {
-			asc: false,
+			desc: true,
 			input: pkgReportCov(map[string]int{
 				"a": 0,
 				"c": 10,
@@ -96,7 +96,7 @@ func TestReport_Sort(t *testing.T) {
 
 	for sortBy, c := range cases {
 		t.Run("sort by "+sortBy, func(t *testing.T) {
-			result := c.input.Sort(sortBy, c.asc)
+			result := c.input.Sort(sortBy, c.desc)
 			assert.Equal(t, c.expect, result)
 		})
 	}

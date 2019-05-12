@@ -21,7 +21,7 @@ func (p Packages) Names() []string {
 }
 
 // Sort sorts packages by specified criteria
-func (p Packages) Sort(by string, asc bool) []string {
+func (p Packages) Sort(by string, desc bool) []string {
 	keys := p.Names()
 	var sortFn sortSelector
 	if by == ByCoverage {
@@ -30,7 +30,7 @@ func (p Packages) Sort(by string, asc bool) []string {
 		sortFn = byName
 	}
 
-	s := &mapSorter{asc: asc, keys: keys, by: sortFn}
+	s := &mapSorter{desc: desc, keys: keys, by: sortFn}
 	sort.Sort(s)
 	return keys
 }
@@ -74,11 +74,16 @@ func (r *Report) CheckCoverage(threshold float64) error {
 }
 
 // FormatFull returns detailed report
-func (r *Report) FormatFull() string {
+func (r *Report) FormatFull(orderProp string, desc bool) string {
 	b := strings.Builder{}
-	for pkgName, pkg := range r.Packages {
+	pkgNames := r.Packages.Sort(orderProp, desc)
+	for _, pkgName := range pkgNames {
+		pkg := r.Packages[pkgName]
 		_, _ = fmt.Fprintf(&b, "  Package '%s' - %.2f%%\n", pkgName, pkg.Percentage())
-		for fnName, fn := range pkg.Functions {
+
+		fnNames := pkg.Sort(orderProp, desc)
+		for _, fnName := range fnNames {
+			fn := pkg.Functions[fnName]
 			_, _ = fmt.Fprintf(&b, "    - %s: %.2f%%\n", fnName, fn.Percentage())
 		}
 	}
@@ -87,9 +92,12 @@ func (r *Report) FormatFull() string {
 }
 
 // FormatSimple returns simplified report
-func (r *Report) FormatSimple() string {
+func (r *Report) FormatSimple(orderProp string, desc bool) string {
 	b := strings.Builder{}
-	for pkgName, pkg := range r.Packages {
+
+	pkgNames := r.Packages.Sort(orderProp, desc)
+	for _, pkgName := range pkgNames {
+		pkg := r.Packages[pkgName]
 		_, _ = fmt.Fprintf(&b, "  - %s: %.2f%%\n", pkgName, pkg.Percentage())
 	}
 
@@ -112,7 +120,7 @@ func (p *PackageReport) names() []string {
 }
 
 // Sort sorts package report data by specified criteria
-func (p *PackageReport) Sort(by string, asc bool) []string {
+func (p *PackageReport) Sort(by string, desc bool) []string {
 	keys := p.names()
 	var sortFn sortSelector
 	if by == ByCoverage {
@@ -121,7 +129,7 @@ func (p *PackageReport) Sort(by string, asc bool) []string {
 		sortFn = byName
 	}
 
-	s := &mapSorter{asc: asc, keys: keys, by: sortFn}
+	s := &mapSorter{desc: desc, keys: keys, by: sortFn}
 	sort.Sort(s)
 	return keys
 }
