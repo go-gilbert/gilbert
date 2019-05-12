@@ -34,13 +34,9 @@ tasks:
   - action: cover
     params:
       threshold: 60
-      sumBy: 'statements'
       reportCoverage: true
-      fullReport: false
       packages:
-        - ./manifest
-        - ./support
-        - ./plugins/...
+        - ./...
 
   lint:
     - description: lint
