@@ -35,11 +35,10 @@ tasks:
     params:
       threshold: 60
       reportCoverage: true
-      fullReport: true
       packages:
         - ./manifest
         - ./support
-        - ./plugins/...
+        - ./actions/...
 
   lint:
     - description: lint
