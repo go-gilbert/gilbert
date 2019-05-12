@@ -44,8 +44,10 @@ func (t *TaskRunner) Stop() {
 	}
 }
 
-// RunTask execute task by name
-func (t *TaskRunner) RunTask(taskName string) (err error) {
+// RunTask execute task by name.
+//
+// "vars" parameter is optional and allows to override job scope values.
+func (t *TaskRunner) RunTask(taskName string, vars sdk.Vars) (err error) {
 	task, ok := t.manifest.Tasks[taskName]
 	if !ok {
 		return fmt.Errorf("task '%s' doesn't exists", taskName)
@@ -92,7 +94,7 @@ func (t *TaskRunner) RunTask(taskName string) (err error) {
 			t.subLogger.Infof("- %s", descr)
 		}
 		var err error
-		ctx := job.NewRunContext(t.context, nil, sl)
+		ctx := job.NewRunContext(t.context, vars, sl)
 
 		if j.Async {
 			tracker.decorateJobContext(ctx)
