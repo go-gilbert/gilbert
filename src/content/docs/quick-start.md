@@ -90,6 +90,8 @@ gilbert ls
 ```bash
 gilbert run build
 ```
+
+See <a href="../commands/#run-task">command docs</a> for more information.
 </p>
 <h3 class="section-head" id="next">
     <a href="#next">Next steps</a>

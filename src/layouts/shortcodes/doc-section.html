@@ -1,0 +1,7 @@
+<h3 class="section-head" id="{{ .Get "id" }}">
+    <a href="#{{ .Get "id" }}">
+        {{ with .Get "code"}}<code>{{ end }}
+        {{ .Get "label" }}
+        {{ with .Get "code"}}</code>{{ end }}
+    </a>
+</h3>

@@ -78,6 +78,10 @@ tasks:
         </li>
     </ul>
 </p>
+<p>
+  <b>Tip:</b> variable values could be set or changed using <a href="../commands/#run-task">command flags</a>
+</p>
+
 <h4>Prefefined variables</h4>
 <p>
   By default, there are a few predefined variables in global scope:
