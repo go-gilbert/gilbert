@@ -52,7 +52,7 @@ Shows application version
 #### Cache management
 
 ```
-gilbert clean [--all | --plugin]
+gilbert clean [--all | --plugins]
 ```
 
 Cleans local Gilbert storage.
@@ -63,4 +63,4 @@ You can override storage location with `GILBERT_HOME` environment variable.
 You should specify one or all of storage types to clear. Each storage type represented as command flag:
 
 * `--all` - purge everything
-* `--plugin` - purge downloaded plugins
+* `--plugins` - purge downloaded plugins
