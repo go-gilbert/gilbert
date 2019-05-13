@@ -22,6 +22,20 @@ Project integration   Gilbert uses gilbert.yaml file to store list of tasks to r
     </item>
     
     <item>
+      <title>Commands</title>
+      <link>https://go-gilbert.github.io/gilbert/docs/commands/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://go-gilbert.github.io/gilbert/docs/commands/</guid>
+      <description>Init   gilbert init  Creates a gilbert.yaml file with basic tasks.
+List tasks   gilbert ls  Lists tasks defined in gilbert.yaml file.
+Run task   gilbert run task_name  Runs task by name and returns non-zero exit code if task fails.
+Flags You can set or override job variables with --var command.
+Example:
+gilbert run build-app --var foo=value1 --var bar=value2  Maintenance   Commands above are not related to job execution and used for managing Gilbert configuration and storage.</description>
+    </item>
+    
+    <item>
       <title>Syntax</title>
       <link>https://go-gilbert.github.io/gilbert/docs/syntax/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -46,9 +60,9 @@ version: 1.0 tasks: build: - action: build params: source: &#39;github.com/foo/b
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://go-gilbert.github.io/gilbert/docs/plugins/</guid>
-      <description>Importing a plugin  Before using a plugin, it should be imported into your gilbert.yaml file. Each import declaration should be in URL format
+      <description>Import a plugin   Before using a plugin, it should be imported into your gilbert.yaml file. Each import declaration should be in URL format
 Plugin will be download automatically at first start and you will be able to use all actions that it exports.
-plugins: - github://github.com/go-gilbert/gilbert-plugin-example # import URL tasks: hello-world: # each plugin action should be in format &#39;plugin-name:action-name&#39; - action: &#39;example-plugin:hello-world&#39; params: message: &#39;hello world&#39;</description>
+plugins: - github://github.com/go-gilbert/gilbert-plugin-example # import URL tasks: hello-world: # each plugin action should be in format &#39;plugin-name:action-name&#39; - action: &#39;example-plugin:hello-world&#39; params: message: &#39;hello world&#39;  Import sources   Each plugin import URL starts with import handler as schema (e.</description>
     </item>
     
     <item>
@@ -57,9 +71,10 @@ plugins: - github://github.com/go-gilbert/gilbert-plugin-example # import URL ta
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://go-gilbert.github.io/gilbert/docs/plugin-development/</guid>
-      <description>Intro  Plugins are generic Go libraries, compiled with plugin build mode. Current target requires Go version 1.12 with enabled modules support.
- Plugins are currently supported only on Linux and macOS. Structure  Each plugin should export two methods:
- func GetPluginName() string - returns plugin name func GetPluginActions() sdk.Actions - returns a map with action name as key and handler as value   Action lifecycle  Each time when job fires an action, Gilbert searches for handler factory that will return an action handler instance.</description>
+      <description>Intro   Plugins are generic Go libraries, compiled with plugin build mode. Current target requires Go version 1.12 with enabled modules support.
+Plugins are currently supported only on Linux and macOS.
+Structure   Each plugin should export two methods:
+ func GetPluginName() string - returns plugin name func GetPluginActions() sdk.Actions - returns a map with action name as key and handler as value  Action lifecycle   Each time when job fires an action, Gilbert searches for handler factory that will return an action handler instance.</description>
     </item>
     
   </channel>

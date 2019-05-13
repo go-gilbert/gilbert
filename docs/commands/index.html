@@ -6,15 +6,14 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> Docs </title>
+  <title> Commands </title>
 
   
+  <meta name="description" content="Command line reference"> 
   
   
   
   
-  
-  <meta name="robots" content="noindex">
   
 
   
@@ -22,10 +21,10 @@
   <meta name="author" content="go-gilbert">
 
 
-  <meta property="og:title" content="Docs" />
-<meta property="og:description" content="" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://go-gilbert.github.io/gilbert/docs/" />
+  <meta property="og:title" content="Commands" />
+<meta property="og:description" content="Command line reference" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://go-gilbert.github.io/gilbert/docs/commands/" />
 
 
   
@@ -38,9 +37,8 @@
   
   
   
-  <link href="https://go-gilbert.github.io/gilbert/docs/index.xml" rel="alternate" type="application/rss+xml" title="Gilbert" /> 
 
-  <link rel="canonical" href="https://go-gilbert.github.io/gilbert/docs/">  
+  <link rel="canonical" href="https://go-gilbert.github.io/gilbert/docs/commands/">  
 
   <link rel="shortcut icon" type="image/png" href="https://go-gilbert.github.io/gilbert/img/icon.png">
 
@@ -84,7 +82,7 @@
        
     <li><a href="/gilbert/docs/quick-start" >Quick start</a></li>
     
-    <li><a href="/gilbert/docs/"  class="active">Documentation</a></li>
+    <li><a href="/gilbert/docs/" >Documentation</a></li>
     
     <li><a href="https://github.com/go-gilbert/gilbert" >Source</a></li>
     
@@ -104,47 +102,126 @@
   </div>
  </header>
   <main>
-<div id="main">
-  <div id="hero">
-    <h1>Documentation</h1>
-  </div>
-  <div id="components">
-    <div class="row gutters">
-      
-      <div class="col col-4 item">
-        <h4><a href="https://go-gilbert.github.io/gilbert/docs/quick-start/">Quick Start</a></h4>
-        <p>Up and running in under a minute</p>
-      </div>
-      
-      <div class="col col-4 item">
-        <h4><a href="https://go-gilbert.github.io/gilbert/docs/commands/">Commands</a></h4>
-        <p>Command line reference</p>
-      </div>
-      
-      <div class="col col-4 item">
-        <h4><a href="https://go-gilbert.github.io/gilbert/docs/syntax/">Syntax</a></h4>
-        <p>Creating tasks and pipelines in gilbert.yaml file</p>
-      </div>
-      
-      <div class="col col-4 item">
-        <h4><a href="https://go-gilbert.github.io/gilbert/docs/actions/">Built-in actions</a></h4>
-        <p>Information about built-in actions</p>
-      </div>
-      
-      <div class="col col-4 item">
-        <h4><a href="https://go-gilbert.github.io/gilbert/docs/plugins/">Plugins</a></h4>
-        <p>Extend functionality with third-party plugins</p>
-      </div>
-      
-      <div class="col col-4 item">
-        <h4><a href="https://go-gilbert.github.io/gilbert/docs/plugin-development/">Create a plugin</a></h4>
-        <p>Create and publish a custom plugin</p>
-      </div>
-      
+  <div id="main">
+    <div id="hero">
+      <h1> Commands </h1>
+      <p class="hero-lead">
+           This article covers all information about Gilbert commands.
+      </p>
 
+    </div> 
+    <div id="kube-component" class="content">
+    
+<nav id="contents">
+    <ol class="js-toc">
+    </ol>
+</nav>
+<script type="text/javascript">
+document.addEventListener("DOMContentLoaded",
+function(){
+tocbot.init({
+
+tocSelector: '.js-toc',
+
+contentSelector: '.content',
+
+headingSelector: 'h3'
+})
+}
+);
+</script>
+
+
+
+    
+
+<h3 class="section-head" id="init">
+    <a href="#init">
+        
+        Init
+        
+    </a>
+</h3>
+
+<pre><code>gilbert init
+</code></pre>
+
+<p>Creates a <code>gilbert.yaml</code> file with basic tasks.</p>
+
+<h3 class="section-head" id="list-tasks">
+    <a href="#list-tasks">
+        
+        List tasks
+        
+    </a>
+</h3>
+
+<pre><code>gilbert ls
+</code></pre>
+
+<p>Lists tasks defined in <code>gilbert.yaml</code> file.</p>
+
+<h3 class="section-head" id="run-task">
+    <a href="#run-task">
+        
+        Run task
+        
+    </a>
+</h3>
+
+<pre><code>gilbert run task_name
+</code></pre>
+
+<p>Runs task by name and returns non-zero exit code if task fails.</p>
+
+<h4 id="flags">Flags</h4>
+
+<p>You can set or override job variables with <code>--var</code> command.</p>
+
+<p><strong>Example:</strong></p>
+
+<pre><code>gilbert run build-app --var foo=value1 --var bar=value2
+</code></pre>
+
+<p><h3 class="section-head" id="maintenance">
+    <a href="#maintenance">
+        
+        Maintenance
+        
+    </a>
+</h3>
+Commands above are not related to job execution and used for managing Gilbert configuration and storage.</p>
+
+<h4 id="version">Version</h4>
+
+<pre><code>gilbert version
+</code></pre>
+
+<p>Shows application version</p>
+
+<h4 id="cache-management">Cache management</h4>
+
+<pre><code>gilbert clean [--all | --plugin]
+</code></pre>
+
+<p>Cleans local Gilbert storage.</p>
+
+<p>Storage used to store downloaded plugins and etc. Default storage location is <code>~/.gilbert</code>.
+You can override storage location with <code>GILBERT_HOME</code> environment variable.</p>
+
+<p>You should specify one or all of storage types to clear. Each storage type represented as command flag:</p>
+
+<ul>
+<li><code>--all</code> - purge everything</li>
+<li><code>--plugin</code> - purge downloaded plugins</li>
+</ul>
+
+
+    <script src='/gilbert/js/highlight.pack.js'></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    
     </div>
-  </div>
-</div>
+    </div>
 </main>
   <footer>   <footer id="footer">
     <nav>

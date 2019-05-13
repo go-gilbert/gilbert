@@ -133,10 +133,17 @@ headingSelector: 'h3'
 
 
 
-    <p><h3 class="section-head" id="plugin-import"><a href="#plugin-import">Importing a plugin</a></h3>
-<p>
-    Before using a plugin, it should be imported into your <code>gilbert.yaml</code> file.
-  Each import declaration should be in URL format</p>
+    
+
+<p><h3 class="section-head" id="plugin-import">
+    <a href="#plugin-import">
+        
+        Import a plugin
+        
+    </a>
+</h3>
+Before using a plugin, it should be imported into your <code>gilbert.yaml</code> file.
+Each import declaration should be in URL format</p>
 
 <p>Plugin will be download automatically at first start and you will be able to use all actions that it exports.</p>
 
@@ -150,60 +157,67 @@ tasks:
         message: 'hello world'
 </code></pre>
 
-<p></p></p>
+<h3 class="section-head" id="import-sources">
+    <a href="#import-sources">
+        
+        Import sources
+        
+    </a>
+</h3>
 
-<p><h3 class="section-head" id="import-sources"><a href="#import-sources">Import sources</a></h3>
-<p>
-    Each plugin import URL starts with import handler as schema (e.g.: <code>github://</code>).
-  There are a few supported import sources:
-</p></p>
+<p>Each plugin import URL starts with import handler as schema (e.g.: <code>github://</code>).
+There are a few supported import sources:</p>
 
-<p><h4>Local file</h4>
-<p>
-  Import plugin locally by file path.</p>
+<h4 id="local-file">Local file</h4>
+
+<p>Import plugin locally by file path.</p>
 
 <pre><code class="language-yaml">plugins:
   - file:///home/root/path/to/plugin.so
 </code></pre>
 
-<p></p></p>
+<h4 id="web">Web</h4>
 
-<p><h4>Web</h4>
-<p>
-  Downloads plugin file from specified URL. Supported schemas are <code>http</code> and <code>https</code>.</p>
+<p>Downloads plugin file from specified URL. Supported schemas are <code>http</code> and <code>https</code>.</p>
 
 <pre><code class="language-yaml">plugins:
   - http://example.com/storage/my_plugin.so
   - https://example.com/storage/my_plugin2.so
 </code></pre>
 
-<p></p></p>
+<h4 id="local-package">Local package</h4>
 
-<p><h4>GitHub</h4>
-<p>
-  Plugins that are hosted on GitHub, can be downloaded by using special <code>github</code> handler.
-  Handler finds specified repo and downloads latest or specified plugin release.</p>
+<p>Builds local Go package as Gilbert plugin</p>
+
+<pre><code class="language-yaml">plugins:
+  - go://./mypkg
+  - go://{{ GOPATH }}/src/github.com/user/package
+</code></pre>
+
+<p>See <a href="../plugin-development/">plugin development docs</a> for more information.</p>
+
+<h4 id="github">GitHub</h4>
+
+<p>Plugins that are hosted on GitHub, can be downloaded by using special <code>github</code> handler.
+Handler finds specified repo and downloads latest or specified plugin release.</p>
 
 <p>Plugin artifact should be present at repo&rsquo;s <strong>Releases</strong> page.
-  See <a href="../plugin-development#publishing">GitHub publishing</a> for more info.</p>
+See <a href="../plugin-development/#plugin-deployment">GitHub publishing</a> for more info.</p>
 
-<p>GitHub Enterprize and token auth are also supported.
-</p>
-<p></p>
+<p>GitHub Enterprize and token auth are also supported.</p>
 
 <pre><code class="language-yaml">plugins:
   - github://github.com/owner/repo_name?version=v1.0.0&amp;token=AUTH_TOKEN
 </code></pre>
 
-<p><b>Optional URL parameters:</b>
-  <ul>
-    <li><code>version</code> - Release tag to download (default is <code>latest</code>)</li>
-    <li><code>token</code> - Your personal GitHub auth token</li>
-  </ul>
-</p></p>
+<p><strong>Optional URL parameters:</strong></p>
 
-<p><h5>GitHub Enterprise</h5>
-<p></p>
+<ul>
+<li><code>version</code> - Release tag to download (default is <code>latest</code>)</li>
+<li><code>token</code> - Your personal GitHub auth token</li>
+</ul>
+
+<h5 id="github-enterprise">GitHub Enterprise</h5>
 
 <pre><code class="language-yaml">plugins:
   - github://company.domain.com:8888/custom_path/owner/repo_name?version=v1.0.0&amp;token=AUTH_TOKEN
@@ -213,20 +227,25 @@ tasks:
 
 <p>Path can contain hostname, port and path.</p>
 
-<p><b>Optional URL parameters:</b>
-  <ul>
-    <li><code>version</code> - Release tag to download (default is <code>latest</code>)</li>
-    <li><code>token</code> - Your personal GitHub auth token</li>
-    <li><code>protocol</code> - Protocol to use (<code>http</code> or <code>https</code>). <code>https</code> is default value.</li>
-  </ul>
-</p></p>
+<p><strong>Optional URL parameters:</strong></p>
 
-<p><h3 class="section-head" id="explore-plugins"><a href="#explore-plugins">Explore plugins</a></h3>
-<p>
-  You can explore third-party plugins by searching on GitHub by <code><a href="https://github.com/topics/gilbert-plugin">gilbert-plugin</a></code> topic.</p>
+<ul>
+<li><code>version</code> - Release tag to download (default is <code>latest</code>)</li>
+<li><code>token</code> - Your personal GitHub auth token</li>
+<li><code>protocol</code> - Protocol to use (<code>http</code> or <code>https</code>). <code>https</code> is default value.</li>
+</ul>
 
-<p>Also you can explore our <a href="../plugin-development">plugin development docs</a> and create a plugin on your own.
-</p></p>
+<h3 class="section-head" id="explore-plugins">
+    <a href="#explore-plugins">
+        
+        Explore plugins
+        
+    </a>
+</h3>
+
+<p>You can explore third-party plugins by searching on GitHub by <code><a href="https://github.com/topics/gilbert-plugin">gilbert-plugin</a></code> topic.</p>
+
+<p>Also you can explore our <a href="../plugin-development">plugin development docs</a> and create a plugin on your own.</p>
 
 
     <script src='/gilbert/js/highlight.pack.js'></script>
