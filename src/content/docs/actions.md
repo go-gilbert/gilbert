@@ -210,7 +210,7 @@ tasks:
 <p>
     Runs package tests and checks package code coverage. Task fails if code coverage is below specified threshold.
 </p>
-<h4>Configuration sample</h4>
+<h4>Full configuration sample</h4>
 ```
 version: 1.0
 tasks:
@@ -220,8 +220,11 @@ tasks:
       threshold: 60.5       # minimal coverage percent
       reportCoverage: true  # show coverage report in output
       fullReport: false     # display coverage for each function
+      sort:
+        by: 'coverage'      # sort report by package name or coverage
+        desc: true          # sort ascending or descending
       packages:
-      - ./controllers
+      - ./controllers       # list of packages to cover
       - ./src/...
 ```
 <h4>Configuration params</h4>
@@ -251,6 +254,11 @@ tasks:
             <td><code>fullReport</code></td>
             <td><i>boolean</i></td>
             <td>Display coverage for each function in package</td>
+        </tr>
+        <tr>
+            <td><code>sort</code></td>
+            <td><i>object</i></td>
+            <td>Coverage report sort</td>
         </tr>
     </table>
 </p>
