@@ -7,12 +7,11 @@ toc = true
 bref = "Usage of third-party plugins to use custom actions"
 +++
 
-<h3 class="section-head" id="plugin-import"><a href="#plugin-import">Importing a plugin</a></h3>
-<p>
-	Before using a plugin, it should be imported into your `gilbert.yaml` file.
-  Each import declaration should be in URL format
+{{<doc-section id="plugin-import" label="Import a plugin" >}}
+Before using a plugin, it should be imported into your `gilbert.yaml` file.
+Each import declaration should be in URL format
 
-  Plugin will be download automatically at first start and you will be able to use all actions that it exports.
+Plugin will be download automatically at first start and you will be able to use all actions that it exports.
 
 ```yaml
 plugins:
@@ -24,60 +23,66 @@ tasks:
       params:
         message: 'hello world'
 ```
-</p>
 
-<h3 class="section-head" id="import-sources"><a href="#import-sources">Import sources</a></h3>
-<p>
-	Each plugin import URL starts with import handler as schema (e.g.: `github://`).
-  There are a few supported import sources:
-</p>
+{{<doc-section id="import-sources" label="Import sources" >}}
 
-<h4>Local file</h4>
-<p>
-  Import plugin locally by file path.
+Each plugin import URL starts with import handler as schema (e.g.: `github://`).
+There are a few supported import sources:
+
+#### Local file
+
+Import plugin locally by file path.
 
 ```yaml
 plugins:
   - file:///home/root/path/to/plugin.so
 ```
-</p>
 
-<h4>Web</h4>
-<p>
-  Downloads plugin file from specified URL. Supported schemas are `http` and `https`.
+#### Web
+
+Downloads plugin file from specified URL. Supported schemas are `http` and `https`.
 
 ```yaml
 plugins:
   - http://example.com/storage/my_plugin.so
   - https://example.com/storage/my_plugin2.so
 ```
-</p>
 
-<h4>GitHub</h4>
-<p>
-  Plugins that are hosted on GitHub, can be downloaded by using special `github` handler.
-  Handler finds specified repo and downloads latest or specified plugin release.
+#### Local package
 
-  Plugin artifact should be present at repo's **Releases** page.
-  See [GitHub publishing](../plugin-development#publishing) for more info.
+Builds local Go package as Gilbert plugin
 
-  GitHub Enterprize and token auth are also supported.
-</p>
-<p>
+```yaml
+plugins:
+  - go://./mypkg
+  - go://{{ GOPATH }}/src/github.com/user/package
+```
+
+See [plugin development docs](../plugin-development/) for more information.
+
+#### GitHub
+
+Plugins that are hosted on GitHub, can be downloaded by using special `github` handler.
+Handler finds specified repo and downloads latest or specified plugin release.
+
+Plugin artifact should be present at repo's **Releases** page.
+See [GitHub publishing](../plugin-development/#plugin-deployment) for more info.
+
+GitHub Enterprize and token auth are also supported.
+
+
 ```yaml
 plugins:
   - github://github.com/owner/repo_name?version=v1.0.0&token=AUTH_TOKEN
 ```
 
-<b>Optional URL parameters:</b>
-  <ul>
-    <li>`version` - Release tag to download (default is <code>latest</code>)</li>
-    <li>`token` - Your personal GitHub auth token</li>
-  </ul>
-</p>
+**Optional URL parameters:**
 
-<h5>GitHub Enterprise</h5>
-<p>
+* `version` - Release tag to download (default is `latest`)
+* `token` - Your personal GitHub auth token
+
+##### GitHub Enterprise
+
 ```yaml
 plugins:
   - github://company.domain.com:8888/custom_path/owner/repo_name?version=v1.0.0&token=AUTH_TOKEN
@@ -87,17 +92,14 @@ To use custom GitHub host, just replace `github.com` to your GitHub Enterprise i
 
 Path can contain hostname, port and path.
 
-<b>Optional URL parameters:</b>
-  <ul>
-    <li>`version` - Release tag to download (default is <code>latest</code>)</li>
-    <li>`token` - Your personal GitHub auth token</li>
-    <li>`protocol` - Protocol to use (`http` or `https`). `https` is default value.</li>
-  </ul>
-</p>
+**Optional URL parameters:**
 
-<h3 class="section-head" id="explore-plugins"><a href="#explore-plugins">Explore plugins</a></h3>
-<p>
-  You can explore third-party plugins by searching on GitHub by <code>[gilbert-plugin](https://github.com/topics/gilbert-plugin)</code> topic.
+* `version` - Release tag to download (default is `latest`)
+* `token` - Your personal GitHub auth token
+* `protocol` - Protocol to use (`http` or `https`). `https` is default value.
 
-  Also you can explore our [plugin development docs](../plugin-development) and create a plugin on your own.
-</p>
+{{<doc-section id="explore-plugins" label="Explore plugins" >}}
+
+You can explore third-party plugins by searching on GitHub by <code>[gilbert-plugin](https://github.com/topics/gilbert-plugin)</code> topic.
+
+Also you can explore our [plugin development docs](../plugin-development) and create a plugin on your own.
