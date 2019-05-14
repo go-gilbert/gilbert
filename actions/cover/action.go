@@ -27,6 +27,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	ctx.Log().Debugf("cover command: '%s'", strings.Join(cmd.Args, " "))
+	cmd.Stderr = ctx.Log().ErrorWriter()
 	if err = cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start cover tool, %s", err)
 	}
