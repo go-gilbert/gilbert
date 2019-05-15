@@ -93,13 +93,20 @@ gilbert run build
 
 See <a href="../commands/#run-task">command docs</a> for more information.
 </p>
-<h3 class="section-head" id="next">
-    <a href="#next">Next steps</a>
-</h3>
-<p>
-    We recommend to read about gilbert <a href="../syntax">file syntax documentation</a> and take a look on <a href="../actions">built-in actions</a> for more information.
-</p>
-<p>
-    Also, you can find a good use-case example in <a href="https://github.com/x1unix/demo-go-plugins" target="_blank">this demo project</a>.<br />
-    That repo shows usage of mixins and a few built-in plugins for a real-world web-server example.
-</p>
+
+{{<doc-section id="next-steps" label="Next Steps" >}}
+
+We recommend to take a look at theese links to get more information about Gilbert:
+
+#### Documentation
+
+* [File Syntax](../syntax)
+* [Built-in Actions](../actions)
+
+#### Examples
+
+* [Sample project](ttps://github.com/x1unix/demo-go-plugins)
+
+#### Tools
+
+* [Plugin for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=x1unix.gilbert) 
