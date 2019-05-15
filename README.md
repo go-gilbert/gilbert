@@ -18,6 +18,27 @@ This project is currently in early development stage. Bug reports and pull reque
 
 All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file you can find [here](https://github.com/go-gilbert/gilbert/blob/master/gilbert.yaml).
 
+**Full list of features:**
+
+* [Tasks](https://go-gilbert.github.io/gilbert/docs/syntax/#tasks)
+  - Simple job declaration
+  - Rollback and graceful shutdown
+  - Evaluation conditions
+  - Async and parallel jobs
+  - Job timeout and deadline
+  - Job and [manifest templates](https://go-gilbert.github.io/gilbert/docs/syntax/#mixins)
+  - [Variables](https://go-gilbert.github.io/gilbert/docs/syntax/#variables) and [inline expressions](https://go-gilbert.github.io/gilbert/docs/syntax/#h-templates)
+* [Actions](https://go-gilbert.github.io/gilbert/docs/actions/)
+  - Built-in most necessary actions
+    - Track file changes and re-run task on change
+    - Check project test coverage with specified threshold
+    - Build project
+  - Plugins for custom actions
+    - Get plugins from [GitHub](https://go-gilbert.github.io/gilbert/docs/plugin-development/) or other sources
+    - Simple [Plugin API](https://go-gilbert.github.io/gilbert/docs/plugin-development/)
+
+Read [documentation](https://go-gilbert.github.io/gilbert/docs/) for more information.
+
 ## Installation
 
 All release binaries are available on the [releases](https://github.com/go-gilbert/gilbert/releases) page.
@@ -40,6 +61,8 @@ Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/go-gilbe
 
 ## Usage
 
-Run `gilbert init` to create a sample `gilbert.yaml` file in your project's directory with basic build task.
+Please check out [quick start](https://go-gilbert.github.io/gilbert/docs/quick-start/) guide.
 
-To run specific task, use `gilbert run [taskname]`
+### Tools
+
+* [Plugin for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=x1unix.gilbert) 
