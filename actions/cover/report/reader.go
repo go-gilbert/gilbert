@@ -42,7 +42,7 @@ func (a *Formatter) FailedTests() (string, bool) {
 		return "", false
 	}
 
-	b := strings.Builder{}
+	b := &strings.Builder{}
 	for pkg, tests := range failures {
 		/*
 			Format:
@@ -50,15 +50,21 @@ func (a *Formatter) FailedTests() (string, bool) {
 					- Test:
 						main.go: Test error
 		*/
-		b.WriteString(wrapListItem(1, fmt.Sprintf(`package "%s":`, pkg)))
+		b.WriteString(wrapListItem(1, fmt.Sprintf(`Package "%s":`, pkg)))
 
 		for test, errors := range tests {
 			b.WriteString(wrapListItem(2, test))
-			b.WriteString(strings.Join(errors, "\n") + "\n")
+			outputLinesToList(b, errors)
 		}
 	}
 
 	return b.String(), true
+}
+
+func outputLinesToList(w *strings.Builder, lines []string) {
+	for _, l := range lines {
+		w.WriteString(wrapListItem(3, l+"\n"))
+	}
 }
 
 // NewReportFormatter returns new "go test" tool report formatter

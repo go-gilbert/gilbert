@@ -8,8 +8,8 @@ import (
 
 // toolArgsPrefixSize is prefix args count for 'go tool cover' command
 //
-// go test -coverprofile=/tmp/cover ./services/foo ./services/bar./services/baz
-const toolArgsPrefixSize = 2
+// go test -coverprofile=/tmp/cover -json ./services/foo ./services/bar./services/baz
+const toolArgsPrefixSize = 3
 
 type params struct {
 	Threshold  float64   `mapstructure:"threshold"`

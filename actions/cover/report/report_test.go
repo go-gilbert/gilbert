@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var fixturePath = filepath.Join(".", "testdata", "lines.json")
+var fixturePath = filepath.Join(".", "testdata", "report.json")
 
 func TestLines_Failed(t *testing.T) {
 	expected := FailureGroup{

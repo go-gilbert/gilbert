@@ -77,8 +77,9 @@ func (a *Action) printFailedPackages(l sdk.Logger, fpFmt *report.Formatter) {
 		return
 	}
 
-	l.Error("Failed to check test coverage, some tests are failed")
-	l.Error(failed)
+	l.Error("Failed to check test coverage, some tests are failed.\n")
+	l.Error("Failed tests:")
+	_, _ = l.ErrorWriter().Write([]byte(failed))
 }
 
 func (a *Action) printReport(ctx sdk.JobContextAccessor, r *profile.Report) {
@@ -120,7 +121,7 @@ func (a *Action) clean(ctx sdk.JobContextAccessor) {
 func (a *Action) createCoverCommand(ctx sdk.JobContextAccessor) (*exec.Cmd, error) {
 	// pass package names as is, since '-coverpkg' doesn't recognise them in CSV format (go 1.11+)
 	args := make([]string, 0, len(a.params.Packages)+toolArgsPrefixSize)
-	args = append(args, "test", "-coverprofile="+a.coverFile.Name())
+	args = append(args, "test", "-coverprofile="+a.coverFile.Name(), "-json")
 
 	for _, pkg := range a.params.Packages {
 		val, err := a.scope.ExpandVariables(pkg)

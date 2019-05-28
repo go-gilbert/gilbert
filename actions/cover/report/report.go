@@ -84,12 +84,19 @@ func (lns Lines) SkippedPackages() []string {
 }
 
 func (lns *Lines) AppendData(data []byte) error {
-	var l Line
-	if err := json.Unmarshal(data, &l); err != nil {
-		return err
+	// sometimes, cmd can provide multiple lines at once
+	// so we should process each line one by one
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+
+	for _, ln := range lines {
+		var l Line
+		if err := json.Unmarshal([]byte(ln), &l); err != nil {
+			return err
+		}
+
+		*lns = append(*lns, l)
 	}
 
-	*lns = append(*lns, l)
 	return nil
 }
 
