@@ -51,7 +51,7 @@ gilbert run build-app --var foo=value1 --var bar=value2  Maintenance   Commands 
       
       <guid>https://go-gilbert.github.io/gilbert/docs/actions/</guid>
       <description>Build action  Build action is abstraction over go build compile tool and simplifies build params pass. This action can operate without configuration. Configuration sample
-version: 1.0 tasks: build: - action: build params: source: &#39;github.com/foo/bar&#39; # default: current package buildMode: &#39;c-archive&#39; # default: &amp;quot;default&amp;quot; outputPath: &#39;./build/foo.exe&#39; # default: project directory params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &#39;-X main.foo=bar&#39; target: os: windows # default: current OS arch: &#39;386&#39; # default: current arch variables: # default: empty &#39;main.</description>
+version: 1.0 tasks: build: - action: build params: source: &#39;github.com/foo/bar&#39; # default: current package buildMode: &#39;c-archive&#39; # default: &amp;quot;default&amp;quot; outputPath: &#39;./build/foo.exe&#39; # default: project directory tags: &#39;foo bar baz&#39; # set of build tags, separated by space params: stripDebugInfo: true # removes debug info, default: false linkerFlags: # custom linker flags, default: empty - &#39;-X main.</description>
     </item>
     
     <item>

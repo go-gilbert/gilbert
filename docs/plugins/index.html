@@ -191,8 +191,14 @@ There are a few supported import sources:</p>
 
 <pre><code class="language-yaml">plugins:
   - go://./mypkg
-  - go://{{ GOPATH }}/src/github.com/user/package
+  - go://{{ GOPATH }}/src/github.com/user/package?rebuild=true
 </code></pre>
+
+<p><strong>Optional URL parameters:</strong></p>
+
+<ul>
+<li><code>rebuild</code> - rebuild local package each time. Useful for local plugin development.</li>
+</ul>
 
 <p>See <a href="../plugin-development/">plugin development docs</a> for more information.</p>
 
