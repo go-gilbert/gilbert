@@ -24,8 +24,8 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", a.params.Command, err)
 	}
 
-	ctx.Log().Debugf("command: '%s'", a.params.Command)
-	ctx.Log().Debugf(`starting process "%s"...`, strings.Join(a.cmd.Args, " "))
+	ctx.Log().Debugf("shell: command '%s'", a.params.Command)
+	ctx.Log().Debugf(`shell: exec "%s"...`, strings.Join(a.cmd.Args, " "))
 
 	// Add std listeners when silent is off
 	if !a.params.Silent {
@@ -45,7 +45,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 
 func (a *Action) decorateProcessOutput(ctx sdk.JobContextAccessor, cmd *exec.Cmd) {
 	if a.params.RawOutput {
-		ctx.Log().Debug("raw output enabled")
+		ctx.Log().Debug("shell: raw output enabled")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
@@ -63,9 +63,9 @@ func (a *Action) Cancel(ctx sdk.JobContextAccessor) error {
 	}
 
 	// TODO: use exec.CommandContext to kill process
-	ctx.Log().Debug("received stop signal")
+	ctx.Log().Debug("shell: received stop signal")
 	if err := shell.KillProcessGroup(a.cmd); err != nil {
-		ctx.Log().Debugf("process killed with error: %s", err)
+		ctx.Log().Debugf("shell: process killed with error: %s", err)
 	}
 
 	return nil
