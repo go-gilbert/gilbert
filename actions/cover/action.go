@@ -6,7 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/go-gilbert/gilbert-sdk"
+	sdk "github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/actions/cover/report"
 
 	"github.com/go-gilbert/gilbert/actions/cover/profile"
 	"github.com/go-gilbert/gilbert/support/shell"
@@ -27,12 +28,18 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	ctx.Log().Debugf("cover command: '%s'", strings.Join(cmd.Args, " "))
+
+	// "go test" tool sometimes reports errors not to stderr, but to stdout
+	// so we also should capture output from stdout
+	repFmt := report.NewReportFormatter()
+	cmd.Stdout = repFmt
 	cmd.Stderr = ctx.Log().ErrorWriter()
 	if err = cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start cover tool, %s", err)
 	}
 
 	if err = cmd.Wait(); err != nil {
+		a.printFailedPackages(ctx.Log(), repFmt)
 		return shell.FormatExitError(err)
 	}
 
@@ -62,6 +69,16 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	return nil
+}
+
+func (a *Action) printFailedPackages(l sdk.Logger, fpFmt *report.Formatter) {
+	failed, ok := fpFmt.FailedTests()
+	if !ok {
+		return
+	}
+
+	l.Error("Failed to check test coverage, some tests are failed")
+	l.Error(failed)
 }
 
 func (a *Action) printReport(ctx sdk.JobContextAccessor, r *profile.Report) {

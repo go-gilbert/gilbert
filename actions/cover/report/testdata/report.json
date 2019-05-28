@@ -1,0 +1,216 @@
+{"Time":"2019-05-28T14:56:18.249981+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert","Elapsed":0.001}
+{"Time":"2019-05-28T14:56:18.250057+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions","Output":"?   \tgithub.com/go-gilbert/gilbert/actions\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:18.250085+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/actions","Elapsed":0}
+{"Time":"2019-05-28T14:56:18.250127+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/build","Output":"?   \tgithub.com/go-gilbert/gilbert/actions/build\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:18.250162+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/actions/build","Elapsed":0}
+{"Time":"2019-05-28T14:56:20.492589+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/manifest","Test":"TestLoadManifest"}
+{"Time":"2019-05-28T14:56:20.4927+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/manifest","Test":"TestLoadManifest","Output":"=== RUN   TestLoadManifest\n"}
+{"Time":"2019-05-28T14:56:20.495613+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/manifest","Test":"TestLoadManifest","Output":"--- PASS: TestLoadManifest (0.00s)\n"}
+{"Time":"2019-05-28T14:56:20.495737+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/manifest","Test":"TestLoadManifest","Elapsed":0}
+{"Time":"2019-05-28T14:56:20.495786+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/manifest","Output":"PASS\n"}
+{"Time":"2019-05-28T14:56:20.496954+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/manifest","Output":"coverage: 73.3% of statements\n"}
+{"Time":"2019-05-28T14:56:20.499397+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/manifest","Output":"ok  \tgithub.com/go-gilbert/gilbert/manifest\t0.041s\tcoverage: 73.3% of statements\n"}
+{"Time":"2019-05-28T14:56:20.499463+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/manifest","Elapsed":0.041}
+{"Time":"2019-05-28T14:56:20.957277+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate"}
+{"Time":"2019-05-28T14:56:20.957394+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate","Output":"=== RUN   TestParamsValidate\n"}
+{"Time":"2019-05-28T14:56:20.957448+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_below_0"}
+{"Time":"2019-05-28T14:56:20.957481+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_below_0","Output":"=== RUN   TestParamsValidate/should_validate_threshold_below_0\n"}
+{"Time":"2019-05-28T14:56:20.957578+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_above_100"}
+{"Time":"2019-05-28T14:56:20.957634+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_above_100","Output":"=== RUN   TestParamsValidate/should_validate_threshold_above_100\n"}
+{"Time":"2019-05-28T14:56:20.957669+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_sort_type"}
+{"Time":"2019-05-28T14:56:20.957693+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_sort_type","Output":"=== RUN   TestParamsValidate/should_validate_sort_type\n"}
+{"Time":"2019-05-28T14:56:20.957751+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate","Output":"--- FAIL: TestParamsValidate (0.00s)\n"}
+{"Time":"2019-05-28T14:56:20.957793+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_below_0","Output":"    --- PASS: TestParamsValidate/should_validate_threshold_below_0 (0.00s)\n"}
+{"Time":"2019-05-28T14:56:20.957902+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_below_0","Elapsed":0}
+{"Time":"2019-05-28T14:56:20.957921+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_above_100","Output":"    --- FAIL: TestParamsValidate/should_validate_threshold_above_100 (0.00s)\n"}
+{"Time":"2019-05-28T14:56:20.957933+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_above_100","Output":"        params_test.go:48: error 'coverage threshold should be between 0 and 100 (got 101.000000)' should contain 'coverage threshold should be between 0 and 1001'\n"}
+{"Time":"2019-05-28T14:56:20.957955+03:00","Action":"fail","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_threshold_above_100","Elapsed":0}
+{"Time":"2019-05-28T14:56:20.957967+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_sort_type","Output":"    --- PASS: TestParamsValidate/should_validate_sort_type (0.00s)\n"}
+{"Time":"2019-05-28T14:56:20.957998+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate/should_validate_sort_type","Elapsed":0}
+{"Time":"2019-05-28T14:56:20.95801+03:00","Action":"fail","Package":"github.com/go-gilbert/gilbert/actions/cover","Test":"TestParamsValidate","Elapsed":0}
+{"Time":"2019-05-28T14:56:20.958031+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Output":"FAIL\n"}
+{"Time":"2019-05-28T14:56:20.958842+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Output":"coverage: 5.1% of statements\n"}
+{"Time":"2019-05-28T14:56:20.960985+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover","Output":"FAIL\tgithub.com/go-gilbert/gilbert/actions/cover\t0.031s\n"}
+{"Time":"2019-05-28T14:56:20.961043+03:00","Action":"fail","Package":"github.com/go-gilbert/gilbert/actions/cover","Elapsed":0.031}
+{"Time":"2019-05-28T14:56:21.119265+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_CheckCoverage"}
+{"Time":"2019-05-28T14:56:21.1194+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_CheckCoverage","Output":"=== RUN   TestReport_CheckCoverage\n"}
+{"Time":"2019-05-28T14:56:21.122172+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_CheckCoverage","Output":"--- PASS: TestReport_CheckCoverage (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.122277+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_CheckCoverage","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.122299+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort"}
+{"Time":"2019-05-28T14:56:21.122321+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort","Output":"=== RUN   TestPackages_Sort\n"}
+{"Time":"2019-05-28T14:56:21.122349+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_name(desc)"}
+{"Time":"2019-05-28T14:56:21.122364+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_name(desc)","Output":"=== RUN   TestPackages_Sort/sort_by_name(desc)\n"}
+{"Time":"2019-05-28T14:56:21.122491+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_coverage(desc)"}
+{"Time":"2019-05-28T14:56:21.122516+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_coverage(desc)","Output":"=== RUN   TestPackages_Sort/sort_by_coverage(desc)\n"}
+{"Time":"2019-05-28T14:56:21.122596+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort","Output":"--- PASS: TestPackages_Sort (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.122654+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_name(desc)","Output":"    --- PASS: TestPackages_Sort/sort_by_name(desc) (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.12268+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_name(desc)","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.1227+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_coverage(desc)","Output":"    --- PASS: TestPackages_Sort/sort_by_coverage(desc) (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.122716+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort/sort_by_coverage(desc)","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.12273+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestPackages_Sort","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.122746+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort"}
+{"Time":"2019-05-28T14:56:21.122762+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort","Output":"=== RUN   TestReport_Sort\n"}
+{"Time":"2019-05-28T14:56:21.122782+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_coverage"}
+{"Time":"2019-05-28T14:56:21.1228+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_coverage","Output":"=== RUN   TestReport_Sort/sort_by_coverage\n"}
+{"Time":"2019-05-28T14:56:21.122826+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_name"}
+{"Time":"2019-05-28T14:56:21.12284+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_name","Output":"=== RUN   TestReport_Sort/sort_by_name\n"}
+{"Time":"2019-05-28T14:56:21.122854+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort","Output":"--- PASS: TestReport_Sort (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.122869+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_coverage","Output":"    --- PASS: TestReport_Sort/sort_by_coverage (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.122883+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_coverage","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.122894+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_name","Output":"    --- PASS: TestReport_Sort/sort_by_name (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.122913+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort/sort_by_name","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.122925+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Test":"TestReport_Sort","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.122935+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Output":"PASS\n"}
+{"Time":"2019-05-28T14:56:21.124878+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Output":"coverage: 31.7% of statements\n"}
+{"Time":"2019-05-28T14:56:21.127282+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Output":"ok  \tgithub.com/go-gilbert/gilbert/actions/cover/profile\t0.040s\tcoverage: 31.7% of statements\n"}
+{"Time":"2019-05-28T14:56:21.127361+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/actions/cover/profile","Elapsed":0.041}
+{"Time":"2019-05-28T14:56:21.130503+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/pkgget","Output":"?   \tgithub.com/go-gilbert/gilbert/actions/pkgget\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130553+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/actions/pkgget","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.130579+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/shell","Output":"?   \tgithub.com/go-gilbert/gilbert/actions/shell\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130592+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/actions/shell","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.130613+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/actions/watch","Output":"?   \tgithub.com/go-gilbert/gilbert/actions/watch\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130626+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/actions/watch","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.13064+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/cli/maintenance","Output":"?   \tgithub.com/go-gilbert/gilbert/cli/maintenance\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130654+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/cli/maintenance","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.130677+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/cli/scaffold","Output":"?   \tgithub.com/go-gilbert/gilbert/cli/scaffold\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.13069+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/cli/scaffold","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.130704+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/cli/tasks","Output":"?   \tgithub.com/go-gilbert/gilbert/cli/tasks\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130721+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/cli/tasks","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.130747+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/log","Output":"?   \tgithub.com/go-gilbert/gilbert/log\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130759+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/log","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.130783+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins","Output":"?   \tgithub.com/go-gilbert/gilbert/plugins\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.130837+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/plugins","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.131078+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/loader","Output":"?   \tgithub.com/go-gilbert/gilbert/plugins/loader\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:21.13114+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/plugins/loader","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.709337+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl"}
+{"Time":"2019-05-28T14:56:21.709449+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl","Output":"=== RUN   TestReadUrl\n"}
+{"Time":"2019-05-28T14:56:21.709492+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL"}
+{"Time":"2019-05-28T14:56:21.709509+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL","Output":"=== RUN   TestReadUrl/should_parse_enterprise_GitHub_URL\n"}
+{"Time":"2019-05-28T14:56:21.709538+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL_with_custom_protocol_and_path"}
+{"Time":"2019-05-28T14:56:21.709594+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL_with_custom_protocol_and_path","Output":"=== RUN   TestReadUrl/should_parse_enterprise_GitHub_URL_with_custom_protocol_and_path\n"}
+{"Time":"2019-05-28T14:56:21.709639+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_GH_enterprise_url"}
+{"Time":"2019-05-28T14:56:21.709653+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_GH_enterprise_url","Output":"=== RUN   TestReadUrl/should_parse_simple_GH_enterprise_url\n"}
+{"Time":"2019-05-28T14:56:21.709764+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_has_no_host"}
+{"Time":"2019-05-28T14:56:21.7098+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_has_no_host","Output":"=== RUN   TestReadUrl/should_fail_if_URL_has_no_host\n"}
+{"Time":"2019-05-28T14:56:21.709847+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_format_is_invalid"}
+{"Time":"2019-05-28T14:56:21.709864+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_format_is_invalid","Output":"=== RUN   TestReadUrl/should_fail_if_URL_format_is_invalid\n"}
+{"Time":"2019-05-28T14:56:21.709889+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_url"}
+{"Time":"2019-05-28T14:56:21.709901+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_url","Output":"=== RUN   TestReadUrl/should_parse_simple_url\n"}
+{"Time":"2019-05-28T14:56:21.709917+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_package_version_and_token"}
+{"Time":"2019-05-28T14:56:21.709929+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_package_version_and_token","Output":"=== RUN   TestReadUrl/should_parse_package_version_and_token\n"}
+{"Time":"2019-05-28T14:56:21.709986+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl","Output":"--- PASS: TestReadUrl (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710008+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL","Output":"    --- PASS: TestReadUrl/should_parse_enterprise_GitHub_URL (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710024+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.71007+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL_with_custom_protocol_and_path","Output":"    --- PASS: TestReadUrl/should_parse_enterprise_GitHub_URL_with_custom_protocol_and_path (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710093+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_enterprise_GitHub_URL_with_custom_protocol_and_path","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.710107+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_GH_enterprise_url","Output":"    --- PASS: TestReadUrl/should_parse_simple_GH_enterprise_url (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710122+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_GH_enterprise_url","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.710195+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_has_no_host","Output":"    --- PASS: TestReadUrl/should_fail_if_URL_has_no_host (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710221+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_has_no_host","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.710238+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_format_is_invalid","Output":"    --- PASS: TestReadUrl/should_fail_if_URL_format_is_invalid (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710256+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_fail_if_URL_format_is_invalid","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.71027+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_url","Output":"    --- PASS: TestReadUrl/should_parse_simple_url (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.71029+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_simple_url","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.710306+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_package_version_and_token","Output":"    --- PASS: TestReadUrl/should_parse_package_version_and_token (0.00s)\n"}
+{"Time":"2019-05-28T14:56:21.710335+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl/should_parse_package_version_and_token","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.710354+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Test":"TestReadUrl","Elapsed":0}
+{"Time":"2019-05-28T14:56:21.710375+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Output":"PASS\n"}
+{"Time":"2019-05-28T14:56:21.710884+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Output":"coverage: 44.3% of statements\n"}
+{"Time":"2019-05-28T14:56:21.712751+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Output":"ok  \tgithub.com/go-gilbert/gilbert/plugins/sources/github\t0.032s\tcoverage: 44.3% of statements\n"}
+{"Time":"2019-05-28T14:56:21.712797+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/github","Elapsed":0.032}
+{"Time":"2019-05-28T14:56:22.412119+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin"}
+{"Time":"2019-05-28T14:56:22.412279+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin","Output":"=== RUN   TestGetPlugin\n"}
+{"Time":"2019-05-28T14:56:22.412329+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached"}
+{"Time":"2019-05-28T14:56:22.412368+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"=== RUN   TestGetPlugin/should_compile_plugin_package_if_it's_not_cached\n"}
+{"Time":"2019-05-28T14:56:22.412795+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_do_not_build_plugin_if_it's_cached"}
+{"Time":"2019-05-28T14:56:22.412862+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_do_not_build_plugin_if_it's_cached","Output":"=== RUN   TestGetPlugin/should_do_not_build_plugin_if_it's_cached\n"}
+{"Time":"2019-05-28T14:56:22.412894+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present"}
+{"Time":"2019-05-28T14:56:22.41297+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"=== RUN   TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present\n"}
+{"Time":"2019-05-28T14:56:22.413039+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure"}
+{"Time":"2019-05-28T14:56:22.413057+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Output":"=== RUN   TestGetPlugin/should_return_error_on_compile_failure\n"}
+{"Time":"2019-05-28T14:56:22.413208+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin","Output":"--- PASS: TestGetPlugin (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.413243+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"    --- PASS: TestGetPlugin/should_compile_plugin_package_if_it's_not_cached (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.413261+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"        tests.go:12: log:  goloader: building plugin package 'foo/bar'\n"}
+{"Time":"2019-05-28T14:56:22.413275+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413292+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"        tests.go:12: log:  goloader: exec 'go build -buildmode plugin -o /Users/dsedc/projects/gilbert/plugins/sources/gopkg/.gilbert/plugins/82d0f0fa8551de8b7eb5ecb65eae0261/bar.so .'\n"}
+{"Time":"2019-05-28T14:56:22.413314+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413333+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"        tests.go:12: log:  goloader: build successful\n"}
+{"Time":"2019-05-28T14:56:22.413344+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413359+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_compile_plugin_package_if_it's_not_cached","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.413373+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_do_not_build_plugin_if_it's_cached","Output":"    --- PASS: TestGetPlugin/should_do_not_build_plugin_if_it's_cached (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.413385+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_do_not_build_plugin_if_it's_cached","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.413395+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"    --- PASS: TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.413406+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"        tests.go:12: log:  goloader: building plugin package 'foo/bar'\n"}
+{"Time":"2019-05-28T14:56:22.413503+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413527+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"        tests.go:12: log:  goloader: exec 'go build -buildmode plugin -o /Users/dsedc/projects/gilbert/plugins/sources/gopkg/.gilbert/plugins/82d0f0fa8551de8b7eb5ecb65eae0261/bar.so .'\n"}
+{"Time":"2019-05-28T14:56:22.41356+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413575+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"        tests.go:12: log:  goloader: build successful\n"}
+{"Time":"2019-05-28T14:56:22.41359+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.41361+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_rebuild_plugin_if_rebuild_flag_present","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.413625+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Output":"    --- PASS: TestGetPlugin/should_return_error_on_compile_failure (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.413638+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Output":"        tests.go:12: log:  goloader: building plugin package 'foo/bar'\n"}
+{"Time":"2019-05-28T14:56:22.413651+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413664+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Output":"        tests.go:12: log:  goloader: exec 'go build -buildmode plugin -o /Users/dsedc/projects/gilbert/plugins/sources/gopkg/.gilbert/plugins/82d0f0fa8551de8b7eb5ecb65eae0261/bar.so .'\n"}
+{"Time":"2019-05-28T14:56:22.41368+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Output":"            \n"}
+{"Time":"2019-05-28T14:56:22.413703+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin/should_return_error_on_compile_failure","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.413717+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Test":"TestGetPlugin","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.413731+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Output":"PASS\n"}
+{"Time":"2019-05-28T14:56:22.413933+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Output":"coverage: 64.1% of statements\n"}
+{"Time":"2019-05-28T14:56:22.416088+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Output":"ok  \tgithub.com/go-gilbert/gilbert/plugins/sources/gopkg\t0.038s\tcoverage: 64.1% of statements\n"}
+{"Time":"2019-05-28T14:56:22.416139+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/plugins/sources/gopkg","Elapsed":0.038}
+{"Time":"2019-05-28T14:56:22.418714+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/sources/http","Output":"?   \tgithub.com/go-gilbert/gilbert/plugins/sources/http\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.418796+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/plugins/sources/http","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.418835+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/plugins/support","Output":"?   \tgithub.com/go-gilbert/gilbert/plugins/support\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.418852+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/plugins/support","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.418883+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/runner","Output":"?   \tgithub.com/go-gilbert/gilbert/runner\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.418904+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/runner","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.418946+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/runner/job","Output":"?   \tgithub.com/go-gilbert/gilbert/runner/job\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.419011+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/runner/job","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.656012+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsScan"}
+{"Time":"2019-05-28T14:56:22.656163+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsScan","Output":"=== RUN   TestVarsScan\n"}
+{"Time":"2019-05-28T14:56:22.656331+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsScan","Output":"--- PASS: TestVarsScan (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.656388+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsScan","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.656419+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract"}
+{"Time":"2019-05-28T14:56:22.656434+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract","Output":"=== RUN   TestVarsExtract\n"}
+{"Time":"2019-05-28T14:56:22.656458+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_extract_valid_variables"}
+{"Time":"2019-05-28T14:56:22.656488+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_extract_valid_variables","Output":"=== RUN   TestVarsExtract/should_extract_valid_variables\n"}
+{"Time":"2019-05-28T14:56:22.656691+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/another_extract_test"}
+{"Time":"2019-05-28T14:56:22.656741+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/another_extract_test","Output":"=== RUN   TestVarsExtract/another_extract_test\n"}
+{"Time":"2019-05-28T14:56:22.656783+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_include_nested_variables_in_local_variable"}
+{"Time":"2019-05-28T14:56:22.656811+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_include_nested_variables_in_local_variable","Output":"=== RUN   TestVarsExtract/should_include_nested_variables_in_local_variable\n"}
+{"Time":"2019-05-28T14:56:22.656838+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_fail_on_undefined_variable"}
+{"Time":"2019-05-28T14:56:22.656861+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_fail_on_undefined_variable","Output":"=== RUN   TestVarsExtract/should_fail_on_undefined_variable\n"}
+{"Time":"2019-05-28T14:56:22.656962+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_expand_shell_expression"}
+{"Time":"2019-05-28T14:56:22.65699+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_expand_shell_expression","Output":"=== RUN   TestVarsExtract/should_expand_shell_expression\n"}
+{"Time":"2019-05-28T14:56:22.667645+03:00","Action":"run","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_ignore_non-complete_statement"}
+{"Time":"2019-05-28T14:56:22.667713+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_ignore_non-complete_statement","Output":"=== RUN   TestVarsExtract/should_ignore_non-complete_statement\n"}
+{"Time":"2019-05-28T14:56:22.667755+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract","Output":"--- PASS: TestVarsExtract (0.01s)\n"}
+{"Time":"2019-05-28T14:56:22.667803+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_extract_valid_variables","Output":"    --- PASS: TestVarsExtract/should_extract_valid_variables (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.667827+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_extract_valid_variables","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.667868+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/another_extract_test","Output":"    --- PASS: TestVarsExtract/another_extract_test (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.667898+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/another_extract_test","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.667913+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_include_nested_variables_in_local_variable","Output":"    --- PASS: TestVarsExtract/should_include_nested_variables_in_local_variable (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.667929+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_include_nested_variables_in_local_variable","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.667951+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_fail_on_undefined_variable","Output":"    --- PASS: TestVarsExtract/should_fail_on_undefined_variable (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.667974+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_fail_on_undefined_variable","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.667994+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_expand_shell_expression","Output":"    --- PASS: TestVarsExtract/should_expand_shell_expression (0.01s)\n"}
+{"Time":"2019-05-28T14:56:22.668012+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_expand_shell_expression","Elapsed":0.01}
+{"Time":"2019-05-28T14:56:22.66803+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_ignore_non-complete_statement","Output":"    --- PASS: TestVarsExtract/should_ignore_non-complete_statement (0.00s)\n"}
+{"Time":"2019-05-28T14:56:22.668044+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract/should_ignore_non-complete_statement","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.668056+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Test":"TestVarsExtract","Elapsed":0.01}
+{"Time":"2019-05-28T14:56:22.668076+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Output":"PASS\n"}
+{"Time":"2019-05-28T14:56:22.668997+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Output":"coverage: 75.3% of statements\n"}
+{"Time":"2019-05-28T14:56:22.671328+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/scope","Output":"ok  \tgithub.com/go-gilbert/gilbert/scope\t0.038s\tcoverage: 75.3% of statements\n"}
+{"Time":"2019-05-28T14:56:22.671376+03:00","Action":"pass","Package":"github.com/go-gilbert/gilbert/scope","Elapsed":0.038}
+{"Time":"2019-05-28T14:56:22.673533+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/storage","Output":"?   \tgithub.com/go-gilbert/gilbert/storage\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.673607+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/storage","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.67365+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/support","Output":"?   \tgithub.com/go-gilbert/gilbert/support\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.673671+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/support","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.673699+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/support/fs","Output":"?   \tgithub.com/go-gilbert/gilbert/support/fs\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.673721+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/support/fs","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.673752+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/support/rx","Output":"?   \tgithub.com/go-gilbert/gilbert/support/rx\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.67377+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/support/rx","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.673798+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/support/shell","Output":"?   \tgithub.com/go-gilbert/gilbert/support/shell\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.673819+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/support/shell","Elapsed":0}
+{"Time":"2019-05-28T14:56:22.673848+03:00","Action":"output","Package":"github.com/go-gilbert/gilbert/support/web","Output":"?   \tgithub.com/go-gilbert/gilbert/support/web\t[no test files]\n"}
+{"Time":"2019-05-28T14:56:22.673863+03:00","Action":"skip","Package":"github.com/go-gilbert/gilbert/support/web","Elapsed":0}
