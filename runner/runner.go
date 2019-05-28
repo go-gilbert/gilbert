@@ -66,7 +66,7 @@ func (t *TaskRunner) RunTask(taskName string, vars sdk.Vars) (err error) {
 	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
-		t.subLogger.Debugf("%d async jobs in task", asyncJobsCount)
+		t.subLogger.Debugf("runner: %d async jobs in task", asyncJobsCount)
 		tracker = newAsyncJobTracker(t.context, t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
@@ -127,7 +127,7 @@ func (t *TaskRunner) startJobAndWait(job sdk.Job, ctx *job.RunContext) error {
 
 	err, ok := <-ctx.Error
 	if !ok {
-		ctx.Log().Debug("Error: failed to read data from result channel")
+		ctx.Log().Debug("runner: failed to read data from result channel!!!")
 		return nil
 	}
 
@@ -149,7 +149,7 @@ func (t *TaskRunner) handleJob(j sdk.Job, ctx *job.RunContext) {
 
 	// Wait if necessary
 	if j.Delay > 0 {
-		ctx.Log().Debugf("Job delay defined, waiting %dms...", j.Delay)
+		ctx.Log().Debugf("runner: job delay defined, waiting %dms...", j.Delay)
 		time.Sleep(j.Delay.ToDuration())
 	}
 
@@ -179,7 +179,7 @@ func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx *job.R
 
 	actionHandler, err := factory(s, j.Params)
 	if err != nil {
-		ctx.Result(fmt.Errorf("failed to apply actionHandler '%s': %v", j.ActionName, err))
+		ctx.Result(fmt.Errorf("failed to create action handler instance of '%s': %s", j.ActionName, err))
 		return
 	}
 
@@ -187,7 +187,7 @@ func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx *job.R
 	// Event may arrive on SIGKILL or when timeout reached
 	go func() {
 		<-ctx.Context().Done()
-		ctx.Log().Debugf("sent stop signal to '%s' actionHandler", j.ActionName)
+		ctx.Log().Debugf("runner: sent stop signal to '%s' action handler", j.ActionName)
 		ctx.Result(actionHandler.Cancel(ctx))
 	}()
 
@@ -207,7 +207,7 @@ func (t *TaskRunner) handleMixinCall(j sdk.Job, s sdk.ScopeAccessor, ctx *job.Ru
 	}
 
 	// Create a task from mixin and job params
-	ctx.Log().Debugf("create sub-task from mixin '%s'", j.MixinName)
+	ctx.Log().Debugf("runner: create sub-task from mixin '%s'", j.MixinName)
 	task := mx.ToTask(s.Vars())
 	if err := t.runSubTask(task, s, ctx); err != nil {
 		ctx.Result(err)
@@ -230,7 +230,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccesso
 	var tracker *asyncJobTracker
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
-		parentCtx.Log().Debugf("%d async jobs in sub-task", asyncJobsCount)
+		parentCtx.Log().Debugf("runner: %d async jobs in sub-task", asyncJobsCount)
 		tracker = newAsyncJobTracker(parentCtx.Context(), t, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
@@ -276,7 +276,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccesso
 		}
 
 		if err = t.startJobAndWait(j, ctx); err != nil {
-			return fmt.Errorf("%v (sub-task step %d)", err, currentStep)
+			return fmt.Errorf("%s (sub-task step %d)", err, currentStep)
 		}
 	}
 
@@ -298,7 +298,7 @@ func (t *TaskRunner) shouldRunJob(job sdk.Job, scp sdk.ScopeAccessor) bool {
 	}
 	cmd := shell.PrepareCommand(condCmd)
 
-	l.Debugf("Assert command: '%s'", condCmd)
+	l.Debugf("runner: assert command: '%s'", condCmd)
 
 	// Return false if command failed to start or returned bad exit code
 	if err := cmd.Start(); err != nil {

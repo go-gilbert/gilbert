@@ -6,7 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/go-gilbert/gilbert-sdk"
+	sdk "github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/actions/cover/report"
 
 	"github.com/go-gilbert/gilbert/actions/cover/profile"
 	"github.com/go-gilbert/gilbert/support/shell"
@@ -26,13 +27,19 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 		return err
 	}
 
-	ctx.Log().Debugf("cover command: '%s'", strings.Join(cmd.Args, " "))
+	ctx.Log().Debugf("cover: exec '%s'", strings.Join(cmd.Args, " "))
+
+	// "go test" tool sometimes reports errors not to stderr, but to stdout
+	// so we also should capture output from stdout
+	repFmt := report.NewReportFormatter()
+	cmd.Stdout = repFmt
 	cmd.Stderr = ctx.Log().ErrorWriter()
 	if err = cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start cover tool, %s", err)
 	}
 
 	if err = cmd.Wait(); err != nil {
+		a.printFailedPackages(ctx.Log(), repFmt)
 		return shell.FormatExitError(err)
 	}
 
@@ -51,17 +58,43 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	// Check coverage
-	report := profile.Create(*pkgs)
-	if err := report.CheckCoverage(a.params.Threshold); err != nil {
-		a.printReport(ctx, &report)
+	a.printUncoveredItems(ctx.Log(), repFmt)
+	prof := profile.Create(*pkgs)
+	err = prof.CheckCoverage(a.params.Threshold)
+	if err != nil || a.params.Report {
+		a.printReport(ctx, &prof)
 		return err
 	}
 
-	if a.params.Report {
-		a.printReport(ctx, &report)
+	return err
+}
+
+func (a *Action) printUncoveredItems(l sdk.Logger, fpFmt *report.Formatter) {
+	uncovered, count := fpFmt.UncoveredPackages()
+	if count == 0 {
+		l.Debug("cover: no uncovered packages in report")
+		return
 	}
 
-	return nil
+	if !a.params.ShowUncovered {
+		l.Warnf("%d packages don't have tests and therefore were not included in the report.", count)
+		return
+	}
+
+	l.Warnf("%d packages without tests:", count)
+	_, _ = l.Write([]byte(uncovered))
+}
+
+func (a *Action) printFailedPackages(l sdk.Logger, fpFmt *report.Formatter) {
+	failed, count := fpFmt.FailedTests()
+	if count == 0 {
+		l.Debug("cover: no failed tests available in report")
+		return
+	}
+
+	l.Errorf("Failed to check test coverage, %d tests are failed.\n", count)
+	l.Error("Failed tests:")
+	_, _ = l.ErrorWriter().Write([]byte(failed))
 }
 
 func (a *Action) printReport(ctx sdk.JobContextAccessor, r *profile.Report) {
@@ -93,17 +126,17 @@ func (a *Action) clean(ctx sdk.JobContextAccessor) {
 	a.alive = false
 	fname := a.coverFile.Name()
 	if err := os.Remove(fname); err != nil {
-		ctx.Log().Debugf("failed to remove cover file '%s': %s", fname, err)
+		ctx.Log().Debugf("cover: failed to remove cover file '%s': %s", fname, err)
 		return
 	}
 
-	ctx.Log().Debugf("removed cover file '%s'", fname)
+	ctx.Log().Debugf("cover: removed cover file '%s'", fname)
 }
 
 func (a *Action) createCoverCommand(ctx sdk.JobContextAccessor) (*exec.Cmd, error) {
 	// pass package names as is, since '-coverpkg' doesn't recognise them in CSV format (go 1.11+)
 	args := make([]string, 0, len(a.params.Packages)+toolArgsPrefixSize)
-	args = append(args, "test", "-coverprofile="+a.coverFile.Name())
+	args = append(args, "test", "-coverprofile="+a.coverFile.Name(), "-json")
 
 	for _, pkg := range a.params.Packages {
 		val, err := a.scope.ExpandVariables(pkg)

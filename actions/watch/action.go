@@ -32,7 +32,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
 	defer func() {
 		notify.Stop(a.events)
 		childCtx.Cancel()
-		ctx.Log().Debug("watcher removed")
+		ctx.Log().Debug("watch: watcher removed")
 	}()
 
 	// Start file watcher
@@ -54,12 +54,12 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
 				}
 
 				if !ignored {
-					ctx.Log().Debugf("event: %v %s", event.Event(), fPath)
+					ctx.Log().Debugf("watch: received event - %v %s", event.Event(), fPath)
 					t.Reset(interval)
 				}
 			case <-t.C:
 				// Re-start job when timer ends.
-				ctx.Log().Debug("timer ended")
+				ctx.Log().Debug("watch: timer ended")
 
 				if childCtx.IsAlive() {
 					childCtx.Cancel()
@@ -76,7 +76,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) error {
 }
 
 func (a *Action) invokeJob(ctx sdk.JobContextAccessor, r sdk.JobRunner) {
-	ctx.Log().Debug("wait until previous process stops")
+	ctx.Log().Debug("watch: wait until previous process stops")
 	a.dead.Lock()
 	// override errors channel
 	jctx := ctx.(*job.RunContext)
@@ -100,6 +100,6 @@ func (a *Action) invokeJob(ctx sdk.JobContextAccessor, r sdk.JobRunner) {
 func (a *Action) Cancel(ctx sdk.JobContextAccessor) error {
 	a.done <- true
 	notify.Stop(a.events)
-	ctx.Log().Debug("watcher removed")
+	ctx.Log().Debug("watch: watcher removed")
 	return nil
 }

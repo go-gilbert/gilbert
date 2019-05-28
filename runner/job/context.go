@@ -137,7 +137,7 @@ func (r *RunContext) Result(err error) {
 
 		r.finished = true
 		r.Error <- err
-		r.logger.Debug("result received")
+		r.logger.Debug("job: result received")
 		if r.wg != nil {
 			r.wg.Done()
 		}
