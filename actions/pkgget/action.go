@@ -65,7 +65,7 @@ func (a *Action) getPackage(pkgName string, ctx sdk.JobContextAccessor) (err err
 
 	go func() {
 		<-ctx.Context().Done()
-		a.log.Debug("kill:", proc.Path)
+		a.log.Debugf("get-package: kill '%s'", proc.Path)
 		_ = proc.Process.Kill()
 	}()
 
