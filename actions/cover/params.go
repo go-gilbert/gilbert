@@ -40,7 +40,7 @@ type sortParam struct {
 func newParams() params {
 	return params{
 		Threshold:     0.0,
-		Report:        false,
+		Report:        true,
 		ShowUncovered: false,
 		Sort: sortParam{
 			By:   profile.ByCoverage,

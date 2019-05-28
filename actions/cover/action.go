@@ -58,10 +58,10 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	// Check coverage
+	a.printUncoveredItems(ctx.Log(), repFmt)
 	prof := profile.Create(*pkgs)
 	err = prof.CheckCoverage(a.params.Threshold)
 	if err != nil || a.params.Report {
-		a.printUncoveredItems(ctx.Log(), repFmt)
 		a.printReport(ctx, &prof)
 		return err
 	}
@@ -81,7 +81,7 @@ func (a *Action) printUncoveredItems(l sdk.Logger, fpFmt *report.Formatter) {
 		return
 	}
 
-	l.Warn("Packages without tests:")
+	l.Warnf("%d packages without tests:", count)
 	_, _ = l.Write([]byte(uncovered))
 }
 
