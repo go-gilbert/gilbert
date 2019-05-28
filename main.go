@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert/cli/maintenance"
 	"os"
 	"runtime"
 
 	"github.com/fatih/color"
+	"github.com/go-gilbert/gilbert/cli/maintenance"
 	"github.com/go-gilbert/gilbert/cli/scaffold"
 	"github.com/go-gilbert/gilbert/cli/tasks"
 	"github.com/go-gilbert/gilbert/log"
@@ -20,7 +20,7 @@ var (
 	commit  = "local build"
 )
 
-// unfortunately, urface/cli ignores '--verbose' global flag :(
+// unfortunately, uface/cli ignores '--verbose' global flag :(
 // so it should be defined implicitly in each task
 var verboseFlag = cli.BoolFlag{
 	Name:        "verbose",
