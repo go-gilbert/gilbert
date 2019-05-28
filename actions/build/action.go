@@ -24,8 +24,8 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 		return err
 	}
 
-	ctx.Log().Debugf("Target: %s %s", a.params.Target.Os, a.params.Target.Arch)
-	ctx.Log().Debugf("Command: '%s'", strings.Join(a.cmd.Args, " "))
+	ctx.Log().Debugf("build: target: %s %s", a.params.Target.Os, a.params.Target.Arch)
+	ctx.Log().Debugf("build: exec: '%s'", strings.Join(a.cmd.Args, " "))
 	a.cmd.Stdout = ctx.Log()
 	a.cmd.Stderr = ctx.Log().ErrorWriter()
 
