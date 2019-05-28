@@ -27,7 +27,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 		return err
 	}
 
-	ctx.Log().Debugf("cover: start '%s'", strings.Join(cmd.Args, " "))
+	ctx.Log().Debugf("cover: exec '%s'", strings.Join(cmd.Args, " "))
 
 	// "go test" tool sometimes reports errors not to stderr, but to stdout
 	// so we also should capture output from stdout
