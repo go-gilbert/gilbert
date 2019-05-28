@@ -52,6 +52,7 @@ type Params struct {
 	OutputPath string
 	Params     LinkerParams
 	Target     CompileTarget
+	Tags       string
 	Variables  sdk.Vars
 }
 
@@ -78,6 +79,16 @@ func (p *Params) linkerParams(ctx sdk.ScopeAccessor) (args []string, err error) 
 // buildArgs returns arguments for Go support to build the artifact
 func (p *Params) buildArgs(ctx sdk.ScopeAccessor) (args []string, err error) {
 	args = []string{"build"}
+
+	// Add tags
+	if p.Tags != "" {
+		tags, err := ctx.ExpandVariables(p.Tags)
+		if err != nil {
+			return nil, err
+		}
+
+		args = append(args, `-tags`, tags)
+	}
 
 	// Add output file param
 	if !support.StringEmpty(p.OutputPath) {
