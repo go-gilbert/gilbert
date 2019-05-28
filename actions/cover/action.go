@@ -27,7 +27,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 		return err
 	}
 
-	ctx.Log().Debugf("cover command: '%s'", strings.Join(cmd.Args, " "))
+	ctx.Log().Debugf("cover: start '%s'", strings.Join(cmd.Args, " "))
 
 	// "go test" tool sometimes reports errors not to stderr, but to stdout
 	// so we also should capture output from stdout
@@ -126,11 +126,11 @@ func (a *Action) clean(ctx sdk.JobContextAccessor) {
 	a.alive = false
 	fname := a.coverFile.Name()
 	if err := os.Remove(fname); err != nil {
-		ctx.Log().Debugf("failed to remove cover file '%s': %s", fname, err)
+		ctx.Log().Debugf("cover: failed to remove cover file '%s': %s", fname, err)
 		return
 	}
 
-	ctx.Log().Debugf("removed cover file '%s'", fname)
+	ctx.Log().Debugf("cover: removed cover file '%s'", fname)
 }
 
 func (a *Action) createCoverCommand(ctx sdk.JobContextAccessor) (*exec.Cmd, error) {
