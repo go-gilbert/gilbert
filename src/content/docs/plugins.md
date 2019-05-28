@@ -55,8 +55,12 @@ Builds local Go package as Gilbert plugin
 ```yaml
 plugins:
   - go://./mypkg
-  - go://{{ GOPATH }}/src/github.com/user/package
+  - go://{{ GOPATH }}/src/github.com/user/package?rebuild=true
 ```
+
+**Optional URL parameters:**
+
+* `rebuild` - rebuild local package each time. Useful for local plugin development.
 
 See [plugin development docs](../plugin-development/) for more information.
 
