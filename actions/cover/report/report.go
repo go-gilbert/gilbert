@@ -7,10 +7,8 @@ import (
 
 const (
 	actionOutput = "output"
-	actionPass   = "pass"
 	actionSkip   = "skip"
 	actionFail   = "fail"
-	actionRun    = "run"
 )
 
 // ignoredLines contains lines that should be excluded from lines
@@ -46,7 +44,7 @@ func (lns Lines) Failed() FailureGroup {
 			}
 		case actionFail:
 			if !f.hasPackage(l.Package) {
-				f[l.Package] = make(Failures, 0)
+				f[l.Package] = make(Failures)
 			}
 
 			f[l.Package][l.Test] = make([]string, 0)
