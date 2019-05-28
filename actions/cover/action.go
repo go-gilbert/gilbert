@@ -58,26 +58,41 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	// Check coverage
-	report := profile.Create(*pkgs)
-	if err := report.CheckCoverage(a.params.Threshold); err != nil {
-		a.printReport(ctx, &report)
+	prof := profile.Create(*pkgs)
+	err = prof.CheckCoverage(a.params.Threshold)
+	if err != nil || a.params.Report {
+		a.printUncoveredItems(ctx.Log(), repFmt)
+		a.printReport(ctx, &prof)
 		return err
 	}
 
-	if a.params.Report {
-		a.printReport(ctx, &report)
-	}
-
-	return nil
+	return err
 }
 
-func (a *Action) printFailedPackages(l sdk.Logger, fpFmt *report.Formatter) {
-	failed, ok := fpFmt.FailedTests()
-	if !ok {
+func (a *Action) printUncoveredItems(l sdk.Logger, fpFmt *report.Formatter) {
+	uncovered, count := fpFmt.UncoveredPackages()
+	if count == 0 {
+		l.Debug("cover: no uncovered packages in report")
 		return
 	}
 
-	l.Error("Failed to check test coverage, some tests are failed.\n")
+	if !a.params.ShowUncovered {
+		l.Warnf("%d packages don't have tests and therefore were not included in the report.", count)
+		return
+	}
+
+	l.Warn("Packages without tests:")
+	_, _ = l.Write([]byte(uncovered))
+}
+
+func (a *Action) printFailedPackages(l sdk.Logger, fpFmt *report.Formatter) {
+	failed, count := fpFmt.FailedTests()
+	if count == 0 {
+		l.Debug("cover: no failed tests available in report")
+		return
+	}
+
+	l.Errorf("Failed to check test coverage, %d tests are failed.\n", count)
 	l.Error("Failed tests:")
 	_, _ = l.ErrorWriter().Write([]byte(failed))
 }

@@ -12,11 +12,12 @@ import (
 const toolArgsPrefixSize = 3
 
 type params struct {
-	Threshold  float64   `mapstructure:"threshold"`
-	Report     bool      `mapstructure:"reportCoverage"`
-	FullReport bool      `mapstructure:"fullReport"`
-	Packages   []string  `mapstructure:"packages"`
-	Sort       sortParam `mapstructure:"sort"`
+	Threshold     float64   `mapstructure:"threshold"`
+	Report        bool      `mapstructure:"reportCoverage"`
+	ShowUncovered bool      `mapstructure:"showUncovered"`
+	FullReport    bool      `mapstructure:"fullReport"`
+	Packages      []string  `mapstructure:"packages"`
+	Sort          sortParam `mapstructure:"sort"`
 }
 
 func (p *params) validate() error {
@@ -38,8 +39,9 @@ type sortParam struct {
 
 func newParams() params {
 	return params{
-		Threshold: 0.0,
-		Report:    false,
+		Threshold:     0.0,
+		Report:        false,
+		ShowUncovered: false,
 		Sort: sortParam{
 			By:   profile.ByCoverage,
 			Desc: true,

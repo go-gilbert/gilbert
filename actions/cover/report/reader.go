@@ -20,28 +20,26 @@ func (a *Formatter) Write(p []byte) (n int, err error) {
 }
 
 // UncoveredPackages returns pre-formatted lines about uncovered packages
-func (a *Formatter) UncoveredPackages() (string, bool) {
+func (a *Formatter) UncoveredPackages() (string, int) {
 	pkgs := a.lines.SkippedPackages()
-	if len(pkgs) == 0 {
-		return "", false
-	}
-
+	pkgCount := len(pkgs)
 	b := strings.Builder{}
 	for _, s := range pkgs {
 		// format: "  - package_name"
 		b.WriteString(wrapListItem(1, "- "+s))
 	}
 
-	return b.String(), true
+	return b.String(), pkgCount
 }
 
 // FailedTests returns pre-formatted lines about failed tests
-func (a *Formatter) FailedTests() (string, bool) {
+func (a *Formatter) FailedTests() (string, int) {
 	failures := a.lines.Failed()
 	if len(failures) == 0 {
-		return "", false
+		return "", 0
 	}
 
+	failedCount := 0
 	b := &strings.Builder{}
 	for pkg, tests := range failures {
 		/*
@@ -55,10 +53,11 @@ func (a *Formatter) FailedTests() (string, bool) {
 		for test, errors := range tests {
 			b.WriteString(wrapListItem(2, test))
 			outputLinesToList(b, errors)
+			failedCount++
 		}
 	}
 
-	return b.String(), true
+	return b.String(), failedCount
 }
 
 func outputLinesToList(w *strings.Builder, lines []string) {
