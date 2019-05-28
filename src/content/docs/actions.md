@@ -23,6 +23,7 @@ tasks:
 	  	source: 'github.com/foo/bar' 		# default: current package
 		buildMode: 'c-archive' 				# default: "default"
 		outputPath: './build/foo.exe'		# default: project directory
+        tags: 'foo bar baz'                 # set of build tags, separated by space
 		params:
 			stripDebugInfo: true			# removes debug info, default: false
 			linkerFlags:					# custom linker flags, default: empty
@@ -55,6 +56,11 @@ tasks:
             <td>`outputPath`</td>
             <td><i>string</i></td>
             <td>Artifact output path</td>
+        </tr>
+        <tr>
+            <td>`tags`</td>
+            <td><i>string</i></td>
+            <td>List of Go build tags separated by space (e.g: `foo bar`)</td>
         </tr>
         <tr>
             <td>`params`</td>
@@ -220,6 +226,7 @@ tasks:
       threshold: 60.5       # minimal coverage percent
       reportCoverage: true  # show coverage report in output
       fullReport: false     # display coverage for each function
+      showUncovered: false  # show list of packages without tests
       sort:
         by: 'coverage'      # sort report by package name or coverage
         desc: true          # sort ascending or descending
@@ -254,6 +261,11 @@ tasks:
             <td><code>fullReport</code></td>
             <td><i>boolean</i></td>
             <td>Display coverage for each function in package</td>
+        </tr>
+        <tr>
+            <td><code>showUncovered</code></td>
+            <td><i>boolean</i></td>
+            <td>Display list of packages without tests</td>
         </tr>
         <tr>
             <td><code>sort</code></td>
