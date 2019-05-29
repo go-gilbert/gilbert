@@ -33,10 +33,6 @@ func (lns Lines) Failed() FailureGroup {
 
 	// step 1: collect failed tests
 	for i, l := range lns {
-		if l.Test == "" {
-			continue
-		}
-
 		switch l.Action {
 		case actionOutput:
 			if !lineIgnored(l.Output) {

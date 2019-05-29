@@ -8,7 +8,12 @@ import (
 	"strings"
 )
 
-var ident = 2
+const (
+	ident = 2
+
+	// defaultSectionName is section for generic errors not related to tests
+	defaultSectionName = "[Test Execution Error]"
+)
 
 type Formatter struct {
 	lines Lines
@@ -51,7 +56,8 @@ func (a *Formatter) FailedTests() (string, int) {
 		b.WriteString(wrapListItem(1, fmt.Sprintf(`Package "%s":`, pkg)))
 
 		for test, errors := range tests {
-			b.WriteString(wrapListItem(2, test))
+			testName := normalizeTestName(test)
+			b.WriteString(wrapListItem(2, testName))
 			outputLinesToList(b, errors)
 			failedCount++
 		}
@@ -77,4 +83,12 @@ func NewReportFormatter() *Formatter {
 
 func wrapListItem(level int, str string) string {
 	return strings.Repeat(" ", ident*level) + str + "\n"
+}
+
+func normalizeTestName(tName string) string {
+	if tName != "" {
+		return tName
+	}
+
+	return defaultSectionName
 }
