@@ -2,6 +2,7 @@ package cover
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/support/shell"
 	"os"
 	"os/exec"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/go-gilbert/gilbert/actions/cover/report"
 
 	"github.com/go-gilbert/gilbert/actions/cover/profile"
-	"github.com/go-gilbert/gilbert/support/shell"
 )
 
 type Action struct {
@@ -35,12 +35,12 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	cmd.Stdout = repFmt
 	cmd.Stderr = ctx.Log().ErrorWriter()
 	if err = cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start cover tool, %s", err)
+		return fmt.Errorf("failed to start 'go test' tool, %s", err)
 	}
 
 	if err = cmd.Wait(); err != nil {
 		a.printFailedPackages(ctx.Log(), repFmt)
-		return shell.FormatExitError(err)
+		return fmt.Errorf("test execution failed (%s)", shell.FormatExitError(err))
 	}
 
 	if !a.alive {
