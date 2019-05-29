@@ -92,7 +92,7 @@ func (a *Action) printFailedPackages(l sdk.Logger, fpFmt *report.Formatter) {
 		return
 	}
 
-	l.Errorf("Failed to check test coverage, %d tests are failed.\n", count)
+	l.Errorf("Failed to check test coverage, test run failed with %d errors.\n", count)
 	l.Error("Failed tests:")
 	_, _ = l.ErrorWriter().Write([]byte(failed))
 }

@@ -8,12 +8,8 @@ import (
 	"strings"
 )
 
-const (
-	ident = 2
-
-	// defaultSectionName is section for generic errors not related to tests
-	defaultSectionName = "[Test Execution Error]"
-)
+// defaultSectionName is section for generic errors not related to tests
+const defaultSectionName = "[Test Execution Error]"
 
 type Formatter struct {
 	lines Lines
@@ -56,8 +52,12 @@ func (a *Formatter) FailedTests() (string, int) {
 		b.WriteString(wrapListItem(1, fmt.Sprintf(`Package "%s":`, pkg)))
 
 		for test, errors := range tests {
+			if len(errors) == 0 {
+				continue
+			}
+
 			testName := normalizeTestName(test)
-			b.WriteString(wrapListItem(2, testName))
+			b.WriteString(wrapListItem(2, testName+":"))
 			outputLinesToList(b, errors)
 			failedCount++
 		}
@@ -70,6 +70,8 @@ func outputLinesToList(w *strings.Builder, lines []string) {
 	for _, l := range lines {
 		w.WriteString(wrapListItem(3, l+"\n"))
 	}
+
+	w.WriteString(" \n")
 }
 
 // NewReportFormatter returns new "go test" tool report formatter
@@ -82,7 +84,7 @@ func NewReportFormatter() *Formatter {
 }
 
 func wrapListItem(level int, str string) string {
-	return strings.Repeat(" ", ident*level) + str + "\n"
+	return strings.Repeat("\t", level) + str + "\n"
 }
 
 func normalizeTestName(tName string) string {

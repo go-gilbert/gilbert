@@ -12,7 +12,7 @@ const (
 )
 
 // ignoredLines contains lines that should be excluded from lines
-var ignoredLines = []string{"=== RUN", "--- FAIL"}
+var ignoredLines = []string{"=== RUN", "--- FAIL", "coverage:", "FAIL"}
 
 // Line represents JSON line from "go test" tool's lines
 type Line struct {
