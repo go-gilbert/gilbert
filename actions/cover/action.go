@@ -2,10 +2,11 @@ package cover
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert/support/shell"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/go-gilbert/gilbert/support/shell"
 
 	sdk "github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/actions/cover/report"
