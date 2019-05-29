@@ -12,7 +12,7 @@ const (
 )
 
 // ignoredLines contains lines that should be excluded from lines
-var ignoredLines = []string{"=== RUN", "--- FAIL"}
+var ignoredLines = []string{"=== RUN", "--- FAIL", "coverage:", "FAIL"}
 
 // Line represents JSON line from "go test" tool's lines
 type Line struct {
@@ -33,10 +33,6 @@ func (lns Lines) Failed() FailureGroup {
 
 	// step 1: collect failed tests
 	for i, l := range lns {
-		if l.Test == "" {
-			continue
-		}
-
 		switch l.Action {
 		case actionOutput:
 			if !lineIgnored(l.Output) {
