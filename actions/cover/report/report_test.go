@@ -13,10 +13,10 @@ var fixturePath = filepath.Join(".", "testdata", "report.json")
 func TestLines_Failed(t *testing.T) {
 	expected := FailureGroup{
 		"github.com/go-gilbert/gilbert/actions/cover": Failures{
+			"": []string{}, "TestParamsValidate": []string{},
 			"TestParamsValidate/should_validate_threshold_above_100": []string{
 				`params_test.go:48: error 'coverage threshold should be between 0 and 100 (got 101.000000)' should contain 'coverage threshold should be between 0 and 1001'`,
 			},
-			"TestParamsValidate": []string{},
 		},
 	}
 	f, err := os.Open(fixturePath)
