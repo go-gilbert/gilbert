@@ -44,10 +44,10 @@ func (t *TaskRunner) Stop() {
 	}
 }
 
-// RunTask execute task by name.
+// Run executes task by name.
 //
 // "vars" parameter is optional and allows to override job scope values.
-func (t *TaskRunner) RunTask(taskName string, vars sdk.Vars) (err error) {
+func (t *TaskRunner) Run(taskName string, vars sdk.Vars) (err error) {
 	task, ok := t.manifest.Tasks[taskName]
 	if !ok {
 		return fmt.Errorf("task '%s' doesn't exists", taskName)
@@ -110,22 +110,47 @@ func (t *TaskRunner) RunTask(taskName string, vars sdk.Vars) (err error) {
 	return err
 }
 
+// RunTask starts sub-task by name
+//
+// Returns an error if task is not defined or returned an error
+func (t *TaskRunner) RunTask(taskName string, ctx sdk.JobContextAccessor, scope sdk.ScopeAccessor) error {
+	task, ok := t.manifest.Tasks[taskName]
+	if !ok {
+		return fmt.Errorf("task '%s' doesn't exists", taskName)
+	}
+
+	// Create a task copy with injected local variables from scope
+	// if scope has some variables
+	locals := scope.Vars()
+	if len(locals) > 0 {
+		task = task.Clone(locals)
+	}
+
+	ctx.Log().Debugf("runner: start sub-task '%s'", taskName)
+	if err := t.runSubTask(task, scope, ctx); err != nil {
+		ctx.Log().Debugf("runner: task '%s' returned an error '%s'", taskName, err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // RunJob starts job in separate goroutine.
 //
 // Use ctx.Error channel to track job result and ctx.Cancel() to cancel it.
 func (t *TaskRunner) RunJob(j sdk.Job, ctx sdk.JobContextAccessor) {
-	go t.handleJob(j, ctx.(*job.RunContext))
+	go t.handleJob(j, ctx)
 }
 
-func (t *TaskRunner) startJobAndWait(job sdk.Job, ctx *job.RunContext) error {
+func (t *TaskRunner) startJobAndWait(job sdk.Job, ctx sdk.JobContextAccessor) error {
 	go t.handleJob(job, ctx)
 	// All child jobs (except async jobs) inherit parent job channel,
 	// so we should close channel only if parent job was finished.
 	if !ctx.IsChild() {
-		defer close(ctx.Error)
+		defer close(ctx.Errors())
 	}
 
-	err, ok := <-ctx.Error
+	err, ok := <-ctx.Errors()
 	if !ok {
 		ctx.Log().Debug("runner: failed to read data from result channel!!!")
 		return nil
@@ -135,10 +160,10 @@ func (t *TaskRunner) startJobAndWait(job sdk.Job, ctx *job.RunContext) error {
 }
 
 // handleJob handles specified job
-func (t *TaskRunner) handleJob(j sdk.Job, ctx *job.RunContext) {
+func (t *TaskRunner) handleJob(j sdk.Job, ctx sdk.JobContextAccessor) {
 	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
 		AppendGlobals(t.manifest.Vars).
-		AppendVariables(ctx.RootVars)
+		AppendVariables(ctx.Vars())
 
 	// check if job should be run
 	if !t.shouldRunJob(j, s) {
@@ -162,15 +187,22 @@ func (t *TaskRunner) handleJob(j sdk.Job, ctx *job.RunContext) {
 	execType := j.Type()
 	switch execType {
 	case sdk.ExecAction:
-		t.handleActionCall(s, j, ctx)
+		t.handleActionCall(ctx, j, s)
 	case sdk.ExecMixin:
-		t.handleMixinCall(j, s, ctx)
+		t.handleMixinCall(ctx, j, s)
+	case sdk.ExecTask:
+		t.handleSubTaskCall(ctx, j, s)
 	default:
 		ctx.Result(errNoTaskHandler)
 	}
 }
 
-func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx *job.RunContext) {
+func (t *TaskRunner) handleSubTaskCall(ctx sdk.JobContextAccessor, j sdk.Job, s sdk.ScopeAccessor) {
+	err := t.RunTask(j.TaskName, ctx, s)
+	ctx.Result(err)
+}
+
+func (t *TaskRunner) handleActionCall(ctx sdk.JobContextAccessor, j sdk.Job, s sdk.ScopeAccessor) {
 	factory, err := t.ActionByName(j.ActionName)
 	if err != nil {
 		ctx.Result(err)
@@ -199,7 +231,7 @@ func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx *job.R
 // handleMixinCall constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) handleMixinCall(j sdk.Job, s sdk.ScopeAccessor, ctx *job.RunContext) {
+func (t *TaskRunner) handleMixinCall(ctx sdk.JobContextAccessor, j sdk.Job, s sdk.ScopeAccessor) {
 	mx, ok := t.manifest.Mixins[j.MixinName]
 	if !ok {
 		ctx.Result(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
@@ -222,8 +254,8 @@ func (t *TaskRunner) handleMixinCall(j sdk.Job, s sdk.ScopeAccessor, ctx *job.Ru
 // parentCtx used to expand task base properties (like description, etc.)
 //
 // subLogger used to create stack of log lines
-func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccessor, parentCtx *job.RunContext) (err error) {
-	// FIXME: drop copy-paste from RunTask
+func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccessor, parentCtx sdk.JobContextAccessor) (err error) {
+	// FIXME: drop copy-paste from Run
 	steps := len(task)
 
 	// Set waitgroup and buff channel for async jobs.
@@ -268,7 +300,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccesso
 			parentCtx.Log().Infof("- %s", descr)
 		}
 
-		ctx := parentCtx.ChildContext().(*job.RunContext)
+		ctx := parentCtx.ChildContext()
 		if j.Async {
 			tracker.decorateJobContext(ctx)
 			go t.handleJob(j, ctx)

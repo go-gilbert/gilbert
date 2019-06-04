@@ -4,7 +4,7 @@ imports:
 
 vars:
   buildDir: './build'
-  version: '0.10.1'
+  version: '0.11.0'
   commit: '{% git log --format=%H -n 1 %}'
 
 mixins:
@@ -34,6 +34,8 @@ tasks:
   - action: cover
     params:
       threshold: 60
+      fullReport: false
+      showUncovered: true
       packages:
         - ./...
 
