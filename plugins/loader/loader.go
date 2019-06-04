@@ -23,7 +23,7 @@ func LoadPlugin(libPath string) (pluginName string, pluginActions sdk.Actions, e
 	handle, err := plugin.Open(libPath)
 
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to load plugin, %s (file '%s')", err, libPath)
+		return "", nil, err
 	}
 
 	pluginName, err = getPluginName(handle)
