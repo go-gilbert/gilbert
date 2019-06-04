@@ -110,18 +110,25 @@ func (t *TaskRunner) Run(taskName string, vars sdk.Vars) (err error) {
 	return err
 }
 
-// RunTask starts sub-task by name or returns an error if task not found in manifest.
+// RunTask starts sub-task by name
 //
-// Use ctx.Errors() to track job result and ctx.Cancel() to cancel job execution.
+// Returns an error if task is not defined or returned an error
 func (t *TaskRunner) RunTask(taskName string, ctx sdk.JobContextAccessor, scope sdk.ScopeAccessor) error {
 	task, ok := t.manifest.Tasks[taskName]
 	if !ok {
 		return fmt.Errorf("task '%s' doesn't exists", taskName)
 	}
 
+	// Create a task copy with injected local variables from scope
+	// if scope has some variables
+	locals := scope.Vars()
+	if len(locals) > 0 {
+		task = task.Clone(locals)
+	}
+
 	ctx.Log().Debugf("runner: start sub-task '%s'", taskName)
 	if err := t.runSubTask(task, scope, ctx); err != nil {
-		ctx.Log().Debugf("runner: task '%s' returned an error '%s'", err.Error())
+		ctx.Log().Debugf("runner: task '%s' returned an error '%s'", taskName, err.Error())
 		return err
 	}
 
@@ -293,7 +300,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccesso
 			parentCtx.Log().Infof("- %s", descr)
 		}
 
-		ctx := parentCtx.ChildContext().(*job.RunContext)
+		ctx := parentCtx.ChildContext()
 		if j.Async {
 			tracker.decorateJobContext(ctx)
 			go t.handleJob(j, ctx)
