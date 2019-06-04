@@ -18,3 +18,10 @@ func (t Task) AsyncJobsCount() (count int) {
 
 	return count
 }
+
+// Clone creates a new task copy
+func (t Task) Clone() Task {
+	out := make(Task, 0, len(t))
+	copy(out, t)
+	return out
+}

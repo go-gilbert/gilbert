@@ -113,8 +113,18 @@ func (t *TaskRunner) Run(taskName string, vars sdk.Vars) (err error) {
 // RunTask starts sub-task by name or returns an error if task not found in manifest.
 //
 // Use ctx.Errors() to track job result and ctx.Cancel() to cancel job execution.
-func (t *TaskRunner) RunTask(taskName string, ctx sdk.JobContextAccessor) error {
-	// TODO: add implementation
+func (t *TaskRunner) RunTask(taskName string, ctx sdk.JobContextAccessor, scope sdk.ScopeAccessor) error {
+	task, ok := t.manifest.Tasks[taskName]
+	if !ok {
+		return fmt.Errorf("task '%s' doesn't exists", taskName)
+	}
+
+	ctx.Log().Debugf("runner: start sub-task '%s'", taskName)
+	if err := t.runSubTask(task, scope, ctx); err != nil {
+		ctx.Log().Debugf("runner: task '%s' returned an error '%s'", err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -170,15 +180,22 @@ func (t *TaskRunner) handleJob(j sdk.Job, ctx sdk.JobContextAccessor) {
 	execType := j.Type()
 	switch execType {
 	case sdk.ExecAction:
-		t.handleActionCall(s, j, ctx)
+		t.handleActionCall(ctx, j, s)
 	case sdk.ExecMixin:
-		t.handleMixinCall(j, s, ctx)
+		t.handleMixinCall(ctx, j, s)
+	case sdk.ExecTask:
+		t.handleSubTaskCall(ctx, j, s)
 	default:
 		ctx.Result(errNoTaskHandler)
 	}
 }
 
-func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx sdk.JobContextAccessor) {
+func (t *TaskRunner) handleSubTaskCall(ctx sdk.JobContextAccessor, j sdk.Job, s sdk.ScopeAccessor) {
+	err := t.RunTask(j.TaskName, ctx, s)
+	ctx.Result(err)
+}
+
+func (t *TaskRunner) handleActionCall(ctx sdk.JobContextAccessor, j sdk.Job, s sdk.ScopeAccessor) {
 	factory, err := t.ActionByName(j.ActionName)
 	if err != nil {
 		ctx.Result(err)
@@ -207,7 +224,7 @@ func (t *TaskRunner) handleActionCall(s sdk.ScopeAccessor, j sdk.Job, ctx sdk.Jo
 // handleMixinCall constructs a task from job with mixin and runs it
 //
 // requires subLogger instance to create cascade logging output
-func (t *TaskRunner) handleMixinCall(j sdk.Job, s sdk.ScopeAccessor, ctx sdk.JobContextAccessor) {
+func (t *TaskRunner) handleMixinCall(ctx sdk.JobContextAccessor, j sdk.Job, s sdk.ScopeAccessor) {
 	mx, ok := t.manifest.Mixins[j.MixinName]
 	if !ok {
 		ctx.Result(fmt.Errorf("mixin '%s' doesn't exists", j.MixinName))
