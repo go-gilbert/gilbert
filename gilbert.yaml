@@ -34,6 +34,8 @@ tasks:
   - action: cover
     params:
       threshold: 60
+      fullReport: false
+      showUncovered: true
       packages:
         - ./...
 
