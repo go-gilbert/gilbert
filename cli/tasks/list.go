@@ -1,16 +1,26 @@
 package tasks
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/go-gilbert/gilbert/manifest"
 	"os"
 
-	"github.com/go-gilbert/gilbert/log"
 	"github.com/urfave/cli"
+
+	"github.com/go-gilbert/gilbert/log"
+	"github.com/go-gilbert/gilbert/manifest"
 )
 
+// FlagJSON sets output in JSON format
+const FlagJSON = "json"
+
+type tasksSummary struct {
+	FileName string   `json:"file"`
+	Tasks    []string `json:"tasks"`
+}
+
 // ListTasksAction handles 'ls' command
-func ListTasksAction(_ *cli.Context) error {
+func ListTasksAction(ctx *cli.Context) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("cannot get current working directory, %v", err)
@@ -19,6 +29,11 @@ func ListTasksAction(_ *cli.Context) error {
 	m, err := manifest.FromDirectory(dir)
 	if err != nil {
 		return err
+	}
+
+	if ctx.Bool(FlagJSON) {
+		// print tasks in JSON format if appropriate flag enabled
+		return tasksToJSON(m)
 	}
 
 	if len(m.Tasks) == 0 {
@@ -32,5 +47,20 @@ func ListTasksAction(_ *cli.Context) error {
 	}
 
 	log.Default.Logf(msg)
+	return nil
+}
+
+func tasksToJSON(m *manifest.Manifest) error {
+	s := &tasksSummary{FileName: m.Location(), Tasks: make([]string, 0, len(m.Tasks))}
+	for t := range m.Tasks {
+		s.Tasks = append(s.Tasks, t)
+	}
+
+	data, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(data))
 	return nil
 }
