@@ -29,7 +29,7 @@ func wrapManifestError(parent error) error {
 	return fmt.Errorf("%s\n\nCheck if 'gilbert.yaml' file exists or has correct syntax and check all import statements", parent)
 }
 
-// RunTask is a handler for 'run' command
+// Run is a handler for 'run' command
 func RunTask(c *cli.Context) (err error) {
 	// Read cmd args
 	if c.NArg() == 0 {
@@ -64,7 +64,7 @@ func RunTask(c *cli.Context) (err error) {
 
 	// get variables passed with '--var' flags
 	vars := getOverrideVars(c)
-	if err := tr.RunTask(task, vars); err != nil {
+	if err := tr.Run(task, vars); err != nil {
 		return err
 	}
 
