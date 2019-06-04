@@ -11,6 +11,15 @@ mixins:
         command: 'foo'
 
 tasks:
+  test-subtask:
+    - task: '__foo'
+      vars:
+        message: 'Hello foo'
+    - task: 'test-plugins'
+  __foo:
+    - action: shell
+      params:
+        command: 'echo {{message}}'
   test-plugins:
     - action: 'example-plugin:hello-world'
       params:

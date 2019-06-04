@@ -63,6 +63,10 @@ func main() {
 			Before:      bootstrap,
 			Flags: []cli.Flag{
 				verboseFlag,
+				cli.BoolFlag{
+					Name:  tasks.FlagJSON,
+					Usage: "Print output in JSON format",
+				},
 			},
 		},
 		{

@@ -24,7 +24,6 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 		return fmt.Errorf("failed to create process to execute command '%s': %s", a.params.Command, err)
 	}
 
-	ctx.Log().Debugf("shell: command '%s'", a.params.Command)
 	ctx.Log().Debugf(`shell: exec "%s"...`, strings.Join(a.cmd.Args, " "))
 
 	// Add std listeners when silent is off

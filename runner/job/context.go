@@ -46,6 +46,11 @@ func (r *RunContext) Errors() chan error {
 	return r.Error
 }
 
+// SetErrorChannel sets custom error report channel
+func (r *RunContext) SetErrorChannel(ch chan error) {
+	r.Error = ch
+}
+
 // Log provides logger for current job context
 func (r *RunContext) Log() sdk.Logger {
 	return r.logger
@@ -62,6 +67,16 @@ func (r *RunContext) ForkContext() sdk.JobContextAccessor {
 		child:    true,
 		wg:       r.wg,
 	}
+}
+
+// Vars returns a set of variables attached to this context
+func (r *RunContext) Vars() sdk.Vars {
+	return r.RootVars
+}
+
+// SetVars sets context variables
+func (r *RunContext) SetVars(newVars sdk.Vars) {
+	r.RootVars = newVars
 }
 
 // ChildContext creates a new child context with separate Error channel and context

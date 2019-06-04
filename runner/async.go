@@ -2,9 +2,8 @@ package runner
 
 import (
 	"context"
+	sdk "github.com/go-gilbert/gilbert-sdk"
 	"sync"
-
-	"github.com/go-gilbert/gilbert/runner/job"
 )
 
 // asyncJobTracker tracks state of async jobs
@@ -37,10 +36,10 @@ func (t *asyncJobTracker) trackAsyncJobs() {
 }
 
 // decorateJobContext binds tracker to job context
-func (t *asyncJobTracker) decorateJobContext(ctx *job.RunContext) {
+func (t *asyncJobTracker) decorateJobContext(ctx sdk.JobContextAccessor) {
 	t.wg.Add(1)
 	ctx.SetWaitGroup(t.wg)
-	ctx.Error = t.errors
+	ctx.SetErrorChannel(t.errors)
 }
 
 // wait waits until all async jobs complete

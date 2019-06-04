@@ -18,3 +18,14 @@ func (t Task) AsyncJobsCount() (count int) {
 
 	return count
 }
+
+// Clone creates a new task copy with specified variables
+func (t Task) Clone(vars sdk.Vars) Task {
+	out := make(Task, len(t))
+	for i, j := range t {
+		j.Vars = j.Vars.Append(vars)
+		out[i] = j
+	}
+
+	return out
+}
