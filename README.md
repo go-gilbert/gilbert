@@ -20,24 +20,24 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
 
 **Full list of features:**
 
-* [Tasks](https://go-gilbert.github.io/gilbert/docs/syntax/#tasks)
+* [Tasks](https://go-gilbert.github.io/docs/syntax/#tasks)
   - Simple job declaration
   - Rollback and graceful shutdown
   - Evaluation conditions
   - Async and parallel jobs
   - Job timeout and deadline
-  - Job and [manifest templates](https://go-gilbert.github.io/gilbert/docs/syntax/#mixins)
-  - [Variables](https://go-gilbert.github.io/gilbert/docs/syntax/#variables) and [inline expressions](https://go-gilbert.github.io/gilbert/docs/syntax/#h-templates)
-* [Actions](https://go-gilbert.github.io/gilbert/docs/actions/)
+  - Job and [manifest templates](https://go-gilbert.github.io/docs/syntax/#mixins)
+  - [Variables](https://go-gilbert.github.io/docs/syntax/#variables) and [inline expressions](https://go-gilbert.github.io/docs/syntax/#h-templates)
+* [Actions](https://go-gilbert.github.io/docs/actions/)
   - Built-in most necessary actions
     - Track file changes and re-run task on change
     - Check project test coverage with specified threshold
     - Build project
   - Plugins for custom actions
-    - Get plugins from [GitHub](https://go-gilbert.github.io/gilbert/docs/plugin-development/) or other sources
-    - Simple [Plugin API](https://go-gilbert.github.io/gilbert/docs/plugin-development/)
+    - Get plugins from [GitHub](https://go-gilbert.github.io/docs/plugin-development/) or other sources
+    - Simple [Plugin API](https://go-gilbert.github.io/docs/plugin-development/)
 
-Read [documentation](https://go-gilbert.github.io/gilbert/docs/) for more information.
+Read [documentation](https://go-gilbert.github.io/docs/) for more information.
 
 ## Installation
 
@@ -61,7 +61,7 @@ Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/go-gilbe
 
 ## Usage
 
-Please check out [quick start](https://go-gilbert.github.io/gilbert/docs/quick-start/) guide.
+Please check out [quick start](https://go-gilbert.github.io/docs/quick-start/) guide.
 
 ### Tools
 
