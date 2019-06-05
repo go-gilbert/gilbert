@@ -1,5 +1,13 @@
 /** https://themes.gohugo.io/kube/ **/
 
+.deprecated-alert {
+	text-align: center;
+	color: rgb(251, 219, 127); 
+	background-color: rgb(81, 62, 0);
+	border-color: rgb(167, 126, 0);
+	padding: 10px 15px;
+}
+
 .x-logo {
 	display: inline-block;
 	background-color: #1c86f2;
