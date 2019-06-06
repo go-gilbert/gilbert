@@ -290,6 +290,10 @@ func (v *StmtVisitor) VisitStmt(s ast.Stmt) {
 	if statements == nil {
 		return
 	}
+	v.processStatements(statements)
+}
+
+func (v *StmtVisitor) processStatements(statements *[]ast.Stmt) {
 	for i := 0; i < len(*statements); i++ {
 		s := (*statements)[i]
 		switch s.(type) {
