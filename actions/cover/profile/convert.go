@@ -239,36 +239,9 @@ func (v *StmtVisitor) VisitStmt(s ast.Stmt) {
 	case *ast.CommClause:
 		statements = &s.Body
 	case *ast.ForStmt:
-		if s.Init != nil {
-			v.VisitStmt(s.Init)
-		}
-		if s.Post != nil {
-			v.VisitStmt(s.Post)
-		}
-		v.VisitStmt(s.Body)
+		v.processIter(s)
 	case *ast.IfStmt:
-		if s.Init != nil {
-			v.VisitStmt(s.Init)
-		}
-		v.VisitStmt(s.Body)
-		if s.Else != nil {
-			// Code copied from go.support/cmd/cover, to deal with "if x {} else if y {}"
-			const backupToElse = token.Pos(len("else ")) // The AST doesn't remember the else location. We can make an accurate guess.
-			switch stmt := s.Else.(type) {
-			case *ast.IfStmt:
-				block := &ast.BlockStmt{
-					Lbrace: stmt.If - backupToElse, // So the covered part looks like it starts at the "else".
-					List:   []ast.Stmt{stmt},
-					Rbrace: stmt.End(),
-				}
-				s.Else = block
-			case *ast.BlockStmt:
-				stmt.Lbrace -= backupToElse // So the block looks like it starts at the "else".
-			default:
-				panic("unexpected node type in if")
-			}
-			v.VisitStmt(s.Else)
-		}
+		v.processCondition(s)
 	case *ast.LabeledStmt:
 		v.VisitStmt(s.Stmt)
 	case *ast.RangeStmt:
@@ -291,6 +264,41 @@ func (v *StmtVisitor) VisitStmt(s ast.Stmt) {
 		return
 	}
 	v.processStatements(statements)
+}
+
+func (v *StmtVisitor) processIter(s *ast.ForStmt) {
+	if s.Init != nil {
+		v.VisitStmt(s.Init)
+	}
+	if s.Post != nil {
+		v.VisitStmt(s.Post)
+	}
+	v.VisitStmt(s.Body)
+}
+
+func (v *StmtVisitor) processCondition(s *ast.IfStmt) {
+	if s.Init != nil {
+		v.VisitStmt(s.Init)
+	}
+	v.VisitStmt(s.Body)
+	if s.Else != nil {
+		// Code copied from go.support/cmd/cover, to deal with "if x {} else if y {}"
+		const backupToElse = token.Pos(len("else ")) // The AST doesn't remember the else location. We can make an accurate guess.
+		switch stmt := s.Else.(type) {
+		case *ast.IfStmt:
+			block := &ast.BlockStmt{
+				Lbrace: stmt.If - backupToElse, // So the covered part looks like it starts at the "else".
+				List:   []ast.Stmt{stmt},
+				Rbrace: stmt.End(),
+			}
+			s.Else = block
+		case *ast.BlockStmt:
+			stmt.Lbrace -= backupToElse // So the block looks like it starts at the "else".
+		default:
+			panic("unexpected node type in if")
+		}
+		v.VisitStmt(s.Else)
+	}
 }
 
 func (v *StmtVisitor) processStatements(statements *[]ast.Stmt) {
