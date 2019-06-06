@@ -30,6 +30,7 @@ func CreateScope(projectDirectory string, vars sdk.Vars) (c *Scope) {
 	return
 }
 
+// Vars returns defined scope variables
 func (c *Scope) Vars() sdk.Vars {
 	return c.Variables
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/go-gilbert/gilbert/actions/cover/profile"
 )
 
+// Action is action handler
 type Action struct {
 	scope     sdk.ScopeAccessor
 	params    params
@@ -21,6 +22,7 @@ type Action struct {
 	alive     bool
 }
 
+// Call implements sdk.ActionHandler
 func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	defer a.clean(ctx)
 	cmd, err := a.createCoverCommand(ctx)
@@ -154,6 +156,7 @@ func (a *Action) createCoverCommand(ctx sdk.JobContextAccessor) (*exec.Cmd, erro
 	return cmd, nil
 }
 
+// Cancel implements sdk.ActionHandler
 func (a *Action) Cancel(ctx sdk.JobContextAccessor) error {
 	a.clean(ctx)
 	return nil

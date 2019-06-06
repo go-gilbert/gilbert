@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Packages is a set of reports for each package
 type Packages map[string]*PackageReport
 
 // Names returns a slice of package names

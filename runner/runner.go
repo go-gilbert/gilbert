@@ -27,6 +27,7 @@ type TaskRunner struct {
 	cancelFn         context.CancelFunc
 }
 
+// SetContext sets execution context
 func (t *TaskRunner) SetContext(ctx context.Context, fn context.CancelFunc) {
 	t.context = ctx
 	t.cancelFn = fn

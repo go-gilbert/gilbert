@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
+
 package profile
 
 import (
@@ -32,6 +33,7 @@ import (
 	"github.com/axw/gocov"
 )
 
+// ConvertProfiles converts "go test" profiles to package coverage report
 func ConvertProfiles(filenames ...string) (*gocovutil.Packages, error) {
 	ps := &gocovutil.Packages{}
 	for i := range filenames {
@@ -56,6 +58,7 @@ func ConvertProfiles(filenames ...string) (*gocovutil.Packages, error) {
 	return ps, nil
 }
 
+// Converter converts profiles
 type Converter struct {
 	packages map[string]*gocov.Package
 }
@@ -219,6 +222,7 @@ func (v *FuncVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
+// StmtVisitor extracts data from file
 type StmtVisitor struct {
 	fset     *token.FileSet
 	function *FuncExtent

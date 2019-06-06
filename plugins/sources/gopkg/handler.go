@@ -54,6 +54,7 @@ func newImportContext(uri *url.URL) (*importContext, error) {
 	}, nil
 }
 
+// GetPlugin returns plugin from URL
 func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 	ic, err := newImportContext(uri)
 	if err != nil {

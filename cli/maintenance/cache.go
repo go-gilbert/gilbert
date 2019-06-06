@@ -12,17 +12,20 @@ const (
 )
 
 var (
+	// ClearAllFlag is flag for clearing all storage
 	ClearAllFlag = cli.BoolFlag{
 		Name:  targetAll,
 		Usage: "clear everything",
 	}
 
+	// ClearPluginsFlag is flag for clearing plugin cache
 	ClearPluginsFlag = cli.BoolFlag{
 		Name:  targetPlugins,
 		Usage: "clear downloaded plugins",
 	}
 )
 
+// ClearCacheAction handles cache clear command
 func ClearCacheAction(ctx *cli.Context) (err error) {
 	defer func() {
 		if err == nil {

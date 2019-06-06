@@ -1,5 +1,5 @@
 /*
-package lines parses output of "go test" tool, formats and provides information about uncovered packages and failed tests
+package report parses output of "go test" tool, formats and provides information about uncovered packages and failed tests
 */
 package report
 
@@ -11,6 +11,7 @@ import (
 // defaultSectionName is section for generic errors not related to tests
 const defaultSectionName = "[Test Execution Error]"
 
+// Formatter creates a text coverage report from "go test" tool
 type Formatter struct {
 	lines Lines
 }
