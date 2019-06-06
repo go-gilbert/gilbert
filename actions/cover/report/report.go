@@ -77,6 +77,7 @@ func (lns Lines) SkippedPackages() []string {
 	return pkgs
 }
 
+// AppendData appends data to report
 func (lns *Lines) AppendData(data []byte) error {
 	// sometimes, cmd can provide multiple lines at once
 	// so we should process each line one by one
@@ -94,6 +95,7 @@ func (lns *Lines) AppendData(data []byte) error {
 	return nil
 }
 
+// Parse parses go test report JSON line
 func Parse(data []byte) (l Line, err error) {
 	err = json.Unmarshal(data, &l)
 	return l, err

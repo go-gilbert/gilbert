@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	homeDirName  = ".gilbert"
+	homeDirName = ".gilbert"
+
+	// StoreVarName is env var name for storage path
 	StoreVarName = "GILBERT_HOME"
 )
 

@@ -1,5 +1,5 @@
 /*
-package actions contains operations related to action handlers
+Package actions contains operations related to action handlers
 */
 package actions
 
