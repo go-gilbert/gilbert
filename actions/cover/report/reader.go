@@ -1,5 +1,5 @@
 /*
-package report parses output of "go test" tool, formats and provides information about uncovered packages and failed tests
+Package report parses output of "go test" tool, formats and provides information about uncovered packages and failed tests
 */
 package report
 

@@ -228,6 +228,7 @@ type StmtVisitor struct {
 	function *FuncExtent
 }
 
+// VisitStmt visits statement
 func (v *StmtVisitor) VisitStmt(s ast.Stmt) {
 	var statements *[]ast.Stmt
 	switch s := s.(type) {
