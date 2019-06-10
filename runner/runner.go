@@ -68,7 +68,7 @@ func (t *TaskRunner) Run(taskName string, vars sdk.Vars) (err error) {
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
 		t.subLogger.Debugf("runner: %d async jobs in task", asyncJobsCount)
-		tracker = newAsyncJobTracker(t.context, t, asyncJobsCount)
+		tracker = newAsyncJobTracker(t.context, t.subLogger, asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
@@ -264,7 +264,7 @@ func (t *TaskRunner) runSubTask(task manifest.Task, parentScope sdk.ScopeAccesso
 	asyncJobsCount := task.AsyncJobsCount()
 	if asyncJobsCount > 0 {
 		parentCtx.Log().Debugf("runner: %d async jobs in sub-task", asyncJobsCount)
-		tracker = newAsyncJobTracker(parentCtx.Context(), t, asyncJobsCount)
+		tracker = newAsyncJobTracker(parentCtx.Context(), parentCtx.Log(), asyncJobsCount)
 		go tracker.trackAsyncJobs()
 
 		defer func() {
