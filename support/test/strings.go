@@ -9,7 +9,7 @@ import (
 
 func AssertErrorContains(t *testing.T, haystack error, needle string) {
 	if haystack == nil {
-		t.Fatalf(`no error returned (expected "%s"`, needle)
+		t.Fatalf(`no error returned (expected "%s")`, needle)
 		return
 	}
 	if !strings.Contains(haystack.Error(), needle) {

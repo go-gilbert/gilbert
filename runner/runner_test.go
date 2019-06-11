@@ -39,18 +39,18 @@ func TestTaskRunner_Run(t *testing.T) {
 		after    func(t *testing.T, tr *TaskRunner, l *test.Log)
 	}{
 		"error if task not exists": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "task 'foo' doesn't exists",
 		},
 		"error if job is empty": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "no task handler defined",
 			m:        manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{sdk.Job{}}}},
 		},
 		"error if action not exists": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "no such action handler: 'foo'",
 			m:        manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{sdk.Job{ActionName: "foo"}}}},
@@ -59,7 +59,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"error if action returned error": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "fail",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
@@ -68,7 +68,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			}}},
 		},
 		"error if action factory returned error": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "fail",
 			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
@@ -81,7 +81,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			}}},
 		},
 		"wait until async task complete": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testAsync", Async: true},
@@ -96,7 +96,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"respect exec condition": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testTimeout", Condition: "badcommand"},
@@ -111,7 +111,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"skip job if condition expression is bad": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testBadConditionHook", Condition: "{{bad}} condition"},
@@ -126,7 +126,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"run job if expression returns OK result": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testOKConditionHook", Condition: "echo {{msg}}", Vars: sdk.Vars{"msg": "hello"}},
@@ -141,7 +141,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"respect timeout": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testTimeout", Delay: sdk.Period(800)},
@@ -162,7 +162,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"respect deadline": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testDeadline", Deadline: sdk.Period(10)},
@@ -180,7 +180,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"execute mixins": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{
 				Mixins: manifest.Mixins{
@@ -207,7 +207,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"report error if mixin job failed": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "mixin job fail",
 			m: manifest.Manifest{
@@ -225,7 +225,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"report error if mixin doesn't exists": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "mixin 'mx1' doesn't exists",
 			m: manifest.Manifest{
@@ -238,7 +238,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"not fail if expression in mixin job desc is malformed": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{
 				Mixins: manifest.Mixins{
@@ -254,7 +254,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"check if subtask exists": {
-			skip:     true,
+			skip:     false,
 			taskName: "t1",
 			err:      "task 't2' doesn't exists",
 			m: manifest.Manifest{
@@ -266,7 +266,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"execute subtask": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			m: manifest.Manifest{
 				Tasks: manifest.TaskSet{
@@ -292,7 +292,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			},
 		},
 		"return subtask errors": {
-			skip:     true,
+			skip:     false,
 			taskName: "foo",
 			err:      "task 'foo' returned an error on step 2: fail (sub-task step 1)",
 			m: manifest.Manifest{
