@@ -24,7 +24,7 @@ var (
 const FlagNoColor = "no-color"
 
 var (
-	// unfortunately, uface/cli ignores '--verbose' global flag :(
+	// unfortunately, urfave/cli ignores '--verbose' global flag :(
 	// so it should be defined implicitly in each task
 	verboseFlag = cli.BoolFlag{
 		Name:        "verbose",
