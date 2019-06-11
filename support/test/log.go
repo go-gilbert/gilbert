@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	sdk "github.com/go-gilbert/gilbert-sdk"
@@ -20,16 +21,21 @@ import (
 type Log struct {
 	T        *testing.T
 	messages []string
+	mtx      sync.Mutex
 }
 
 func (c *Log) log(level int, args ...interface{}) {
-	c.messages = append(c.messages, fmt.Sprint(args...))
 	c.T.Log(args...)
+	c.mtx.Lock()
+	c.messages = append(c.messages, fmt.Sprint(args...))
+	c.mtx.Unlock()
 }
 
 func (c *Log) logf(level int, format string, args ...interface{}) {
-	c.messages = append(c.messages, fmt.Sprintf(format, args...))
 	c.T.Logf(format, args...)
+	c.mtx.Lock()
+	c.messages = append(c.messages, fmt.Sprintf(format, args...))
+	c.mtx.Unlock()
 }
 
 // AssertMessage checks if message has been logged
