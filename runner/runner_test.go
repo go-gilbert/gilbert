@@ -311,7 +311,7 @@ func TestTaskRunner_Run(t *testing.T) {
 
 	for name, c := range cases {
 		if c.skip {
-			//continue
+			continue
 		}
 		r = results{}
 		l := &test.Log{T: t}

@@ -21,7 +21,7 @@ func TestRunContext_Result(t *testing.T) {
 	rtx.SetWaitGroup(wg)
 	assert.Equal(t, true, rtx.IsAlive())
 	go func(e error) {
-		wg.Add(1)
+		wg.Add(1) //nolint:staticcheck
 		rtx.Result(e)
 	}(expected)
 
@@ -35,7 +35,7 @@ func TestRunContext_Success(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	rtx.SetWaitGroup(wg)
 	go func() {
-		wg.Add(1)
+		wg.Add(1) //nolint:staticcheck
 		time.Sleep(time.Millisecond * 100)
 		rtx.Success()
 	}()
