@@ -33,7 +33,7 @@ func init() {
 }
 
 func splitStringOperator(delimiter string, str string) []string {
-	return strings.Split(str, delimiter)
+	return strings.Split(strings.TrimSpace(str), delimiter)
 }
 
 func createSliceOperator(args ...interface{}) []interface{} {
