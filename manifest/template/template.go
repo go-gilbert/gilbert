@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-gilbert/gilbert/support/shell"
 	"strings"
 	"text/template"
+
+	"github.com/go-gilbert/gilbert/support/shell"
 )
 
 const (
@@ -18,10 +19,10 @@ const (
 var (
 	tplParser *template.Template
 	functions = template.FuncMap{
-		"sliceOf": createSliceOperator,
-		"yaml":    convertToYamlOperator,
-		"shell":   evalShellOperator,
-		"split":   splitStringOperator,
+		"slice": createSliceOperator,
+		"yaml":  convertToYamlOperator,
+		"shell": evalShellOperator,
+		"split": splitStringOperator,
 	}
 )
 
