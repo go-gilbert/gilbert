@@ -33,11 +33,24 @@ tasks:
   cover:
   - action: cover
     params:
-      threshold: 60
-      fullReport: false
+      threshold: 50
+      fullReport: true
       showUncovered: true
       packages:
         - ./...
+
+  cover:html:
+    - description: Generate cover profile
+      action: shell
+      vars:
+        pkgs: ./...
+      params:
+        command: go test -coverprofile /tmp/cover.out {{pkgs}} && go tool cover -html=/tmp/cover.out
+    - description: Cleanup
+      action: shell
+      timeout: 500
+      params:
+        command: rm /tmp/cover.out
 
   lint:
     - description: lint
