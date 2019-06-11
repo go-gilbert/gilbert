@@ -68,7 +68,7 @@ func Path(storageType Type, paths ...string) (string, error) {
 	p := filepath.Join(home, dir)
 
 	if len(paths) > 0 {
-		p += "/" + filepath.Join(paths...)
+		p += string(os.PathSeparator) + filepath.Join(paths...)
 	}
 
 	return p, nil
@@ -89,7 +89,7 @@ func LocalPath(storageType Type, paths ...string) (string, error) {
 	p := filepath.Join(wd, homeDirName, dir)
 
 	if len(paths) > 0 {
-		p += "/" + filepath.Join(paths...)
+		p += string(os.PathSeparator) + filepath.Join(paths...)
 	}
 
 	return p, nil
