@@ -176,7 +176,10 @@ func TestTaskRunner_Run(t *testing.T) {
 				assert.Truef(t, r.cancel, "task didn't receive cancel callback on deadline")
 				diff := uint((r.cancelTime.Sub(r.startTime).Seconds()) * 1000)
 				const deadlineTime = uint(10)
-				assert.Equalf(t, deadlineTime, diff, "task cancel time mismatch")
+				const permMargin = 1 // On some CI's like AppVeyor, cancel signal can take additional second
+				if (diff < deadlineTime-permMargin) || diff > (deadlineTime+permMargin) {
+					t.Fatalf("was canceled too late (%d msec), want %d", diff, deadlineTime)
+				}
 			},
 		},
 		"execute mixins": {
