@@ -18,6 +18,7 @@ func homeDirEnv() string {
 }
 
 func TestHomeDir(t *testing.T) {
+	t.Log(os.Unsetenv(StoreVarName))
 	hdir, err := os.UserHomeDir()
 	if err != nil {
 		t.Skipf("cannot run test, user dir unavailable: %s", err)
@@ -64,6 +65,7 @@ func TestHomeDir(t *testing.T) {
 }
 
 func TestPath(t *testing.T) {
+	t.Log(os.Unsetenv(StoreVarName))
 	t.Log(os.Setenv(StoreVarName, "testdata"))
 	_, err := Path(Type(48))
 	assert.Error(t, err)
@@ -89,6 +91,7 @@ func TestLocalPath(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Log(os.Unsetenv(StoreVarName))
 	t.Log(os.Setenv(StoreVarName, "testdata"))
 	err := Delete(Type(48))
 	assert.Error(t, err)
