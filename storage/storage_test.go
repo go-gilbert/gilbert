@@ -26,15 +26,18 @@ func TestHomeDir(t *testing.T) {
 	}
 
 	envName := homeDirEnv()
-	cases := map[string]struct {
+	cases := []struct {
+		name string
 		err  string
 		want string
 		mod  func()
 	}{
-		"return default cache dir": {
+		{
+			name: "return default cache dir",
 			want: filepath.Join(hdir, homeDirName),
 		},
-		"override path from env var": {
+		{
+			name: "override path from env var",
 			want: "testdata",
 			mod: func() {
 				_ = os.Setenv(StoreVarName, "testdata")
@@ -42,8 +45,8 @@ func TestHomeDir(t *testing.T) {
 		},
 	}
 
-	for name, c := range cases {
-		t.Run(name, func(t *testing.T) {
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
 			if c.mod != nil {
 				c.mod()
 			}
