@@ -95,36 +95,6 @@ func LocalPath(storageType Type, paths ...string) (string, error) {
 	return p, nil
 }
 
-// EnsurePath returns specified storage folder and creates if it not exists
-func EnsurePath(storageType Type, paths ...string) (string, error) {
-	loc, err := Path(storageType, paths...)
-	if err != nil {
-		return "", err
-	}
-
-	exists, err := fs.Exists(loc)
-	if err != nil {
-		return loc, err
-	}
-
-	if !exists {
-		return loc, os.MkdirAll(loc, os.FileMode(0755))
-	}
-
-	return loc, nil
-}
-
-// Exists checks if specified item exists in storage
-func Exists(storageType Type, paths ...string) (bool, string, error) {
-	loc, err := Path(storageType, paths...)
-	if err != nil {
-		return false, loc, err
-	}
-
-	exists, err := fs.Exists(loc)
-	return exists, loc, err
-}
-
 // Delete clears specified storage item
 func Delete(storageType Type, paths ...string) error {
 	dir, err := Path(storageType, paths...)
