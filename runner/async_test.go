@@ -26,5 +26,4 @@ func TestTrackAsyncJobs(t *testing.T) {
 	}()
 
 	assert.NoError(t, tr.wait())
-	l.AssertMessage("async job returned error")
 }
