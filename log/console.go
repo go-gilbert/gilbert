@@ -14,9 +14,16 @@ const (
 )
 
 // consoleLogWriter is console logger
-type consoleWriter struct{}
+type consoleWriter struct {
+	noColor bool
+}
 
 func (c *consoleWriter) Write(level int, message string) {
+	if c.noColor {
+		fmt.Print(message)
+		return
+	}
+
 	switch level {
 	case LevelInfo:
 		color.Blue(message)

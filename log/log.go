@@ -6,10 +6,10 @@ import "github.com/go-gilbert/gilbert-sdk"
 var Default sdk.Logger
 
 // UseConsoleLogger bootstraps console logger as default log instance
-func UseConsoleLogger(level int) {
+func UseConsoleLogger(level int, noColor bool) {
 	Default = &logger{
 		level:     level,
 		formatter: &paddingFormatter{},
-		writer:    &consoleWriter{},
+		writer:    &consoleWriter{noColor: noColor},
 	}
 }
