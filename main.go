@@ -20,13 +20,23 @@ var (
 	commit  = "local build"
 )
 
-// unfortunately, uface/cli ignores '--verbose' global flag :(
-// so it should be defined implicitly in each task
-var verboseFlag = cli.BoolFlag{
-	Name:        "verbose",
-	Usage:       "shows debug information, useful for troubleshooting",
-	Destination: &scope.Debug,
-}
+// FlagNoColor disables color output
+const FlagNoColor = "no-color"
+
+var (
+	// unfortunately, urfave/cli ignores '--verbose' global flag :(
+	// so it should be defined implicitly in each task
+	verboseFlag = cli.BoolFlag{
+		Name:        "verbose",
+		Usage:       "shows debug information, useful for troubleshooting",
+		Destination: &scope.Debug,
+	}
+
+	noColorFlag = cli.BoolFlag{
+		Name:  FlagNoColor,
+		Usage: "disable color output in terminal",
+	}
+)
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -50,6 +60,7 @@ func main() {
 			Before:      bootstrap,
 			Flags: []cli.Flag{
 				verboseFlag,
+				noColorFlag,
 				cli.StringSliceFlag{
 					Name: tasks.OverrideVarFlag,
 				},
@@ -100,13 +111,14 @@ func main() {
 	}
 }
 
-func bootstrap(_ *cli.Context) error {
+func bootstrap(c *cli.Context) error {
 	level := log.LevelInfo
 	if scope.Debug {
 		level = log.LevelDebug
 	}
 
-	log.UseConsoleLogger(level)
+	noColor := c.Bool(FlagNoColor)
+	log.UseConsoleLogger(level, noColor)
 	return nil
 }
 

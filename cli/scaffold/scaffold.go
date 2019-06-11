@@ -5,11 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/log"
-
 	"github.com/go-gilbert/gilbert/manifest"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
@@ -54,15 +52,13 @@ var boilerplate = manifest.Manifest{
 }
 
 // RunScaffoldManifest handles 'init' command
-func RunScaffoldManifest(c *cli.Context) (err error) {
+func RunScaffoldManifest(_ *cli.Context) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("cannot get current working directory, %s", err)
 	}
 
 	log.Default.Debugf("current working directory is '%s'", cwd)
-	ensureGoPath(cwd)
-
 	out, err := yaml.Marshal(boilerplate)
 	if err != nil {
 		return fmt.Errorf("cannot create YAML file: %s", err)
@@ -77,16 +73,4 @@ func RunScaffoldManifest(c *cli.Context) (err error) {
 	log.Default.Successf("File '%s' successfully created", destFile)
 	log.Default.Info("Use 'gilbert run build' to build the project")
 	return nil
-}
-
-func ensureGoPath(cwd string) {
-	goPath := os.Getenv("GOPATH")
-	if goPath == "" {
-		log.Default.Warn("Warning: GOPATH environment variable is not defined")
-		return
-	}
-
-	if !strings.Contains(cwd, goPath) {
-		log.Default.Warnf("Current directory is outside GOPATH (%s)", goPath)
-	}
 }
