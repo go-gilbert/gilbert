@@ -4,6 +4,7 @@ import (
 	"github.com/go-gilbert/gilbert/support/test"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -70,6 +71,12 @@ func TestPath(t *testing.T) {
 
 	val, err := Path(Root, "foo")
 	assert.NoError(t, err)
+
+	// workaround for windows: go sometimes returns wrong backshash symbol
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, path.Join("testdata", "foo"), val)
+		return
+	}
 	assert.Equal(t, filepath.Join("testdata", "foo"), val)
 }
 
@@ -85,6 +92,12 @@ func TestLocalPath(t *testing.T) {
 
 	val, err := LocalPath(Root, "foo")
 	assert.NoError(t, err)
+
+	// workaround for windows: go sometimes returns wrong backshash symbol
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, path.Join(cwd, homeDirName, "foo"), val)
+		return
+	}
 	assert.Equal(t, filepath.Join(cwd, homeDirName, "foo"), val)
 }
 
