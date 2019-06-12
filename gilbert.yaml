@@ -40,17 +40,10 @@ tasks:
         - ./...
 
   cover:html:
-    - description: Generate cover profile
-      action: shell
-      vars:
-        pkgs: ./...
+    - action: cover:html
       params:
-        command: go test -coverprofile /tmp/cover.out {{pkgs}} && go tool cover -html=/tmp/cover.out
-    - description: Cleanup
-      action: shell
-      timeout: 500
-      params:
-        command: rm /tmp/cover.out
+        packages:
+        - '{{pkg}}'
 
   lint:
     - description: lint
