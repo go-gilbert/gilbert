@@ -10,6 +10,7 @@ import (
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/actions/build"
 	"github.com/go-gilbert/gilbert/actions/cover"
+	"github.com/go-gilbert/gilbert/actions/cover/html"
 	"github.com/go-gilbert/gilbert/actions/pkgget"
 	"github.com/go-gilbert/gilbert/actions/shell"
 	"github.com/go-gilbert/gilbert/actions/watch"
@@ -27,6 +28,7 @@ var actionsHandlers = sdk.Actions{
 	"shell":       shell.NewAction,
 	"watch":       watch.NewAction,
 	"cover":       cover.NewAction,
+	"cover:html":  html.NewAction,
 }
 
 // HandleFunc registers action handler for specified action name

@@ -2,15 +2,25 @@ package manifest
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"github.com/go-gilbert/gilbert/manifest/template"
 	"io/ioutil"
 	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 )
 
 // UnmarshalManifest parses yaml contents into manifest structure
 func UnmarshalManifest(data []byte) (m *Manifest, err error) {
+	parsed, err := template.CompileManifest(data)
+	if err != nil {
+		return nil, fmt.Errorf("template syntax error in manifest file: %s", err)
+	}
+
 	m = &Manifest{}
-	err = yaml.Unmarshal(data, m)
+	if err := yaml.Unmarshal(parsed, m); err != nil {
+		// Return formatted error
+		return nil, fmt.Errorf("%s\n\n[Error in file]:\n%s", err, string(parsed))
+	}
 	return
 }
 
