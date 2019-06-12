@@ -16,11 +16,12 @@ import (
 const (
 	coverFilePattern   = "gbcover*.out"
 	defaultCoverTarget = "./..."
+	defaultTimeout     = sdk.Period(300)
 )
 
 // NewAction creates a new html coverage report action handler
 func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (h sdk.ActionHandler, err error) {
-	handler := &reportAction{alive: true, scope: scope}
+	handler := &reportAction{alive: true, scope: scope, Timeout: defaultTimeout}
 	if err := params.Unmarshal(&handler); err != nil {
 		return nil, err
 	}
@@ -38,7 +39,8 @@ func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (h sdk.ActionHa
 }
 
 type reportAction struct {
-	Packages  []string `mapstructure:"packages"`
+	Packages  []string   `mapstructure:"packages"`
+	Timeout   sdk.Period `mapstructure:"timeout"`
 	scope     sdk.ScopeAccessor
 	coverFile *os.File
 	alive     bool
@@ -61,7 +63,7 @@ func (a *reportAction) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err er
 		return fmt.Errorf("failed to open report in browser, %s", err)
 	}
 
-	time.Sleep(300 * time.Millisecond)
+	time.Sleep(a.Timeout.ToDuration())
 	return nil
 }
 
