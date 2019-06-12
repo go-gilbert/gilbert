@@ -58,6 +58,8 @@ Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/go-gilbe
 
 **Note**: You should run `Set-ExecutionPolicy Bypass` in PowerShell to be able to execute installation script.
 
+Some features, like [plugins](https://go-gilbert.github.io/docs/plugins/) are not available on Windows. We recommend to use [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10) for full experience.
+
 ## Usage
 
 Please check out [quick start](https://go-gilbert.github.io/docs/quick-start/) guide.
