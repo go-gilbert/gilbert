@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/assets/gilbert.png" width="256"></p>
 <p align="center">
-  <a href="https://travis-ci.org/go-gilbert/gilbert"><img src="https://travis-ci.org/go-gilbert/gilbert.svg?branch=master" alt="Build Status"></img></a>
+  <a href="https://travis-ci.org/go-gilbert/gilbert"><img src="https://travis-ci.org/go-gilbert/gilbert.svg?branch=master" alt="Build Status" /></a>
   <a href="https://ci.appveyor.com/project/x1unix/gilbert"><img src="https://ci.appveyor.com/api/projects/status/github/go-gilbert/gilbert?svg=true&branch=master&passingText=Windows%20-%20OK&failingText=Windows%20-%20failed&pendingText=Windows%20-%20pending" alt="Windows Build Status"></a>
   <a href="https://goreportcard.com/report/github.com/go-gilbert/gilbert"><img src="https://goreportcard.com/badge/github.com/go-gilbert/gilbert" /></a>
   <a href="https://opensource.org/licenses/mit-license"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" /></a>
@@ -14,7 +14,7 @@
 
 **Gilbert** is task runner that aims to provide declarative way to define and run tasks like in other projects like _Gradle_, _Maven_ and etc.
 
-All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file you can find [here](https://github.com/go-gilbert/gilbert/blob/master/gilbert.yaml).
+All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file you can find [here](https://github.com/go-gilbert/project-example/blob/master/gilbert.yaml).
 
 **Full list of features:**
 
@@ -25,6 +25,7 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
   - Async and parallel jobs
   - Job timeout and deadline
   - Job and [manifest templates](https://go-gilbert.github.io/docs/syntax/#mixins)
+  - [Go templates](https://go-gilbert.github.io/docs/syntax/#h-go-templates)
   - [Variables](https://go-gilbert.github.io/docs/syntax/#variables) and [inline expressions](https://go-gilbert.github.io/docs/syntax/#h-templates)
 * [Actions](https://go-gilbert.github.io/docs/actions/)
   - Built-in most necessary actions
@@ -35,7 +36,7 @@ All tasks are declared in *gilbert file* (`gilbert.yaml`). Example of the file y
     - Get plugins from [GitHub](https://go-gilbert.github.io/docs/plugin-development/) or other sources
     - Simple [Plugin API](https://go-gilbert.github.io/docs/plugin-development/)
 
-Read [documentation](https://go-gilbert.github.io/docs/) for more information.
+Read [documentation](https://go-gilbert.github.io/docs/) and [sample project](https://github.com/go-gilbert/project-example) for more information.
 
 ## Installation
 
@@ -56,6 +57,8 @@ Invoke-Expression (Invoke-Webrequest 'https://raw.githubusercontent.com/go-gilbe
 ```
 
 **Note**: You should run `Set-ExecutionPolicy Bypass` in PowerShell to be able to execute installation script.
+
+Some features, like [plugins](https://go-gilbert.github.io/docs/plugins/) are not available on Windows. We recommend to use [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10) for full experience.
 
 ## Usage
 
