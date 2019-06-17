@@ -14,7 +14,7 @@ const (
 )
 
 type expected struct {
-	ghUrl string
+	ghURL string
 	token string
 	pkg   packageQuery
 }
@@ -46,7 +46,7 @@ func TestReadUrl(t *testing.T) {
 		"should fail if URL format is invalid": {
 			skip: false,
 			url:  "github://github.com/foo",
-			err:  errBadUrl.Error(),
+			err:  errBadURL.Error(),
 		},
 		"should parse package version and token": {
 			skip: false,
@@ -65,7 +65,7 @@ func TestReadUrl(t *testing.T) {
 			skip: false,
 			url:  "github://github.example.com:8888/foo/bar?version=v1.0&token=" + testToken,
 			expected: expected{
-				ghUrl: "https://github.example.com:8888/",
+				ghURL: "https://github.example.com:8888/",
 				token: testToken,
 				pkg: packageQuery{
 					owner:    "foo",
@@ -79,7 +79,7 @@ func TestReadUrl(t *testing.T) {
 			skip: false,
 			url:  "github://github.example.com/service/foo/bar?version=v1.0&protocol=http&token=" + testToken,
 			expected: expected{
-				ghUrl: "http://github.example.com/service/",
+				ghURL: "http://github.example.com/service/",
 				token: testToken,
 				pkg: packageQuery{
 					owner:    "foo",
@@ -93,7 +93,7 @@ func TestReadUrl(t *testing.T) {
 			skip: false,
 			url:  "github://github.example.com/foo/bar",
 			expected: expected{
-				ghUrl: "https://github.example.com/",
+				ghURL: "https://github.example.com/",
 				pkg: packageQuery{
 					owner:    "foo",
 					repo:     "bar",
@@ -121,16 +121,16 @@ func TestReadUrl(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			dc, err := readUrl(ctx, uri)
+			dc, err := readURL(ctx, uri)
 			if c.err != "" {
 				assert.EqualError(t, err, c.err)
 				return
 			}
 
 			assert.NoError(t, err)
-			if c.expected.ghUrl != "" {
-				gotUrl := dc.ghClient.BaseURL.String()
-				assert.Equal(t, c.expected.ghUrl, gotUrl)
+			if c.expected.ghURL != "" {
+				gotURL := dc.ghClient.BaseURL.String()
+				assert.Equal(t, c.expected.ghURL, gotURL)
 			}
 
 			// token check

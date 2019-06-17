@@ -36,7 +36,7 @@ const (
 
 var (
 	errNoHost = errors.New("please specify github host (e.g github.com)")
-	errBadUrl = errors.New("bad GitHub repo path format (expected: 'github.com/owner/repo_name')")
+	errBadURL = errors.New("bad GitHub repo path format (expected: 'github.com/owner/repo_name')")
 )
 
 type downloadContext struct {
@@ -64,7 +64,7 @@ func (p *packageQuery) directory() string {
 	return filepath.Join(ProviderName, hex.EncodeToString(hasher.Sum(nil)))
 }
 
-func getHttpClient(ctx context.Context, uri *url.URL) *http.Client {
+func getHTTPClient(ctx context.Context, uri *url.URL) *http.Client {
 	if token := uri.Query().Get(tokenParam); token != "" {
 		// use oauth2 client if access token presents
 		ts := oauth2.StaticTokenSource(&oauth2.Token{
@@ -77,7 +77,7 @@ func getHttpClient(ctx context.Context, uri *url.URL) *http.Client {
 	return &http.Client{}
 }
 
-func readUrl(ctx context.Context, uri *url.URL) (*downloadContext, error) {
+func readURL(ctx context.Context, uri *url.URL) (*downloadContext, error) {
 	if uri.Host == "" {
 		return nil, errNoHost
 	}
@@ -85,19 +85,19 @@ func readUrl(ctx context.Context, uri *url.URL) (*downloadContext, error) {
 	// Trim slashes around package path and split path
 	pkgPath := strings.Split(strings.Trim(uri.Path, pathDelimiter), pathDelimiter)
 	if len(pkgPath) < pkgPathSize {
-		return nil, errBadUrl
+		return nil, errBadURL
 	}
 
 	dc := downloadContext{
-		httpClient: getHttpClient(ctx, uri),
+		httpClient: getHTTPClient(ctx, uri),
 	}
 
 	var err error
 	if uri.Host != defaultDomain {
 		// Handle enterprise url if used non-default domain
-		var ghUrl string
-		ghUrl, dc.pkg = parseEnterpriseUrl(uri, pkgPath)
-		dc.ghClient, err = github.NewEnterpriseClient(ghUrl, ghUrl, dc.httpClient)
+		var ghURL string
+		ghURL, dc.pkg = parseEnterpriseURL(uri, pkgPath)
+		dc.ghClient, err = github.NewEnterpriseClient(ghURL, ghURL, dc.httpClient)
 	} else {
 		dc.pkg = parsePkgPath(pkgPath)
 		dc.ghClient = github.NewClient(dc.httpClient)
@@ -120,7 +120,7 @@ func parsePkgPath(pkgPath []string) packageQuery {
 	}
 }
 
-func parseEnterpriseUrl(uri *url.URL, urlPath []string) (out string, pkg packageQuery) {
+func parseEnterpriseURL(uri *url.URL, urlPath []string) (out string, pkg packageQuery) {
 	// Determine protocol
 	if proto := uri.Query().Get(protocolParam); proto != "" {
 		out += proto

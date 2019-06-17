@@ -29,14 +29,14 @@ func registerPluginAction(pName, hName string, handler sdk.HandlerFactory) error
 }
 
 // Import imports plugin from URL and loads it
-func Import(ctx context.Context, pluginUrl string) (err error) {
+func Import(ctx context.Context, pluginURL string) (err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("failed to load plugin from '%s':\n%s", pluginUrl, err)
+			err = fmt.Errorf("failed to load plugin from '%s':\n%s", pluginURL, err)
 		}
 	}()
 
-	uri, err := url.Parse(pluginUrl)
+	uri, err := url.Parse(pluginURL)
 	if err != nil {
 		return fmt.Errorf("invalid plugin import URL (%s)", err)
 	}

@@ -7,6 +7,7 @@ import (
 
 //nolint
 
+// AssertErrorContains checks if error contains string
 func AssertErrorContains(t *testing.T, haystack error, needle string) {
 	if haystack == nil {
 		t.Fatalf(`no error returned (expected "%s")`, needle)

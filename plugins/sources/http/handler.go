@@ -35,8 +35,8 @@ func getPluginDirectory(uri string) string {
 
 // GetPlugin is web source handler for plugins
 func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
-	strUri := uri.String()
-	dir, err := storage.Path(storage.Plugins, getPluginDirectory(strUri))
+	strURL := uri.String()
+	dir, err := storage.Path(storage.Plugins, getPluginDirectory(strURL))
 	if err != nil {
 		return "", err
 	}
@@ -54,8 +54,8 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 			return "", err
 		}
 
-		log.Default.Logf("Downloading plugin file from '%s'...", strUri)
-		if err := web.ProgressDownloadFile(&http.Client{}, strUri, pluginPath); err != nil {
+		log.Default.Logf("Downloading plugin file from '%s'...", strURL)
+		if err := web.ProgressDownloadFile(&http.Client{}, strURL, pluginPath); err != nil {
 			return "", err
 		}
 	}

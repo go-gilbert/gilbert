@@ -21,7 +21,7 @@ import (
 
 // GetPlugin retrieves plugin from GitHub
 func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
-	dc, err := readUrl(ctx, uri)
+	dc, err := readURL(ctx, uri)
 	if err != nil {
 		return "", err
 	}
@@ -49,13 +49,13 @@ func GetPlugin(ctx context.Context, uri *url.URL) (string, error) {
 			return "", err
 		}
 
-		assetUrl := asset.GetBrowserDownloadURL()
-		if assetUrl == "" {
+		assetURL := asset.GetBrowserDownloadURL()
+		if assetURL == "" {
 			return "", errors.New("missing asset download URL")
 		}
 
-		log.Default.Debugf("github: downloading plugin from '%s'...", assetUrl)
-		if err := web.ProgressDownloadFile(dc.httpClient, assetUrl, pluginPath); err != nil {
+		log.Default.Debugf("github: downloading plugin from '%s'...", assetURL)
+		if err := web.ProgressDownloadFile(dc.httpClient, assetURL, pluginPath); err != nil {
 			return "", err
 		}
 	}
