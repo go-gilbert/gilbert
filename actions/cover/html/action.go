@@ -20,16 +20,17 @@ const (
 )
 
 // NewAction creates a new html coverage report action handler
-func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (h sdk.ActionHandler, err error) {
-	handler := &reportAction{alive: true, scope: scope, Timeout: defaultTimeout}
-	if err := params.Unmarshal(&handler); err != nil {
+func NewAction(scope sdk.ScopeAccessor, rp sdk.ActionParams) (h sdk.ActionHandler, err error) {
+	p := params{Timeout: defaultTimeout}
+	if err := rp.Unmarshal(&p); err != nil {
 		return nil, err
 	}
 
-	if len(handler.Packages) == 0 {
-		handler.Packages = []string{defaultCoverTarget}
+	if len(p.Packages) == 0 {
+		p.Packages = []string{defaultCoverTarget}
 	}
 
+	handler := &reportAction{alive: true, scope: scope, params: p}
 	handler.coverFile, err = ioutil.TempFile(os.TempDir(), coverFilePattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create coverage temporary file: %s", err)
@@ -38,9 +39,13 @@ func NewAction(scope sdk.ScopeAccessor, params sdk.ActionParams) (h sdk.ActionHa
 	return handler, nil
 }
 
+type params struct {
+	Packages []string   `mapstructure:"packages"`
+	Timeout  sdk.Period `mapstructure:"timeout"`
+}
+
 type reportAction struct {
-	Packages  []string   `mapstructure:"packages"`
-	Timeout   sdk.Period `mapstructure:"timeout"`
+	params
 	scope     sdk.ScopeAccessor
 	coverFile *os.File
 	alive     bool
