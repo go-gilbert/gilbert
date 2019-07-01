@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/go-gilbert/gilbert/actions/docker"
+
 	"github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/actions/build"
 	"github.com/go-gilbert/gilbert/actions/cover"
@@ -23,12 +25,13 @@ var m sync.RWMutex
 //
 // By-default it contains a list of built-in action handlers
 var actionsHandlers = sdk.Actions{
-	"get-package": pkgget.NewAction,
-	"build":       build.NewAction,
-	"shell":       shell.NewAction,
-	"watch":       watch.NewAction,
-	"cover":       cover.NewAction,
-	"cover:html":  html.NewAction,
+	"get-package":             pkgget.NewAction,
+	"build":                   build.NewAction,
+	"shell":                   shell.NewAction,
+	"watch":                   watch.NewAction,
+	"cover":                   cover.NewAction,
+	"cover:html":              html.NewAction,
+	"docker:create-container": docker.NewContainerCreateAction,
 }
 
 // HandleFunc registers action handler for specified action name

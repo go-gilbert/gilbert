@@ -2,32 +2,8 @@ version: 1.0
 
 # Docker SDK : https://docs.docker.com/develop/sdk/
 
-# Custom section for Docker configs
-docker:
-  host: sock://var/lib/docker.sock
-  services:
-    kafka:
-      container_name: kfk
-      image: wurstmeister/kafka
-      ports:
-        - "9092:9092"
-      environment:
-        KAFKA_ADVERTISED_HOST_NAME: 10.31.36.232
-        MAX_MESSAGE_BYTES: 10000000
-        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      depends_on:
-        - zookeeper
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-
 tasks:
   start:
-    # Action 'start-service' starts service declared in 'docker.services['kafka']'
-    - action: docker:start-service
-      params:
-        name: kafka
-
-  startcon:
     # Start container with specified configs
     - action: docker:create-container
       params:

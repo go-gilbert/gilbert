@@ -3,10 +3,11 @@ module github.com/go-gilbert/gilbert
 go 1.12
 
 require (
+	github.com/Microsoft/go-winio v0.4.12 // indirect
 	github.com/axw/gocov v0.0.0-20170322000131-3a69a0d2a4ef
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v1.13.1 // indirect
+	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fatih/color v1.7.0
