@@ -2,6 +2,8 @@ package docker
 
 import (
 	"fmt"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 )
 
 type containerArgs struct {
@@ -18,6 +20,16 @@ type containerArgs struct {
 
 func (a *containerArgs) CanBeBuilt() bool {
 	return a.Build != ""
+}
+
+func (a *containerArgs) HostConfig() *container.HostConfig {
+	// TODO: add implementation
+	return nil
+}
+
+func (a *containerArgs) NetworkingConfig() *network.NetworkingConfig {
+	// TODO: add implementation
+	return nil
 }
 
 //func (a *containerArgs) PortSet() []nat.Port {
