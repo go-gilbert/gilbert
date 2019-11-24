@@ -39,7 +39,7 @@ task "build" {
     outputPath = "${buildDir}/server"
 
     replace "main.version" {
-        value = "${appVersion}"
+      value = "${appVersion}"
     }
 
     replace "main.commit" {
