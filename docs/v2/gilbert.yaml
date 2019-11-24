@@ -1,0 +1,120 @@
+# Manifest version. Current is 1.0
+version: 1.0
+
+# You can store some common tasks or mixins
+# in separate file and import it.
+#
+# Imported file should have the same syntax
+# as 'gilbert.yaml' file
+imports:
+  - ./docs/common.yaml
+
+# Gilbert can be extended by third-party plugins.
+# Plugins allows to define custom action handlers.
+#
+# In this case a local package was imported as plugin.
+plugins:
+  - go://./docs/actions
+
+# Manifest file can contain Go template expressions
+# that allow to define complicated logic in `gilbert.yaml` file
+#
+# In this case, there is a slice of libraries for compilation
+# and list of packages for coverage check
+  {{{ $libs := shell "ls -1 ./sources | xargs -0 -n 1 basename" | split "\n" }}}
+  {{{ $packages := slice "./server" "./sources/..." }}}
+
+# Global manifest variables
+# You can override variables with '--var' parameter
+vars:
+  app_version: '1.0.0'
+  build_dir: '{{PROJECT}}/build'
+  lib_dir: '{{build_dir}}/lib'
+  server_dir: './server'
+  watcher_addr: 'localhost:4800'
+
+mixins:
+  # Mixin 'rebuild' used by 'watch' task and contains steps that
+  # should be done on filesystem change.
+  rebuild:
+    - task: build
+    - action: 'live-reload:trigger'
+      params:
+        address: '{{watcher_addr}}'
+    - task: start
+
+tasks:
+  build:
+    - task: clean
+    - task: copy-assets
+    - task: build-libs
+    - description: build server
+      action: build
+      params:
+        source: '{{server_dir}}'
+        outputPath: '{{build_dir}}/server'
+        variables:
+          'main.version': '{{app_version}}'
+          'main.commit': '{% git log --format=%H -n 1 %}'
+
+  # Contents of this task are generated from template
+  build-libs:
+    {{{ range $libs }}}
+    - mixin: build-lib
+      vars:
+        name: {{{.}}}
+    {{{ end }}}
+
+  # Check project coverage and throw an error
+  # if coverage level is below specified threshold
+  cover:
+    - action: cover
+      params:
+        threshold: 40
+        reportCoverage: true
+        packages:
+          # Insert list of packages as YAML array parameter
+          # for the action
+          {{{ $packages | yaml }}}
+
+  # Start our custom live reload server and rebuild project
+  # on project source code change.
+  watch:
+    - action: live-reload:start-server # this action handled is defined in plugin
+      async: true
+      params:
+        address: '{{watcher_addr}}'
+        timeout: 1500
+    - action: watch
+      params:
+        path: './server/...'
+        run:
+          mixin: rebuild
+
+  copy-assets:
+    - if: '[ ! -d {{build_dir}} ]'
+      description: 'create build directory'
+      action: shell
+      params:
+        command: 'mkdir {{build_dir}}'
+    - description: 'copy config file'
+      action: shell
+      params:
+        command: 'cp {{server_dir}}/config.json {{build_dir}}/config.json'
+    - description: 'copy assets'
+      action: shell
+      params:
+        command: 'cp -rf {{server_dir}}/public {{build_dir}}'
+
+  start:
+    - if: '[ -f {{build_dir}}/server ]'
+      action: shell
+      params:
+        command: '{{build_dir}}/server'
+        workDir: '{{build_dir}}'
+  clean:
+    - if: '[ -d {{ build_dir }} ]'
+      description: 'clean build directory'
+      action: shell
+      params:
+        command: 'rm -rf {{build_dir}}'
