@@ -8,7 +8,9 @@
 
 # Gilbert
 
-> Build toolchain and task runner for Go
+Build toolchain and task runner for Go
+
+**Attention:** This is experimental branch for version 2 development, design docs available [here](/docs/v2).
 
 ## Features
 
