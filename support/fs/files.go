@@ -35,7 +35,7 @@ func Lookup(name, startLocation string, deepCount int) (string, bool, error) {
 		fpath := filepath.Join(location, name)
 		exists, err := Exists(fpath)
 		if exists {
-			return location, false, nil
+			return fpath, false, nil
 		}
 
 		if err != nil {
