@@ -24,3 +24,32 @@ func Exists(location string) (bool, error) {
 
 	return false, err
 }
+
+// Lookup check if file exists in current directory or in parent directories.
+// Allows to locate file not in current but in parent directories.
+//
+// Accepts file name, start location and search deep count
+func Lookup(name, startLocation string, deepCount int) (string, bool, error) {
+	location := startLocation
+	for i := 0; i < deepCount; i++ {
+		fpath := filepath.Join(location, name)
+		exists, err := Exists(fpath)
+		if exists {
+			return location, false, nil
+		}
+
+		if err != nil {
+			return "", false, err
+		}
+
+		// abort, if we reached root directory
+		parent := filepath.Dir(location)
+		if parent == location {
+			break
+		}
+
+		location = parent
+	}
+
+	return "", false, nil
+}
