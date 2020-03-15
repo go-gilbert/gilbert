@@ -84,19 +84,19 @@ func readBlockParams(b *hclsyntax.Block, ctx *hcl.EvalContext) (Parameters, hcls
 		}
 
 		// check if parameter is required
-		p.Required, diags = getBoolAttrValue(b.Body, attrParamRequired, false)
+		p.Required, diags = getBoolAttrValue(block.Body, attrParamRequired, false)
 		if diags != nil {
 			return nil, nil, diags
 		}
 
 		// get parameter type
-		p.Type, diags = getTypeAttrValue(b.Body, attrParamType)
+		p.Type, diags = getTypeAttrValue(block.Body, attrParamType)
 		if diags != nil {
 			return nil, nil, diags
 		}
 
 		// get default parameter value
-		p.DefaultValue, diags = getAttrValue(b.Body, ctx, attrParamDefault, p.Type, p.Required)
+		p.DefaultValue, diags = getAttrValue(block.Body, ctx, attrParamDefault, p.Type, p.Required)
 		if diags != nil {
 			return nil, nil, diags
 		}

@@ -3,9 +3,10 @@ package manifest
 import (
 	"bytes"
 	"fmt"
-	"github.com/hashicorp/hcl/v2"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/hcl/v2"
 )
 
 const (
@@ -37,10 +38,12 @@ type Error struct {
 }
 
 func NewDiagnosticsFromPosition(r hcl.Range, msg string, args ...interface{}) hcl.Diagnostics {
+	errMsg := fmt.Sprintf(msg, args...)
 	return hcl.Diagnostics{
 		{
 			Severity: hcl.DiagError,
-			Summary:  fmt.Sprintf(msg, args...),
+			Summary:  errMsg,
+			Detail:   errMsg,
 			Context:  &r,
 			Subject:  &r,
 		},

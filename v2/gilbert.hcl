@@ -14,9 +14,6 @@ lib_dir       = "${build_dir}/lib"
 server_dir    = "./server"
 watcher_addr  = "localhost:4800"
 
-//pkg_name = go.mod.module
-
-
 libs = split(shell("ls -1 ./sources | xargs -0 -n 1 basename"), "\n")
 packages = [
   "./server",
@@ -37,8 +34,6 @@ mixin "rebuild" {
   }
 }
 
-/*** $libs := shell "ls -1 ./sources | xargs -0 -n 1 basename" | split "\n" ***/
-/*** $packages := slice "./server" "./sources/..." ***/
 task "watch" "start server and watch for changes" {
   action "live-reload:start-server" "starting live-reload server" {
     async = true

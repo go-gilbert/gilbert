@@ -44,23 +44,14 @@ func getStringAttrValue(body *hclsyntax.Body, name string, ctx *hcl.EvalContext,
 		)
 	}
 
-	var (
-		val   cty.Value
-		diags hcl.Diagnostics
-	)
-
-	if ctx != nil {
-		val, diags = attr.Expr.Value(ctx)
-	} else {
-		val, diags = getLiteralAttrValue(attr, cty.String)
-	}
+	val, diags := attr.Expr.Value(ctx)
 	if diags != nil {
 		return "", diags
 	}
 
 	if val.Type() != cty.String {
 		return "", NewDiagnosticsFromPosition(
-			attr.Range(), "invalid %q parameter value type(expected %q but got %q)",
+			attr.Range(), "invalid %q parameter value type (expected %q but got %q)",
 			name, cty.String.FriendlyName(), val.Type().FriendlyName(),
 		)
 	}
