@@ -41,6 +41,6 @@ func (e *shellEvaluator) Call(cmd string) (result []byte, err error) {
 	return data, nil
 }
 
-func newShellCommandEvaluator(ctx *Scope) CommandEvaluator {
+func NewShellCommandEvaluator(ctx *Scope) CommandEvaluator {
 	return &shellEvaluator{ctx: ctx}
 }

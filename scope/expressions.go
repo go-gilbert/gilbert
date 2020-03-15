@@ -56,7 +56,7 @@ type ExpressionProcessor struct {
 func NewExpressionProcessor(ctx *Scope) ExpressionProcessor {
 	return ExpressionProcessor{
 		ctx:           ctx,
-		commandRunner: newShellCommandEvaluator(ctx),
+		commandRunner: NewShellCommandEvaluator(ctx),
 	}
 }
 
