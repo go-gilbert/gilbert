@@ -10,7 +10,7 @@
 
 Build toolchain and task runner for Go
 
-**Attention:** This is experimental branch for version 2 development, design docs available [here](/docs/v2).
+> **Attention:** This is experimental branch for version 2 development, design docs and source are available [here](/v2).
 
 ## Features
 
