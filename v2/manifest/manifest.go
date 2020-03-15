@@ -12,6 +12,8 @@ import (
 
 const (
 	propImports = "imports"
+
+	DefaultFileName = "gilbert.hcl"
 )
 
 var startPos = hcl.Pos{Line: 1, Column: 1}
