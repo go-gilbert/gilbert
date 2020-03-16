@@ -29,7 +29,7 @@ var (
 		SilenceErrors: true,
 		Short:         "Gilbert - a task runner for Go projects",
 		Long: "Gilbert is task runner for Go projects\n\n" +
-			"Complete documentation is available at https://go-gilbert.github.io",
+			"Complete documentation is available at " + cmd.DocURL,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Hello World")
@@ -52,8 +52,10 @@ var (
 	}
 
 	runTaskCmd = &cobra.Command{
-		Use:   "run [task name] [flags]",
-		Long:  "Run task with passed parameters",
+		Use: "run [task name] [task flags] [flags]",
+		Long: "Run task with passed parameters.\n\n" +
+			"Task parameters should be passed as flags (e.g. --some_param=value)\n" +
+			"See " + cmd.CliDocURL + " for more information",
 		Short: "Run task",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cmd.WrapCobraCommand(runTask),

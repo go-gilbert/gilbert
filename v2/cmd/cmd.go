@@ -14,6 +14,13 @@ type CommandHandler = func(c *cobra.Command, args []string) error
 
 var BinName = filepath.Base(os.Args[0])
 
+const (
+	DocURL       = "https://go-gilbert.github.io"
+	SyntaxDocURL = DocURL + "/docs/syntax"
+	TaskDocURL   = DocURL + "/docs/syntax/#tasks"
+	CliDocURL    = DocURL + "/docs/commands/"
+)
+
 func FindManifestTask(taskName string) (*manifest.Manifest, *manifest.Task, error) {
 	m, err := FindManifest()
 	if err != nil {
@@ -22,7 +29,12 @@ func FindManifestTask(taskName string) (*manifest.Manifest, *manifest.Task, erro
 
 	t, ok := m.Tasks[taskName]
 	if !ok {
-		return nil, nil, fmt.Errorf("no such task %q", taskName)
+		return nil, nil, fmt.Errorf(
+			"no such task %[1]q.\n\n"+
+				"Task %[1]q should be defined in file %[2]q to be able to run it.\n"+
+				"See %[3]s for more information",
+			taskName, m.FileName, TaskDocURL,
+		)
 	}
 
 	return m, &t, nil
@@ -73,7 +85,11 @@ func ExitWithError(err error) {
 	case *manifest.Error:
 		// Don't show "error: " prefix for manifest syntax errors
 		// as they have special formatting
-		_, _ = fmt.Fprintln(os.Stderr, t.PrettyPrint())
+		_, _ = fmt.Fprintln(
+			os.Stderr,
+			t.PrettyPrint(),
+			"\nSee", SyntaxDocURL, "for file syntax information",
+		)
 	default:
 		_, _ = fmt.Fprintln(os.Stderr, "error:", err.Error())
 	}
