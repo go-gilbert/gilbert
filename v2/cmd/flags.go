@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/spf13/cobra"
 	"github.com/zclconf/go-cty/cty"
+	"strings"
 )
 
 type stringInjector struct {
@@ -106,5 +107,23 @@ func ProcessTaskFlags(t *manifest.Task, c *cobra.Command, args []string) (Inject
 		}
 	}
 
-	return params, flags.Parse(args)
+	err := flags.Parse(args)
+	if err != nil {
+		// Add error description if it's unknown flag error
+		if isUnknownFlagError(err) {
+			return nil, fmt.Errorf(
+				"%[1]s\n\nUnknown task parameter or command flag.\n"+
+					`Check task parameters with "%[2]s inpect %[3]s" command or run "%[2]s help run"`,
+				err, BinName, t.Name,
+			)
+		}
+
+		return nil, err
+	}
+
+	return params, nil
+}
+
+func isUnknownFlagError(err error) bool {
+	return strings.HasPrefix(err.Error(), "unknown flag")
 }
