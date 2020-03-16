@@ -29,6 +29,10 @@ type Manifest struct {
 	Mixins   Mixins
 }
 
+func (m *Manifest) FilePath() string {
+	return filepath.Join(m.Location, m.FileName)
+}
+
 func FromFile(fileName string, parentCtx *hcl.EvalContext) (*Manifest, error) {
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {

@@ -15,3 +15,7 @@ type Parameter struct {
 	Required     bool
 	DefaultValue cty.Value
 }
+
+func (p Parameter) HasDefaultValue() bool {
+	return p.DefaultValue != cty.NilVal
+}

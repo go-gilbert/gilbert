@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/v2/cmd"
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/go-gilbert/gilbert/support/fs"
 
 	"github.com/spf13/cobra"
 
@@ -37,11 +36,12 @@ var (
 	}
 
 	lsCmd = &cobra.Command{
-		Use:   "ls",
-		Short: fmt.Sprintf("List tasks from %q file", manifest.DefaultFileName),
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   fmt.Sprintf("List tasks from %q file", manifest.DefaultFileName),
+		Run: func(c *cobra.Command, args []string) {
 			// Stub for "gb ls" command if no manifest was found
-			exitWithError(
+			cmd.ExitWithError(
 				"%q not found. Run \"%s init\" to create a new one.",
 				manifest.DefaultFileName, exeName,
 			)
@@ -69,37 +69,24 @@ func init() {
 }
 
 func main() {
-	_, _, err := findManifest()
+	manPath, found, err := cmd.FindManifest()
 	if err != nil {
-		exitWithError(err.Error())
+		cmd.ExitWithError(err.Error())
+	}
+
+	if found {
+		m, err := cmd.LoadManifest(rootCmd, manPath)
+		if err != nil {
+			cmd.ExitWithError(err.Error())
+		}
+
+		lsCmd.Run = cmd.PrintManifestCommandHandler(m, false)
 	}
 
 	if err := rootCmd.Execute(); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-}
-
-func findManifest() (string, bool, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", false, fmt.Errorf("failed to get working directory: %s", err)
-	}
-
-	manPath, found, err := fs.Lookup(manifest.DefaultFileName, wd, 3)
-	if err != nil {
-		return "", false, fmt.Errorf("failed to find file %q: %s", manifest.DefaultFileName, err.Error())
-	}
-
-	return manPath, found, nil
-}
-
-func exitWithError(msg string, args ...interface{}) {
-	if len(args) > 0 {
-		msg = fmt.Sprintf(msg, args...)
-	}
-	_, _ = fmt.Fprintln(os.Stderr, "error: ", msg)
-	os.Exit(1)
 }
 
 func main2() {

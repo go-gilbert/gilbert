@@ -26,6 +26,14 @@ type JobsContainer struct {
 	Parameters  Parameters
 }
 
+func (j JobsContainer) HasDescription() bool {
+	return j.Description != ""
+}
+
+func (j JobsContainer) HasParameters() bool {
+	return len(j.Parameters) > 0
+}
+
 // Tasks is map of tasks
 type Tasks map[string]Task
 
