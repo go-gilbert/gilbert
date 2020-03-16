@@ -125,6 +125,11 @@ func readBlockLabels(b *hclsyntax.Block) (label, description string, diags hcl.D
 	return label, description, nil
 }
 
+// appendAttrsToContext collects declared global attributes from file
+// and appends attr values to passed context.
+//
+// Used to collect global variables from "gilbert.hcl" and construct eval context
+// for tasks and mixins that references global vars.
 func appendAttrsToContext(attrs hclsyntax.Attributes, ctx *hcl.EvalContext) hcl.Diagnostics {
 	// first process scalar attributes (that don't contain variable references)
 	// and them any values with references
