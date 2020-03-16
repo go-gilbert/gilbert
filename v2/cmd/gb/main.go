@@ -25,8 +25,10 @@ var (
 	exeName = filepath.Base(os.Args[0])
 
 	rootCmd = &cobra.Command{
-		Use:   "gb",
-		Short: "Gilbert - a task runner for Go projects",
+		Use:           "gb",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Short:         "Gilbert - a task runner for Go projects",
 		Long: "Gilbert is task runner for Go projects\n\n" +
 			"Complete documentation is available at https://go-gilbert.github.io",
 
@@ -87,21 +89,6 @@ func main() {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-}
-
-func main2() {
-	man, err := manifest.FromFile(fname, nil)
-	if err != nil {
-		switch t := err.(type) {
-		case *manifest.Error:
-			fmt.Println(t.PrettyPrint())
-		default:
-			fmt.Println(err)
-		}
-		os.Exit(1)
-	}
-
-	fmt.Println(man)
 }
 
 func must(err error) {
