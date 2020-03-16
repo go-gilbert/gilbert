@@ -68,6 +68,14 @@ func ExitWithError(err error) {
 	if err == nil {
 		return
 	}
-	_, _ = fmt.Fprintln(os.Stderr, "error: ", err.Error())
+
+	switch t := err.(type) {
+	case *manifest.Error:
+		// Don't show "error: " prefix for manifest syntax errors
+		// as they have special formatting
+		_, _ = fmt.Fprintln(os.Stderr, t.PrettyPrint())
+	default:
+		_, _ = fmt.Fprintln(os.Stderr, "error:", err.Error())
+	}
 	os.Exit(1)
 }

@@ -25,7 +25,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:           "gb",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Short:         "Gilbert - a task runner for Go projects",
 		Long: "Gilbert is task runner for Go projects\n\n" +
