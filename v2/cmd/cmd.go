@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/go-gilbert/gilbert/support/fs"
 	"github.com/go-gilbert/gilbert/v2/manifest"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
 )
 
 type CommandHandler = func(c *cobra.Command, args []string) error

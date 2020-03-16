@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/go-gilbert/gilbert/v2/cmd"
 	"github.com/go-gilbert/gilbert/v2/manifest"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
-	"runtime"
 )
 
 const (
