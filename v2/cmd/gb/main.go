@@ -118,14 +118,20 @@ func inspectManifestTask(c *cobra.Command, args []string) error {
 	if t.HasParameters() {
 		fmt.Println("\nParameters:")
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Name", "Type", "Description"})
+		table.SetHeader([]string{"Name", "Type", "Description", "Usage"})
 
 		for _, param := range t.Parameters {
 			desc := param.Description
+			paramType := param.Type.FriendlyName()
 			if !param.IsRequired() {
 				desc += " (required)"
 			}
-			table.Append([]string{param.Name, param.Type.FriendlyName(), desc})
+			table.Append([]string{
+				param.Name,
+				paramType,
+				desc,
+				"--" + param.Name + "=" + paramType,
+			})
 		}
 
 		table.Render()
