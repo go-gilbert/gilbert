@@ -91,12 +91,21 @@ func main() {
 }
 
 func runTask(c *cobra.Command, args []string) error {
+	// get task name from first argument and find it
 	taskName := args[0]
 	_, t, err := cmd.FindManifestTask(taskName)
 	if err != nil {
 		return err
 	}
+
+	// extract all task flags from rest of args
+	taskAttrs, err := cmd.ProcessTaskFlags(t, c, args[1:])
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("Start task", t.Name)
+	fmt.Println(taskAttrs)
 	return nil
 }
 
