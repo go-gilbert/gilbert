@@ -136,6 +136,7 @@ func appendAttrsToContext(attrs hclsyntax.Attributes, ctx *hcl.EvalContext) hcl.
 			continue
 		}
 
+		// TODO: Workaround doesn't work, find another way to fix this.
 		refs := hclsyntax.Variables(attr.Expr)
 		if len(refs) > 0 {
 			nonScalarAttrs = append(nonScalarAttrs, attr)
