@@ -10,7 +10,8 @@ project = {
 
 app_version   = "1.0.0"
 build_dir     = "${project.location}/build"
-lib_dir       = "${build_dir}/lib"
+//lib_dir       = "${build_dir}/lib"
+lib_dir       = "build_dir/lib"
 server_dir    = "./server"
 watcher_addr  = "localhost:4800"
 
