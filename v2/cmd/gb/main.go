@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	fname    = "gilbert.hcl"
 	Version  = "2.0.0-snapshot"
 	CommitID = "dev"
 )
