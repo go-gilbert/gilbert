@@ -78,7 +78,7 @@ func (err *Error) PrettyPrint() string {
 }
 
 func (err *Error) Error() string {
-	return err.diags.Error()
+	return err.PrettyPrint()
 }
 
 func formatLineError(lines [][]byte, d *hcl.Diagnostic, sb *strings.Builder) {
