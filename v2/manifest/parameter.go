@@ -16,6 +16,6 @@ type Parameter struct {
 	DefaultValue cty.Value
 }
 
-func (p Parameter) HasDefaultValue() bool {
+func (p Parameter) IsRequired() bool {
 	return p.DefaultValue != cty.NilVal
 }
