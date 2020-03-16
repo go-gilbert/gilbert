@@ -13,6 +13,20 @@ type CommandHandler = func(c *cobra.Command, args []string) error
 
 var BinName = filepath.Base(os.Args[0])
 
+func FindManifestTask(taskName string) (*manifest.Manifest, *manifest.Task, error) {
+	m, err := FindManifest()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t, ok := m.Tasks[taskName]
+	if !ok {
+		return nil, nil, fmt.Errorf("no such task %q", taskName)
+	}
+
+	return m, &t, nil
+}
+
 func FindManifest() (*manifest.Manifest, error) {
 	wd, err := os.Getwd()
 	if err != nil {

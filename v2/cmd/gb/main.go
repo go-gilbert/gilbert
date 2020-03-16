@@ -50,13 +50,25 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run:   cmd.WrapCobraCommand(inspectManifestTask),
 	}
+
+	runTaskCmd = &cobra.Command{
+		Use:   "run [task name] [flags]",
+		Long:  "Run task with passed parameters",
+		Short: "Run task",
+		Args:  cobra.MinimumNArgs(1),
+		Run:   cmd.WrapCobraCommand(runTask),
+	}
 )
 
 func init() {
 	fl := rootCmd.PersistentFlags()
 	fl.BoolVarP(&verbose, "verbose", "v", false, "show debug information, useful for troubleshooting")
 	fl.BoolVarP(&disableColor, "no-color", "n", false, "disable color output in terminal")
+
+	runTaskCmd.Flags().SetInterspersed(false)
+
 	rootCmd.AddCommand(inspectCmd)
+	rootCmd.AddCommand(runTaskCmd)
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Show version",
@@ -74,37 +86,23 @@ func init() {
 
 func main() {
 	cmd.ExitWithError(rootCmd.Execute())
-	//
-	//manPath, found, err := cmd.FindManifest2()
-	//if err != nil {
-	//	cmd.ExitWithError(err.Error())
-	//}
-	//
-	//if found {
-	//	m, err := cmd.LoadManifest(rootCmd, manPath)
-	//	if err != nil {
-	//		cmd.ExitWithError(err.Error())
-	//	}
-	//
-	//	lsCmd.Run = cmd.PrintManifestCommandHandler(m, false)
-	//}
-	//
-	//if err := rootCmd.Execute(); err != nil {
-	//	_, _ = fmt.Fprintln(os.Stderr, err.Error())
-	//	os.Exit(1)
-	//}
+}
+
+func runTask(c *cobra.Command, args []string) error {
+	taskName := args[0]
+	_, t, err := cmd.FindManifestTask(taskName)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Start task", t.Name)
+	return nil
 }
 
 func inspectManifestTask(c *cobra.Command, args []string) error {
 	taskName := args[0]
-	m, err := cmd.FindManifest()
+	_, t, err := cmd.FindManifestTask(taskName)
 	if err != nil {
 		return err
-	}
-
-	t, ok := m.Tasks[taskName]
-	if !ok {
-		return fmt.Errorf("no such task %q", taskName)
 	}
 
 	fmt.Println("Name:\n", taskName)
