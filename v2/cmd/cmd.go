@@ -90,6 +90,11 @@ func taskToCommand(task manifest.Task) (*cobra.Command, error) {
 		Use:   task.Name,
 		Short: task.Description,
 		Long:  getTaskSummary(task),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Call to task", task.Name)
+			fl := cmd.Flags()
+			fmt.Println(fl)
+		},
 	}
 
 	if len(task.Parameters) == 0 {
