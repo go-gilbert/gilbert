@@ -6,16 +6,19 @@ import (
 
 const arrayTypePrefix = "[]"
 
+var (
+	emptyDefaultValue = cty.NilVal
+)
+
 type Parameters map[string]Parameter
 
 type Parameter struct {
 	Name         string
 	Type         cty.Type
 	Description  string
-	Required     bool
 	DefaultValue cty.Value
 }
 
 func (p Parameter) IsRequired() bool {
-	return p.DefaultValue != cty.NilVal
+	return p.DefaultValue.IsNull()
 }

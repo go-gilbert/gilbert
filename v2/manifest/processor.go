@@ -11,9 +11,8 @@ const (
 	blockParam  = "param"
 	blockAction = "action"
 
-	attrParamRequired = "required"
-	attrParamType     = "type"
-	attrParamDefault  = "default"
+	attrParamType    = "type"
+	attrParamDefault = "default"
 )
 
 // extractTasksAndMixins builds tasks and mixins definitions out of HCL file blocks
@@ -83,20 +82,14 @@ func readBlockParams(b *hclsyntax.Block, ctx *hcl.EvalContext) (Parameters, hcls
 			Description: desc,
 		}
 
-		// check if parameter is required
-		p.Required, diags = getBoolAttrValue(block.Body, attrParamRequired, false)
-		if diags != nil {
-			return nil, nil, diags
-		}
-
 		// get parameter type
 		p.Type, diags = getTypeAttrValue(block.Body, attrParamType)
 		if diags != nil {
 			return nil, nil, diags
 		}
 
-		// get default parameter value
-		p.DefaultValue, diags = getAttrValue(block.Body, ctx, attrParamDefault, p.Type, p.Required)
+		// get default parameter value (optional)
+		p.DefaultValue, diags = getAttrValue(block.Body, ctx, attrParamDefault, p.Type, false)
 		if diags != nil {
 			return nil, nil, diags
 		}

@@ -10,8 +10,21 @@ import (
 )
 
 type stringInjector struct {
-	name string
-	val  *string
+	name     string
+	required bool
+	val      *string
+}
+
+func (ij stringInjector) Required() bool {
+	return ij.required
+}
+
+func (ij stringInjector) ValueEmpty() bool {
+	if ij.val == nil {
+		return true
+	}
+
+	return *ij.val == ""
 }
 
 func (ij stringInjector) InjectParameter(ctx *hcl.EvalContext) error {
@@ -20,8 +33,13 @@ func (ij stringInjector) InjectParameter(ctx *hcl.EvalContext) error {
 }
 
 type floatInjector struct {
-	name string
-	val  *float64
+	name     string
+	required bool
+	val      *float64
+}
+
+func (ij floatInjector) Required() bool {
+	return ij.required
 }
 
 func (ij floatInjector) InjectParameter(ctx *hcl.EvalContext) error {
@@ -29,9 +47,26 @@ func (ij floatInjector) InjectParameter(ctx *hcl.EvalContext) error {
 	return nil
 }
 
+func (ij floatInjector) ValueEmpty() bool {
+	if ij.val == nil {
+		return true
+	}
+
+	return *ij.val == 0
+}
+
 type boolInjector struct {
 	name string
 	val  *bool
+}
+
+func (ij boolInjector) Required() bool {
+	// bool params are always optional
+	return false
+}
+
+func (ij boolInjector) ValueEmpty() bool {
+	return ij.val == nil
 }
 
 func (ij boolInjector) InjectParameter(ctx *hcl.EvalContext) error {
@@ -41,9 +76,27 @@ func (ij boolInjector) InjectParameter(ctx *hcl.EvalContext) error {
 
 type CtxParamInjector interface {
 	InjectParameter(ctx *hcl.EvalContext) error
+	Required() bool
+	ValueEmpty() bool
 }
 
+// InjectableParams holds set of task parameters from command line
+// that should be injected into task's context.
 type InjectableParams map[string]CtxParamInjector
+
+// CheckParams checks if all required task parameters are satisfied
+//
+// Necessary, because cobra.MarkFlagRequired() doesn't seem to work.
+func (ip InjectableParams) CheckParams() error {
+	for name, ij := range ip {
+		// optional params always have non-nil value
+		if ij.ValueEmpty() && ij.Required() {
+			return fmt.Errorf("missing required task parameter %q", name)
+		}
+	}
+
+	return nil
+}
 
 func (ip InjectableParams) InjectParameters(ctx *hcl.EvalContext) error {
 	if len(ip) == 0 {
@@ -65,33 +118,34 @@ func ProcessTaskFlags(t *manifest.Task, c *cobra.Command, args []string) (Inject
 	params := make(InjectableParams, len(t.Parameters))
 	flags := c.Flags()
 	for name, param := range t.Parameters {
-		defValType := param.DefaultValue.Type()
-		required := defValType != cty.NilType
+		required := param.IsRequired()
 
 		switch param.Type {
 		case cty.String:
 			var defaultVal string
-			if required {
+			if !required {
 				defaultVal = param.DefaultValue.AsString()
 			}
 
 			params[name] = stringInjector{
-				name: name,
-				val:  flags.String(name, defaultVal, param.Description),
+				name:     name,
+				required: required,
+				val:      flags.String(name, defaultVal, param.Description),
 			}
 		case cty.Number:
 			var defaultVal float64
-			if required {
+			if !required {
 				defaultVal, _ = param.DefaultValue.AsBigFloat().Float64()
 			}
 
 			params[name] = floatInjector{
-				name: name,
-				val:  flags.Float64(name, defaultVal, param.Description),
+				name:     name,
+				required: required,
+				val:      flags.Float64(name, defaultVal, param.Description),
 			}
 		case cty.Bool:
 			defaultVal := false
-			if required {
+			if !required {
 				defaultVal = param.DefaultValue.True()
 			}
 
@@ -105,8 +159,14 @@ func ProcessTaskFlags(t *manifest.Task, c *cobra.Command, args []string) (Inject
 				name, param.Type.FriendlyName(),
 			)
 		}
+
+		// Doesn't work, CheckParams() workaround used instead
+		//if err := c.MarkFlagRequired(name); err != nil {
+		//	return nil, err
+		//}
 	}
 
+	//err := c.Flags().Parse(args)
 	err := flags.Parse(args)
 	if err != nil {
 		// Add error description if it's unknown flag error
@@ -119,6 +179,13 @@ func ProcessTaskFlags(t *manifest.Task, c *cobra.Command, args []string) (Inject
 		}
 
 		return nil, err
+	}
+
+	if err := params.CheckParams(); err != nil {
+		return nil, fmt.Errorf(
+			"%s.\n\nCheck required task parameters with \"%s inspect %s\"",
+			err, BinName, t.Name,
+		)
 	}
 
 	return params, nil

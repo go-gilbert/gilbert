@@ -88,7 +88,7 @@ func getAttrValue(body *hclsyntax.Body, ctx *hcl.EvalContext, name string, expec
 	attr, ok := body.Attributes[name]
 	if !ok {
 		if !required {
-			return cty.NilVal, nil
+			return emptyDefaultValue, nil
 		}
 
 		return cty.NilVal, NewDiagnosticsFromPosition(

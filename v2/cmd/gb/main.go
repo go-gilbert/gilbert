@@ -131,8 +131,11 @@ func inspectManifestTask(c *cobra.Command, args []string) error {
 
 		for _, param := range t.Parameters {
 			desc := param.Description
+			if desc == "" {
+				desc = "N/A"
+			}
 			paramType := param.Type.FriendlyName()
-			if !param.IsRequired() {
+			if param.IsRequired() {
 				desc += " (required)"
 			}
 			table.Append([]string{
