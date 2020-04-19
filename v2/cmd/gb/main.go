@@ -6,6 +6,9 @@ import (
 	"path/filepath"
 	"runtime"
 
+	sdk "github.com/go-gilbert/gilbert-sdk"
+	"github.com/go-gilbert/gilbert/log"
+
 	"github.com/go-gilbert/gilbert/v2/cmd"
 	"github.com/go-gilbert/gilbert/v2/manifest"
 	"github.com/olekukonko/tablewriter"
@@ -18,7 +21,7 @@ const (
 )
 
 var (
-	verbose      = false
+	debug        = false
 	disableColor = false
 
 	exeName = filepath.Base(os.Args[0])
@@ -64,7 +67,7 @@ var (
 
 func init() {
 	fl := rootCmd.PersistentFlags()
-	fl.BoolVarP(&verbose, "verbose", "v", false, "show debug information, useful for troubleshooting")
+	fl.BoolVarP(&debug, "debug", "v", false, "show debug information, useful for troubleshooting")
 	fl.BoolVarP(&disableColor, "no-color", "n", false, "disable color output in terminal")
 
 	runTaskCmd.Flags().SetInterspersed(false)
@@ -91,6 +94,8 @@ func main() {
 }
 
 func runTask(c *cobra.Command, args []string) error {
+	//l := initLogger()
+
 	// get task name from first argument and find it
 	taskName := args[0]
 	_, t, err := cmd.FindManifestTask(taskName)
@@ -105,6 +110,7 @@ func runTask(c *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("Start task", t.Name)
+	fmt.Println("noColor:", disableColor, "debug:", debug)
 	fmt.Println(taskAttrs)
 	return nil
 }
@@ -164,4 +170,14 @@ func listManifestCommand(c *cobra.Command, args []string) error {
 
 	fmt.Printf("\nUse \"%s inspect\" to get information about task parameters.\n", exeName)
 	return nil
+}
+
+func initLogger() sdk.Logger {
+	level := log.LevelInfo
+	if debug {
+		level = log.LevelDebug
+	}
+
+	log.UseConsoleLogger(level, debug)
+	return log.Default
 }

@@ -51,7 +51,8 @@ func FromFile(fileName string, parentCtx *hcl.EvalContext) (*Manifest, error) {
 	ctx.Functions = context.GetDefaultFunctions()
 
 	// extract all global variables
-	if diags := appendAttrsToContext(body.Attributes, ctx); diags != nil {
+	attrs := OrderedAttributesFromBody(body)
+	if diags := appendAttrsToContext(attrs, ctx); diags != nil {
 		return nil, NewError(fileName, "", f.Bytes, diags)
 	}
 

@@ -10,7 +10,8 @@ project = {
 
 app_version   = "1.0.0"
 build_dir     = "${project.location}/build"
-lib_dir       = "${build_dir}/lib"
+//lib_dir       = "${build_dir}/lib"
+lib_dir       = "build_dir/lib"
 server_dir    = "./server"
 watcher_addr  = "localhost:4800"
 
@@ -49,7 +50,6 @@ task "watch" "start server and watch for changes" {
 
 task "start" "start web server" {
   param "server_bin" "server binary path" {
-    // required = true
     type = "string"
     default = "${build_dir}/server"
   }

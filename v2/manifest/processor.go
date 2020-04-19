@@ -123,34 +123,13 @@ func readBlockLabels(b *hclsyntax.Block) (label, description string, diags hcl.D
 //
 // Used to collect global variables from "gilbert.hcl" and construct eval context
 // for tasks and mixins that references global vars.
-func appendAttrsToContext(attrs hclsyntax.Attributes, ctx *hcl.EvalContext) hcl.Diagnostics {
-	// first process scalar attributes (that don't contain variable references)
-	// and them any values with references
-	var nonScalarAttrs []*hclsyntax.Attribute
-
-	for attrName, attr := range attrs {
-		if attrName == propImports {
+func appendAttrsToContext(attrs OrderedAttributes, ctx *hcl.EvalContext) hcl.Diagnostics {
+	for _, attr := range attrs {
+		if attr.Name == propImports {
 			// TODO: process imports
 			continue
 		}
 
-		// TODO: Workaround doesn't work, find another way to fix this.
-		refs := hclsyntax.Variables(attr.Expr)
-		if len(refs) > 0 {
-			nonScalarAttrs = append(nonScalarAttrs, attr)
-			continue
-		}
-
-		attrVal, diags := attr.Expr.Value(ctx)
-		if diags != nil {
-			return diags
-		}
-
-		ctx.Variables[attrName] = attrVal
-	}
-
-	// Process values with references
-	for _, attr := range nonScalarAttrs {
 		attrVal, diags := attr.Expr.Value(ctx)
 		if diags != nil {
 			return diags
@@ -158,6 +137,5 @@ func appendAttrsToContext(attrs hclsyntax.Attributes, ctx *hcl.EvalContext) hcl.
 
 		ctx.Variables[attr.Name] = attrVal
 	}
-
 	return nil
 }

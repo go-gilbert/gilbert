@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/go-gilbert/gilbert/v2/manifest"
+	"github.com/go-gilbert/gilbert/v2/runner"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/spf13/cobra"
 	"github.com/zclconf/go-cty/cty"
@@ -74,48 +75,13 @@ func (ij boolInjector) InjectParameter(ctx *hcl.EvalContext) error {
 	return nil
 }
 
-type CtxParamInjector interface {
-	InjectParameter(ctx *hcl.EvalContext) error
-	Required() bool
-	ValueEmpty() bool
-}
-
-// InjectableParams holds set of task parameters from command line
-// that should be injected into task's context.
-type InjectableParams map[string]CtxParamInjector
-
-// CheckParams checks if all required task parameters are satisfied
-//
-// Necessary, because cobra.MarkFlagRequired() doesn't seem to work.
-func (ip InjectableParams) CheckParams() error {
-	for name, ij := range ip {
-		// optional params always have non-nil value
-		if ij.ValueEmpty() && ij.Required() {
-			return fmt.Errorf("missing required task parameter %q", name)
-		}
-	}
-
-	return nil
-}
-
-func (ip InjectableParams) InjectParameters(ctx *hcl.EvalContext) error {
-	if len(ip) == 0 {
-		return nil
-	}
-	for name, inj := range ip {
-		if err := inj.InjectParameter(ctx); err != nil {
-			return fmt.Errorf("failed to inject parameter %q: %w", name, err)
-		}
-	}
-	return nil
-}
-
-func ProcessTaskFlags(t *manifest.Task, c *cobra.Command, args []string) (InjectableParams, error) {
+// ProcessTaskFlags collects task parameters from command line flags
+func ProcessTaskFlags(t *manifest.Task, c *cobra.Command, args []string) (runner.InjectableParams, error) {
 	if len(t.Parameters) == 0 {
 		return nil, nil
 	}
 
-	params := make(InjectableParams, len(t.Parameters))
+	params := make(runner.InjectableParams, len(t.Parameters))
 	flags := c.Flags()
 	for name, param := range t.Parameters {
 		required := param.IsRequired()
