@@ -145,7 +145,7 @@ module "golangci-lint" {
 
     action "module:execBinary" {
       binary = vars.binName
-      args = array_concat(params.path, mapParamsToArgs(params))
+      args = array_concat(params.path, flagsFromParams(params))
     }
   }
 }

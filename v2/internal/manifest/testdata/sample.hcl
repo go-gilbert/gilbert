@@ -1,5 +1,5 @@
 // See: https://developer.hashicorp.com/terraform/language/expressions/version-constraints
-version = 2
+version = 1
 
 imports = [
   "./semver/module.hcl",
@@ -46,16 +46,16 @@ task "build:platform" "Build project for specific platform" {
   }
 
   param "version" {
-    default = "${shell('git describe --abbrev=0 --tags')}-snapshot"
+    default = "${shell("git describe --abbrev=0 --tags")}-snapshot"
     validate = [
-      regex_match('/(?:^v([0-9]+).([0-9]+).([0-9]+))(-([a-z]+)(.[0-9])?)?$/i', value),
+      regex_match("/(?:^v([0-9]+).([0-9]+).([0-9]+))(-([a-z]+)(.[0-9])?)?$/i", value),
       semver_match(value)
     ]
   }
 
   vars {
     outputDir = path_join(globals.buildDir, "${params.os}-${params.arch}")
-    archiveName = "myApp_${params.os}-${params.arch}.${params.os == 'windows' ? 'zip' : 'tar.gz'}"
+    archiveName = "myApp_${params.os}-${params.arch}.${params.os == "windows" ? "zip" : "tar.gz"}"
   }
 
   action "fs:remove" {
@@ -65,15 +65,16 @@ task "build:platform" "Build project for specific platform" {
     ]
   }
 
-  action "go:build" "Building application for ${params.os} ${params.arch}" {
+  action "go:build" {
+    description = "Building application for ${params.os} ${params.arch}"
     package = "./cmd/..."
     outputFile = vars.outputDir
   }
 
   action "archive:compress" "Creating archive..." {
-    id = 'archive'
-#    keepResult = true
-#    type = 'tar.gz'
+    id = "archive"
+    #    keepResult = true
+    #    type = 'tar.gz'
     outputFile = path_join(vars.outputDir, vars.archiveName)
     input = [
       vars.outputDir
@@ -93,13 +94,13 @@ task "build:platform" "Build project for specific platform" {
 task "build" "Build Project" {
   matrix = [
     {
-      os: 'linux', arch: ['amd64', '386', 'arm64', 'arm'],
+      os: "linux", arch: ["amd64", "386", "arm64", "arm"],
     },
     {
-      os: 'windows', arch: ['amd64', '386', 'arm64', 'arm'],
+      os: "windows", arch: ["amd64", "386", "arm64", "arm"],
     },
     {
-      os: 'darwin', arch: ['amd64', 'arm64'],
+      os: "darwin", arch: ["amd64", "arm64"],
     },
   ]
 
