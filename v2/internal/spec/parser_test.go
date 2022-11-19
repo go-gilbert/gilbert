@@ -1,21 +1,34 @@
-package manifest
+package spec
 
 import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path/filepath"
 	"testing"
 	"unicode/utf8"
 )
 
 func TestParse(t *testing.T) {
-	fname := "testdata/sample.hcl"
+	fname, err := filepath.Abs("testdata/sample.hcl")
+	require.NoError(t, err)
 	//fname := "testdata/simple.hcl"
-	f, err := os.ReadFile(fname)
+	data, err := os.ReadFile(fname)
 	require.NoError(t, err)
 
-	m, err := Parse(f, fname)
+	rootCtx := NewRootContext()
+	rootCtx.Runner = RunnerSpec{
+		Version:   "v2.0.0",
+		Build:     "1",
+		CommitSHA: "n/a",
+	}
+
+	parser := NewParser(NewRootContext(), ProjectSpec{
+		FileName:         fname,
+		WorkingDirectory: filepath.Dir(fname),
+	})
+	m, err := parser.Parse(data)
 	if err == nil {
 		spew.Dump(m)
 		return
@@ -30,7 +43,7 @@ func TestParse(t *testing.T) {
 		t.Logf("%d Errors during parsing", len(errs))
 		for i, err := range errs {
 			rng := oneOfNotNil(err.Subject, err.Context)
-			src := readRange(f, rng)
+			src := readRange(data, rng)
 			t.Errorf("E:%d - %s:\n%s", i, err,
 				src)
 		}

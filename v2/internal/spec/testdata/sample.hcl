@@ -3,8 +3,11 @@ version = 1
 
 imports = [
   "./semver/module.hcl",
-  "./golangci-lint/module.hcl",
-  "github://username/foobar"
+  "./golangci-lint/mod.hcl",
+  "file://./golangci-lint/mod.hcl",
+  "github://username/foobar",
+  "${project.work_dir}/semver/mod.hcl",
+  path_join(project.work_dir, "semver", "mod2.hcl")
 ]
 
 vars {
@@ -26,7 +29,7 @@ param "configFile" "Path to app config file" {
 }
 
 param "buildDir" "Output build directory" {
-  default = path_join(project.workDir, "target")
+  default = path_join(project.work_dir, "target")
 }
 
 task "lint" {
@@ -75,7 +78,7 @@ task "build:platform" "Build project for specific platform" {
     id = "archive"
     #    keepResult = true
     #    type = 'tar.gz'
-    outputFile = path_join(vars.outputDir, vars.archiveName)
+    output_file = path_join(vars.outputDir, vars.archiveName)
     input = [
       vars.outputDir
     ]
