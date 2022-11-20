@@ -12,12 +12,16 @@ const (
 	varsBlockName  = "vars"
 	paramBlockName = "param"
 	taskBlockName  = "task"
+	mixinBlockName = "mixin"
+
+	versionAttr = "version"
+	importsAttr = "imports"
 )
 
 type docBlocks struct {
 	vars    *Vars
-	tasks   map[string]*hcl.Block
-	params  map[string]*Param
+	params  Params
+	tasks   Tasks
 	unknown hclsyntax.Blocks
 }
 
@@ -57,68 +61,86 @@ func (p *Parser) Parse(data []byte) (*Spec, error) {
 }
 
 func (p *Parser) manifestFromHcl(f *hcl.File) (*Spec, error) {
-	body, ok := f.Body.(*hclsyntax.Body)
+	doc, ok := f.Body.(*hclsyntax.Body)
 	if !ok {
-		return nil, fmt.Errorf("hcl file body is not %T (got %T)", body, f.Body)
+		return nil, fmt.Errorf("hcl file body is not %T (got %T)", doc, f.Body)
 	}
 
-	version, err := extractVersion(body)
+	header, err := parseHeader(doc, p.projCtx)
 	if err != nil {
 		return nil, err
 	}
 
-	importList, err := extractImports(body, p.projCtx)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = p.traverseBlocks(body.Blocks)
+	body, err := p.traverseBlocks(doc.Blocks)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Spec{
-		Version: version,
-		Imports: importList,
+		Header: header,
+		Body:   body,
 	}, nil
 }
 
-func (p *Parser) traverseBlocks(blocks hclsyntax.Blocks) (*docBlocks, hcl.Diagnostics) {
-	b := &docBlocks{
-		tasks:  map[string]*hcl.Block{},
-		params: map[string]*Param{},
+func (p *Parser) traverseBlocks(blocks hclsyntax.Blocks) (Body, hcl.Diagnostics) {
+	b := Body{
+		Tasks:  make(Tasks, len(blocks)),
+		Params: Params{},
 	}
 	for _, block := range blocks {
 		switch block.Type {
 		case varsBlockName:
-			if b.vars != nil {
-				return nil, newDiagnosticError(block.DefRange(),
+			if b.Vars != nil {
+				return b, newDiagnosticError(block.DefRange(),
 					"duplicate vars block. Previous declaration was on line %d",
-					b.vars.Range.Start.Line)
+					b.Vars.Range.Start.Line)
 			}
 
-			vars, err := ParseVarsBlock(block.AsHCLBlock())
+			vars, err := ParseVars(block.AsHCLBlock())
 			if err != nil {
-				return nil, err
+				return b, err
 			}
 
-			b.vars = vars
+			b.Vars = vars
 		case paramBlockName:
-			param, err := ParamFromBlock(block, p.projCtx)
+			param, err := ParseParam(block, p.projCtx)
 			if err != nil {
-				return nil, err
+				return b, err
 			}
-			b.params[param.Name] = param
+			b.Params[param.Name] = param
+		case taskBlockName:
+			task, err := ParseTask(block, p.projCtx)
+			if err != nil {
+				return b, err
+			}
+
+			b.Tasks[task.Name] = task
+		case mixinBlockName:
+			panic("unimplemented!")
 		default:
-			b.unknown = append(b.unknown, block)
+			b.Unknown = append(b.Unknown, block)
 		}
 	}
 
 	return b, nil
 }
 
-func extractImports(body *hclsyntax.Body, ctx *hcl.EvalContext) ([]string, error) {
-	importList, err := extractListAttr[string]("imports", body, ctx)
+func parseHeader(body *hclsyntax.Body, ctx *hcl.EvalContext) (head Header, err hcl.Diagnostics) {
+	head.Version, err = extractVersion(body.Attributes)
+	if err != nil {
+		return head, err
+	}
+
+	head.Imports, err = extractImports(body.Attributes, ctx)
+	if err != nil {
+		return head, err
+	}
+
+	return head, nil
+}
+
+func extractImports(attrs hclsyntax.Attributes, ctx *hcl.EvalContext) ([]string, hcl.Diagnostics) {
+	importList, err := extractListAttr[string](importsAttr, attrs, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -126,18 +148,19 @@ func extractImports(body *hclsyntax.Body, ctx *hcl.EvalContext) ([]string, error
 	return importList, nil
 }
 
-func extractVersion(body *hclsyntax.Body) (uint, error) {
-	version, ok, err := extractAttr[uint]("version", body, nil)
+func extractVersion(attrs hclsyntax.Attributes) (uint, hcl.Diagnostics) {
+	attr, ok := attrs[versionAttr]
+	if !ok {
+		return 0, newDiagnosticError(hcl.Range{}, "missing file version")
+	}
+
+	version, err := unmarshalAttr[uint](attr.AsHCLAttribute(), nil)
 	if err != nil {
 		return 0, err
 	}
 
-	if !ok {
-		return 0, ErrVersionMissing
-	}
-
 	if version > maxHclVersion {
-		return 0, ErrUnsupportedVersion
+		return 0, newDiagnosticError(attr.Range(), "unsupported file version (max: %d)", maxHclVersion)
 	}
 
 	return version, nil

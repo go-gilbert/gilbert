@@ -7,7 +7,7 @@ type Vars struct {
 	Attributes hcl.Attributes
 }
 
-func ParseVarsBlock(b *hcl.Block) (*Vars, hcl.Diagnostics) {
+func ParseVars(b *hcl.Block) (*Vars, hcl.Diagnostics) {
 	attrs, err := b.Body.JustAttributes()
 	if err != nil {
 		return nil, err

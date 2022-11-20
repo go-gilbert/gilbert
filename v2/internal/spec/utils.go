@@ -6,23 +6,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
-	"strings"
 )
 
-func lookupLabelAndDescription(labels []string) (name, desc string) {
-	return lookupLabel(labels, 0), lookupLabel(labels, 1)
-}
-
-func lookupLabel(labels []string, index int) string {
-	if len(labels) > index {
-		return strings.TrimSpace(labels[index])
-	}
-
-	return ""
-}
-
-func extractListAttr[T any](name string, body *hclsyntax.Body, ctx *hcl.EvalContext) ([]T, hcl.Diagnostics) {
-	attr, ok := body.Attributes[name]
+func extractListAttr[T any](name string, attrs hclsyntax.Attributes, ctx *hcl.EvalContext) ([]T, hcl.Diagnostics) {
+	attr, ok := attrs[name]
 	if !ok {
 		return nil, nil
 	}
@@ -46,9 +33,9 @@ func extractListAttr[T any](name string, body *hclsyntax.Body, ctx *hcl.EvalCont
 	return out, nil
 }
 
-func extractAttr[T any](name string, body *hclsyntax.Body, ctx *hcl.EvalContext) (T, bool, hcl.Diagnostics) {
+func extractAttr[T any](name string, attrs hclsyntax.Attributes, ctx *hcl.EvalContext) (T, bool, hcl.Diagnostics) {
 	var out T
-	attr, ok := body.Attributes[name]
+	attr, ok := attrs[name]
 	if !ok {
 		return out, false, nil
 	}

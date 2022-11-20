@@ -16,7 +16,6 @@ vars {
 
 param "buildDate" "Build date" {
   default = time_now()
-#  type = list(int)
   type = date
 }
 

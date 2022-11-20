@@ -23,9 +23,10 @@ type FlagSpec struct {
 	Short string
 }
 
+type Params map[string]*Param
+
 type Param struct {
-	Name           string
-	Description    string
+	BlockHeader
 	Type           cty.Type
 	Required       bool
 	Option         *FlagSpec
@@ -34,17 +35,18 @@ type Param struct {
 	Range          hcl.Range
 }
 
-func ParamFromBlock(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.Diagnostics) {
+func ParseParam(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.Diagnostics) {
+	header, err := ParseHeader(block, ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	param := Param{
+		BlockHeader:  header,
 		Required:     false,
 		DefaultValue: nil,
 		Type:         cty.NilType,
 		Range:        block.Range(),
-	}
-
-	param.Name, param.Description = lookupLabelAndDescription(block.Labels)
-	if param.Name == "" {
-		return nil, newDiagnosticError(block.DefRange(), "missing name label in parameter definition")
 	}
 
 	attrs := block.Body.Attributes
@@ -56,7 +58,7 @@ func ParamFromBlock(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.D
 		param.ValidationExpr = validateAttr.Expr
 	}
 
-	isRequired, _, err := extractAttr[bool](paramRequiredAttr, block.Body, ctx)
+	isRequired, _, err := extractAttr[bool](paramRequiredAttr, attrs, ctx)
 	param.Required = isRequired
 	if err != nil {
 		return nil, err
@@ -77,10 +79,7 @@ func ParamFromBlock(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.D
 	}
 
 	if param.Type == cty.NilType && param.DefaultValue == nil {
-		return nil, newDiagnosticError(block.DefRange(),
-			"cannot determine type for parameter %q, parameter should have 'type' or 'default' attribute",
-			param.Name,
-		)
+		param.Type = cty.String
 	}
 
 	optSpec, err := traverseParamBlocks(block.Body.Blocks, ctx)
