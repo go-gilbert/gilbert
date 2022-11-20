@@ -14,9 +14,16 @@ vars {
   pkgName = "app"
 }
 
+param "buildDate" "Build date" {
+  default = time_now()
+#  type = list(int)
+  type = date
+}
+
 param "configFile" "Path to app config file" {
   default = "./config.json"
   required = false
+  description = "foobar"
 
   flag {
     name = "cfg"

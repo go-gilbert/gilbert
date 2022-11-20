@@ -42,9 +42,14 @@ func TestParse(t *testing.T) {
 	if len(errs) > 0 {
 		t.Logf("%d Errors during parsing", len(errs))
 		for i, err := range errs {
+			severity := "ERR"
+			if err.Severity == hcl.DiagWarning {
+				severity = "WRN"
+			}
+
 			rng := oneOfNotNil(err.Subject, err.Context)
 			src := readRange(data, rng)
-			t.Errorf("E:%d - %s:\n%s", i, err,
+			t.Errorf("%s:%d - %s:\n%s", severity, i, err,
 				src)
 		}
 		return
