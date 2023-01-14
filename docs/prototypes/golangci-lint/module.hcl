@@ -113,7 +113,7 @@ module "golangci-lint" {
     }
   }
 
-  task "run" {
+  action "run" {
     param config {
       default = pathJoin(project.workDir, ".golangci.yml")
     }

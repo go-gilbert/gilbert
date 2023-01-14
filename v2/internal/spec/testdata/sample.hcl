@@ -2,6 +2,7 @@
 version = 1
 
 imports = [
+  "./fs/module.hcl",
   "./semver/module.hcl",
   "./golangci-lint/mod.hcl",
   "file://./golangci-lint/mod.hcl",
@@ -121,6 +122,12 @@ task "build" "Build Project" {
 
 task "start" "Run with live reload" {
   action "fs:watch" {
+    path = "./..."
+    ignore = [
+      "!*.go",
+      "*_test.go"
+    ]
+
     onChange {
       action "go:run" {
         package = "./cmd/app"

@@ -57,10 +57,10 @@ func (p *Parser) Parse(data []byte) (*Spec, error) {
 		return nil, fmt.Errorf("failed to parse file: %w", err)
 	}
 
-	return p.manifestFromHcl(f)
+	return p.readHcl(f)
 }
 
-func (p *Parser) manifestFromHcl(f *hcl.File) (*Spec, error) {
+func (p *Parser) readHcl(f *hcl.File) (*Spec, error) {
 	doc, ok := f.Body.(*hclsyntax.Body)
 	if !ok {
 		return nil, fmt.Errorf("hcl file body is not %T (got %T)", doc, f.Body)
