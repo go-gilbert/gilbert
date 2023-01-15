@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/hcl/v2"
 	"go.uber.org/zap/buffer"
 )
 
@@ -15,47 +16,29 @@ var (
 
 type Encoder interface {
 	EncodeEvent(event Event, buff *buffer.Buffer) error
+	EncodeDiagnostics(src []byte, diags hcl.Diagnostics, buff *buffer.Buffer) error
 }
 
-type AbstractLogger interface {
-	Debug(args ...any)
-	Debugf(msg string, args ...any)
-	Info(args ...any)
-	Infof(msg string, args ...any)
-	Warn(args ...any)
-	Warnf(msg string, args ...any)
-	Error(args ...any)
-	Errorf(msg string, args ...any)
-	Fatal(args ...any)
-	Fatalf(msg string, args ...any)
-	Panic(args ...any)
-	Panicf(msg string, args ...any)
-	Success(args ...any)
-	Successf(msg string, args ...any)
-	Trace(args ...any)
-	Tracef(msg string, args ...any)
-}
-
-type Logger struct {
+type OutputPrinter struct {
 	Name    string
 	level   Level
 	writer  Writer
 	encoder Encoder
 }
 
-func NewLogger(level Level, writer Writer, encoder Encoder) *Logger {
-	return &Logger{
+func NewOutputPrinter(level Level, writer Writer, encoder Encoder) *OutputPrinter {
+	return &OutputPrinter{
 		level:   level,
 		writer:  writer,
 		encoder: encoder,
 	}
 }
 
-func (l Logger) write(level Level, msg string) {
+func (l OutputPrinter) write(level Level, msg string) {
 	l.writeWithStyle(level, StyleDefault, msg)
 }
 
-func (l Logger) writeWithStyle(level Level, style MessageStyle, msg string) {
+func (l OutputPrinter) writeWithStyle(level Level, style MessageStyle, msg string) {
 	event := Event{
 		Level:      level,
 		Style:      style,
@@ -84,66 +67,81 @@ func (l Logger) writeWithStyle(level Level, style MessageStyle, msg string) {
 	}
 }
 
-func (l Logger) Debug(args ...any) {
+func (l OutputPrinter) Debug(args ...any) {
 	l.write(DebugLevel, fmt.Sprint(args...))
 }
 
-func (l Logger) Debugf(msg string, args ...any) {
+func (l OutputPrinter) Debugf(msg string, args ...any) {
 	l.write(DebugLevel, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Info(args ...any) {
+func (l OutputPrinter) Info(args ...any) {
 	l.write(InfoLevel, fmt.Sprint(args...))
 }
 
-func (l Logger) Infof(msg string, args ...any) {
+func (l OutputPrinter) Infof(msg string, args ...any) {
 	l.write(InfoLevel, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Warn(args ...any) {
+func (l OutputPrinter) Warn(args ...any) {
 	l.write(WarnLevel, fmt.Sprint(args...))
 }
 
-func (l Logger) Warnf(msg string, args ...any) {
+func (l OutputPrinter) Warnf(msg string, args ...any) {
 	l.write(WarnLevel, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Error(args ...any) {
+func (l OutputPrinter) Error(args ...any) {
 	l.write(ErrorLevel, fmt.Sprint(args...))
 }
 
-func (l Logger) Errorf(msg string, args ...any) {
+func (l OutputPrinter) Errorf(msg string, args ...any) {
 	l.write(ErrorLevel, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Fatal(args ...any) {
+func (l OutputPrinter) Fatal(args ...any) {
 	l.write(FatalLevel, fmt.Sprint(args...))
 }
 
-func (l Logger) Fatalf(msg string, args ...any) {
+func (l OutputPrinter) Fatalf(msg string, args ...any) {
 	l.write(FatalLevel, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Panic(args ...any) {
+func (l OutputPrinter) Panic(args ...any) {
 	l.write(PanicLevel, fmt.Sprint(args...))
 }
 
-func (l Logger) Panicf(msg string, args ...any) {
+func (l OutputPrinter) Panicf(msg string, args ...any) {
 	l.write(PanicLevel, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Success(args ...any) {
+func (l OutputPrinter) Success(args ...any) {
 	l.writeWithStyle(InfoLevel, StyleSuccess, fmt.Sprint(args...))
 }
 
-func (l Logger) Successf(msg string, args ...any) {
+func (l OutputPrinter) Successf(msg string, args ...any) {
 	l.writeWithStyle(InfoLevel, StyleSuccess, fmt.Sprintf(msg, args...))
 }
 
-func (l Logger) Trace(args ...any) {
+func (l OutputPrinter) Trace(args ...any) {
 	l.writeWithStyle(InfoLevel, StyleStep, fmt.Sprint(args...))
 }
 
-func (l Logger) Tracef(msg string, args ...any) {
+func (l OutputPrinter) Tracef(msg string, args ...any) {
 	l.writeWithStyle(InfoLevel, StyleStep, fmt.Sprintf(msg, args...))
+}
+
+func (l OutputPrinter) ReportDiagnostics(src []byte, diags hcl.Diagnostics) {
+	buff := buffPool.Get()
+	defer buff.Free()
+
+	err := l.encoder.EncodeDiagnostics(src, diags, buff)
+	if err != nil {
+		fmt.Println("ERROR: log.Encoder.EncodeEvent:", err)
+	}
+
+	err = l.writer.Write(ErrorLevel, bytes.NewReader(buff.Bytes()))
+	if err != nil {
+		fmt.Println("ERROR: log.Writer.Write:", err)
+	}
 }
