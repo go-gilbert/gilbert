@@ -8,12 +8,12 @@ import (
 
 const (
 	InvalidLevel Level = iota
-	DebugLevel
-	InfoLevel
-	WarnLevel
-	ErrorLevel
-	PanicLevel
 	FatalLevel
+	PanicLevel
+	ErrorLevel
+	WarnLevel
+	InfoLevel
+	DebugLevel
 )
 
 // Level is log level
