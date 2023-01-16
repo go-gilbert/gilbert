@@ -1,4 +1,4 @@
-package hclutil
+package hclx
 
 import (
 	"github.com/hashicorp/hcl/v2"

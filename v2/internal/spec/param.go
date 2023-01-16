@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"github.com/go-gilbert/gilbert/v2/internal/util/hclx"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
@@ -52,6 +53,7 @@ func ParseParam(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.Diagn
 	attrs := block.Body.Attributes
 	if defaultValAttr, ok := attrs[paramDefaultAttr]; ok {
 		param.DefaultValue = defaultValAttr.Expr
+		param.Type = figureOutExpressionType(defaultValAttr.Expr)
 	}
 
 	if validateAttr, ok := attrs[paramValidateAttr]; ok {
@@ -65,8 +67,12 @@ func ParseParam(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.Diagn
 	}
 
 	if !param.Required && param.DefaultValue == nil {
-		return nil, newDiagnosticError(block.Range(),
-			"attribute %q is required if parameter is not optional", paramDefaultAttr)
+		return nil, hcl.Diagnostics{
+			hclx.NewDiagnostic(block.Range(),
+				hclx.WithSummary("Missing attribute type"),
+				hclx.WithDetail("Attribute %q is required if parameter is not optional", paramDefaultAttr),
+			),
+		}
 	}
 
 	if typeAttr, ok := attrs[paramTypeAttr]; ok {
@@ -75,10 +81,36 @@ func ParseParam(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.Diagn
 			return nil, err
 		}
 
+		// Check if default value type equals to specified
+		if param.Type != cty.NilType && typ != param.Type {
+			return nil, hcl.Diagnostics{
+				hclx.NewDiagnostic(typeAttr.Range(),
+					hclx.WithSummary("Type mismatch"),
+					hclx.WithContext(block.Range()),
+					hclx.WithDetail(
+						"Type specified in attribute %q is not equal to type of value in attribute %q",
+						paramTypeAttr, paramDefaultAttr,
+					),
+				),
+			}
+		}
+
 		param.Type = typ
 	}
 
-	if param.Type == cty.NilType && param.DefaultValue == nil {
+	if param.Type == cty.NilType {
+		if param.DefaultValue != nil {
+			// Show error if it's impossible to determine value type from default value.
+			return nil, hcl.Diagnostics{
+				hclx.NewDiagnostic(block.Range(),
+					hclx.WithSummary("Unknown param block type"),
+					hclx.WithDetail("Cannot determine parameter value type from default value. "+
+						"Please specify parameter type in %q attribute", paramTypeAttr),
+				),
+			}
+		}
+
+		// Set default type value
 		param.Type = cty.String
 	}
 
@@ -91,6 +123,17 @@ func ParseParam(block *hclsyntax.Block, ctx *hcl.EvalContext) (*Param, hcl.Diagn
 	return &param, nil
 }
 
+// figureOutExpressionType returns expression value type if it's a literal expression.
+//
+// Returns cty.NilType on failure.
+func figureOutExpressionType(expr hclsyntax.Expression) cty.Type {
+	if litExp, ok := expr.(*hclsyntax.LiteralValueExpr); ok {
+		return litExp.Val.Type()
+	}
+
+	return cty.NilType
+}
+
 func traverseParamBlocks(blocks hclsyntax.Blocks, ctx *hcl.EvalContext) (*FlagSpec, hcl.Diagnostics) {
 	if len(blocks) == 0 {
 		return nil, nil
@@ -99,14 +142,22 @@ func traverseParamBlocks(blocks hclsyntax.Blocks, ctx *hcl.EvalContext) (*FlagSp
 	var specBlock *hclsyntax.Block
 	for _, block := range blocks {
 		if block.Type != blockTypeParamFlag {
-			return nil, newDiagnosticError(block.DefRange(), "unsupported block %q",
-				block.Type)
+			return nil, hcl.Diagnostics{
+				hclx.NewDiagnostic(block.LabelRanges[0],
+					hclx.WithSummary("Unsupported block"),
+					hclx.WithDetail("Unsupported block %q", block.Type),
+					hclx.WithContext(block.DefRange())),
+			}
 		}
 
 		if specBlock != nil {
-			return nil, newDiagnosticError(block.DefRange(),
-				"duplicate %q block, previous block was defined at line %d",
-				block.Type, specBlock.TypeRange.Start.Line)
+			return nil, hcl.Diagnostics{
+				hclx.NewDiagnostic(block.LabelRanges[0],
+					hclx.WithSummary("Duplicate block"),
+					hclx.WithDetail("Duplicate block %q, previous block was defined at %d:%d",
+						block.Type, specBlock.TypeRange.Start.Line, specBlock.TypeRange.Start.Column),
+					hclx.WithContext(block.DefRange())),
+			}
 		}
 
 		specBlock = block
@@ -120,8 +171,10 @@ func traverseParamBlocks(blocks hclsyntax.Blocks, ctx *hcl.EvalContext) (*FlagSp
 
 	flagNameAttr, ok := attrs[paramFlagName]
 	if !ok {
-		return nil, newDiagnosticError(specBlock.DefRange(),
-			"missing %q attribute", paramFlagName)
+		return nil, hcl.Diagnostics{
+			hclx.NewDiagnostic(specBlock.DefRange(),
+				hclx.WithSummary("Missing attribute %q", paramFlagName)),
+		}
 	}
 
 	flagName, err := unmarshalAttr[string](flagNameAttr, ctx)
@@ -131,8 +184,10 @@ func traverseParamBlocks(blocks hclsyntax.Blocks, ctx *hcl.EvalContext) (*FlagSp
 
 	flagName = strings.TrimSpace(flagName)
 	if flagName == "" {
-		return nil, newDiagnosticError(flagNameAttr.Range,
-			"empty required attribute %q", flagNameAttr.Name)
+		return nil, hcl.Diagnostics{
+			hclx.NewDiagnostic(flagNameAttr.Range,
+				hclx.WithSummary("Empty required attribute %q", flagNameAttr.Name)),
+		}
 	}
 
 	flagSpec := FlagSpec{

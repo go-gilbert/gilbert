@@ -2,6 +2,7 @@ package spec
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/v2/internal/util/hclx"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
@@ -56,8 +57,10 @@ func ctyTypeFromExpression(expr hcl.Expression) (cty.Type, hcl.Diagnostics) {
 
 	var typ cty.Type
 	if err := gocty.FromCtyValue(val, &typ); err != nil {
-		return typ, newDiagnosticError(expr.Range(),
-			"attribute can only accept types, not values (%s)", err)
+		return typ, hcl.Diagnostics{
+			hclx.NewDiagnostic(expr.Range(), hclx.WithSummary("Invalid attribute type"),
+				hclx.WithDetail("Attribute can only accept types, not values (%s)", err)),
+		}
 	}
 
 	return typ, nil

@@ -5,7 +5,7 @@ import (
 	"github.com/go-gilbert/gilbert/v2/internal/log"
 	"github.com/go-gilbert/gilbert/v2/internal/spec"
 	"github.com/go-gilbert/gilbert/v2/internal/util/ctyutil"
-	"github.com/go-gilbert/gilbert/v2/internal/util/hclutil"
+	"github.com/go-gilbert/gilbert/v2/internal/util/hclx"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
@@ -52,14 +52,14 @@ func ApplySpecToCommand(cmd *cobra.Command, s *spec.Spec, ctx *hcl.EvalContext) 
 	for key, param := range s.Params {
 		log.Global().Debugf("mounting root param %q", key)
 		if !param.Type.IsPrimitiveType() {
-			return nil, hclutil.NewDiagnosticError(param.Range, "Parameter type should be primitive")
+			return nil, hclx.NewDiagnosticError(param.Range, "Parameter type should be primitive")
 		}
 
 		if param.DefaultValue != nil {
 			log.Global().Debugf("parsing root %q param default value", key)
 			v, err := param.DefaultValue.Value(ctx)
 			if err != nil {
-				return nil, hclutil.WrapDiagnostic(err, "Failed to determine default value for variable %q", key)
+				return nil, hclx.WrapDiagnostic(err, "Failed to determine default value for variable %q", key)
 			}
 
 			jar.Set(key, v)

@@ -2,7 +2,7 @@ package spec
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert/v2/internal/util/hclutil"
+	"github.com/go-gilbert/gilbert/v2/internal/util/hclx"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
@@ -17,8 +17,9 @@ func extractListAttr[T any](name string, attrs hclsyntax.Attributes, ctx *hcl.Ev
 
 	val, err := attr.Expr.Value(ctx)
 	if err != nil {
-		return nil, newDiagnosticError(attr.Range(), "failed to parse %q attribute: %s",
-			attr.Name, err)
+		return nil, hcl.Diagnostics{
+			hclx.NewDiagnostic(attr.Range(), hclx.WithSummary("Failed to parse %q attribute: %s", attr.Name, err)),
+		}
 	}
 
 	if val == cty.NilVal {
@@ -27,8 +28,11 @@ func extractListAttr[T any](name string, attrs hclsyntax.Attributes, ctx *hcl.Ev
 
 	out, cpErr := ctyTupleToSlice[T](val)
 	if cpErr != nil {
-		return nil, newDiagnosticError(attr.Range(),
-			"invalid %q attribute value: %s", attr.Name, cpErr)
+		return nil, hcl.Diagnostics{
+			hclx.NewDiagnostic(attr.Range(),
+				hclx.WithSummary("Invalid %q attribute value: %s", attr.Name, cpErr),
+			),
+		}
 	}
 
 	return out, nil
@@ -43,8 +47,11 @@ func extractAttr[T any](name string, attrs hclsyntax.Attributes, ctx *hcl.EvalCo
 
 	val, err := attr.Expr.Value(ctx)
 	if err != nil {
-		return out, true, newDiagnosticError(attr.Range(), "failed to parse %q attribute: %s",
-			attr.Name, err)
+		return out, true, hcl.Diagnostics{
+			hclx.NewDiagnostic(attr.Range(),
+				hclx.WithSummary("Failed to parse %q attribute: %s", attr.Name, err),
+			),
+		}
 	}
 
 	if val == cty.NilVal {
@@ -52,8 +59,11 @@ func extractAttr[T any](name string, attrs hclsyntax.Attributes, ctx *hcl.EvalCo
 	}
 
 	if err := gocty.FromCtyValue(val, &out); err != nil {
-		return out, true, newDiagnosticError(attr.Range(),
-			"invalid %q attribute value: %s", attr.Name, err)
+		return out, true, hcl.Diagnostics{
+			hclx.NewDiagnostic(attr.Range(),
+				hclx.WithSummary("Invalid %q attribute value: %s", attr.Name, err),
+			),
+		}
 	}
 
 	return out, true, nil
@@ -63,13 +73,19 @@ func unmarshalAttr[T any](attr *hcl.Attribute, ctx *hcl.EvalContext) (T, hcl.Dia
 	var out T
 	val, err := attr.Expr.Value(ctx)
 	if err != nil {
-		return out, newDiagnosticError(attr.Range,
-			"failed to parse %q attribute: %s", attr.Name, err)
+		return out, hcl.Diagnostics{
+			hclx.NewDiagnostic(attr.Range,
+				hclx.WithSummary("Failed to parse %q attribute: %s", attr.Name, err),
+			),
+		}
 	}
 
 	if err := gocty.FromCtyValue(val, &out); err != nil {
-		return out, newDiagnosticError(attr.Range,
-			"invalid %q attribute value: %s", attr.Name, err)
+		return out, hcl.Diagnostics{
+			hclx.NewDiagnostic(attr.Range,
+				hclx.WithSummary("Invalid %q attribute value: %s", attr.Name, err),
+			),
+		}
 	}
 
 	return out, nil
@@ -94,5 +110,7 @@ func ctyTupleToSlice[T any](val cty.Value) ([]T, error) {
 }
 
 func newDiagnosticError(rng hcl.Range, msg string, args ...any) hcl.Diagnostics {
-	return hclutil.NewDiagnosticError(rng, msg, args...)
+	return hcl.Diagnostics{
+		hclx.NewDiagnostic(rng, hclx.WithSummary(msg, args...)),
+	}
 }
