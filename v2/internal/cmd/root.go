@@ -31,7 +31,13 @@ func Run(ctx context.Context, cfg *config.CoreConfig, args []string) {
 		log.Global().Fatal(err)
 	}
 
+	log.ReplaceGlobal(logger)
 	if err := RunE(ctx, logger, cfg, args); err != nil {
+		var diags hcl.Diagnostics
+		if errors.As(err, &diags) {
+			logger.ReportDiagnostics(diags)
+		}
+
 		logger.Fatal(err)
 	}
 }
@@ -56,16 +62,18 @@ func RunE(ctx context.Context, logger log.Printer, cfg *config.CoreConfig, args 
 	}
 
 	parser := spec.NewParser(spec.NewRootContext(), projectSpec)
-	_, err = parser.Parse(data)
+	rootSpec, err := parser.Parse(data)
 	if err != nil {
-		var diags hcl.Diagnostics
-		if errors.As(err, &diags) {
-			logger.ReportDiagnostics(data, diags)
-		}
-
 		return err
 	}
 
+	projCtx := parser.ProjectContext()
+	params, err := ApplySpecToCommand(cmd, rootSpec, projCtx)
+	if err != nil {
+		return err
+	}
+
+	params.MapContext(projCtx)
 	err = cmd.ExecuteContext(ctx)
 	return err
 }

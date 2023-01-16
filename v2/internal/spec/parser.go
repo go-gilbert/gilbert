@@ -51,6 +51,14 @@ func NewParser(rootCtx *RootContext, proj ProjectSpec) *Parser {
 	}
 }
 
+func (p *Parser) RootContext() *hcl.EvalContext {
+	return p.rootCtx
+}
+
+func (p *Parser) ProjectContext() *hcl.EvalContext {
+	return p.projCtx
+}
+
 func (p *Parser) Parse(data []byte) (*Spec, error) {
 	f, err := hclsyntax.ParseConfig(data, p.project.FileName, hcl.InitialPos)
 	if err != nil {

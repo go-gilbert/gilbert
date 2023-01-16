@@ -2,6 +2,7 @@ package spec
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/v2/internal/util/hclutil"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
@@ -93,19 +94,5 @@ func ctyTupleToSlice[T any](val cty.Value) ([]T, error) {
 }
 
 func newDiagnosticError(rng hcl.Range, msg string, args ...any) hcl.Diagnostics {
-	if len(args) > 0 {
-		msg = fmt.Sprintf(msg, args...)
-	}
-
-	return hcl.Diagnostics{
-		&hcl.Diagnostic{
-			Severity:    hcl.DiagError,
-			Summary:     msg,
-			Subject:     &rng,
-			Context:     &rng,
-			Expression:  nil,
-			EvalContext: nil,
-			Extra:       nil,
-		},
-	}
+	return hclutil.NewDiagnosticError(rng, msg, args...)
 }
