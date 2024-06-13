@@ -14,6 +14,7 @@ mixins:
       vars:
         ext: ''
       params:
+        source: './cmd/gilbert'
         outputPath: '{{buildDir}}/gilbert_{{os}}-{{arch}}{{ext}}'
         target:
           os: '{{os}}'
@@ -25,6 +26,7 @@ tasks:
   install:
   - action: build
     params:
+      source: './cmd/gilbert'
       outputPath: '{{GOPATH}}/bin/gilbert'
       variables:
         'main.version': '{{ version }}'
