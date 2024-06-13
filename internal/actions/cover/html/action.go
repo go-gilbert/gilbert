@@ -2,13 +2,12 @@ package html
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support/shell"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
-
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 
 	sdk "github.com/go-gilbert/gilbert-sdk"
 )

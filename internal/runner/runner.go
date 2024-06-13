@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support/shell"
 	"strings"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/manifest"
 	"github.com/go-gilbert/gilbert/internal/runner/job"
 	"github.com/go-gilbert/gilbert/internal/scope"
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 var errNoTaskHandler = fmt.Errorf("no task handler defined, please define task handler in 'plugin' or 'mixin' paramerer")

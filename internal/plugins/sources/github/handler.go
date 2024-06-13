@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support/fs"
+	"github.com/go-gilbert/gilbert/pkg/support/web"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -14,8 +16,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/storage"
 
 	"github.com/go-gilbert/gilbert/internal/log"
-	"github.com/go-gilbert/gilbert/internal/support/fs"
-	"github.com/go-gilbert/gilbert/internal/support/web"
 	"github.com/google/go-github/v25/github"
 )
 

@@ -2,7 +2,7 @@ package template
 
 import (
 	"fmt"
-	"github.com/go-gilbert/gilbert/internal/support/test"
+	"github.com/go-gilbert/gilbert/pkg/support/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

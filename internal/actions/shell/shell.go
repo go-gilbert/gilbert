@@ -1,11 +1,11 @@
 package shell
 
 import (
+	"github.com/go-gilbert/gilbert/pkg/support/shell"
 	"os"
 	"os/exec"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 // Params contains params for shell plugin

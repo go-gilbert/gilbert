@@ -2,12 +2,12 @@ package shell
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support/shell"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 // Action represents sdk.ActionHandler

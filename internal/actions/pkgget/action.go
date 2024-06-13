@@ -3,11 +3,11 @@ package pkgget
 import (
 	"errors"
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support/shell"
 	"os/exec"
 	"strings"
 
 	"github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 // Action implements sdk.Action

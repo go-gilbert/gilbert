@@ -2,13 +2,12 @@ package build
 
 import (
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support"
 	"os/exec"
 	"runtime"
 	"strings"
 
 	"github.com/go-gilbert/gilbert-sdk"
-
-	"github.com/go-gilbert/gilbert/internal/support"
 )
 
 const (

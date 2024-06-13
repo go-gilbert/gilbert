@@ -1,12 +1,12 @@
 package storage
 
 import (
+	"github.com/go-gilbert/gilbert/pkg/support/test"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/go-gilbert/gilbert/internal/support/test"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -2,9 +2,8 @@ package scope
 
 import (
 	"fmt"
+	shell2 "github.com/go-gilbert/gilbert/pkg/support/shell"
 	"os/exec"
-
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 // CommandEvaluator represents command runner and wraps shell calls
@@ -18,8 +17,8 @@ type shellEvaluator struct {
 }
 
 func (e *shellEvaluator) prepareProcess(cmd string) (proc *exec.Cmd) {
-	proc = shell.PrepareCommand(cmd)
-	vars := shell.Environment(e.ctx.Variables)
+	proc = shell2.PrepareCommand(cmd)
+	vars := shell2.Environment(e.ctx.Variables)
 	proc.Dir = e.ctx.environment.ProjectDirectory
 
 	if !vars.Empty() {
@@ -36,7 +35,7 @@ func (e *shellEvaluator) Call(cmd string) (result []byte, err error) {
 
 	data, err := proc.CombinedOutput()
 	if err != nil {
-		return result, fmt.Errorf("%s (%s)", shell.FormatExitError(err), data)
+		return result, fmt.Errorf("%s (%s)", shell2.FormatExitError(err), data)
 	}
 
 	return data, nil

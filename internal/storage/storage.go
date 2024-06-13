@@ -3,10 +3,9 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"github.com/go-gilbert/gilbert/pkg/support/fs"
 	"os"
 	"path/filepath"
-
-	"github.com/go-gilbert/gilbert/internal/support/fs"
 )
 
 const (

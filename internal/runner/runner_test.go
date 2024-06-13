@@ -2,6 +2,7 @@ package runner
 
 import (
 	"errors"
+	test2 "github.com/go-gilbert/gilbert/pkg/support/test"
 	"os"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	sdk "github.com/go-gilbert/gilbert-sdk"
 	"github.com/go-gilbert/gilbert/internal/actions"
 	"github.com/go-gilbert/gilbert/internal/manifest"
-	"github.com/go-gilbert/gilbert/internal/support/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,8 +36,8 @@ func TestTaskRunner_Run(t *testing.T) {
 		taskName string
 		m        manifest.Manifest
 		err      string
-		before   func(t *testing.T, tr *TaskRunner, l *test.Log)
-		after    func(t *testing.T, tr *TaskRunner, l *test.Log)
+		before   func(t *testing.T, tr *TaskRunner, l *test2.Log)
+		after    func(t *testing.T, tr *TaskRunner, l *test2.Log)
 	}{
 		"error if task not exists": {
 			skip:     false,
@@ -55,7 +55,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			taskName: "foo",
 			err:      "no such action handler: 'foo'",
 			m:        manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{sdk.Job{ActionName: "foo"}}}},
-			after: func(t *testing.T, tr *TaskRunner, l *test.Log) {
+			after: func(t *testing.T, tr *TaskRunner, l *test2.Log) {
 				l.AssertMessage("task context was not set")
 			},
 		},
@@ -72,7 +72,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			skip:     false,
 			taskName: "foo",
 			err:      "fail",
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testBadAction", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return nil, errors.New("foo")
 				})
@@ -87,12 +87,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testAsync", Async: true},
 			}}},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testAsync", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.True(t, r.done)
 			},
 		},
@@ -102,12 +102,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testTimeout", Condition: "badcommand"},
 			}}},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testTimeout", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Falsef(t, r.done, "task shouldn't start")
 			},
 		},
@@ -117,12 +117,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testBadConditionHook", Condition: "{{bad}} condition"},
 			}}},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testBadConditionHook", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Falsef(t, r.done, "task shouldn't start")
 			},
 		},
@@ -132,12 +132,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testOKConditionHook", Condition: "echo {{msg}}", Vars: sdk.Vars{"msg": "hello"}},
 			}}},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testOKConditionHook", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Truef(t, r.done, "task was not started")
 			},
 		},
@@ -147,12 +147,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testTimeout", Delay: sdk.Period(800)},
 			}}},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testTimeout", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Truef(t, r.done, "task didn't finished")
 				diff := uint((r.endTime.Sub(r.startTime).Seconds()) * 1000)
 				const expectedDiff = 800 + 100
@@ -168,12 +168,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
 				sdk.Job{ActionName: "testDeadline", Deadline: sdk.Period(10)},
 			}}},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testDeadline", func(sdk.ScopeAccessor, sdk.ActionParams) (sdk.ActionHandler, error) {
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Truef(t, r.cancel, "task didn't receive cancel callback on deadline")
 				diff := uint((r.cancelTime.Sub(r.startTime).Seconds()) * 1000)
 				const deadlineTime = uint(10)
@@ -199,14 +199,14 @@ func TestTaskRunner_Run(t *testing.T) {
 					},
 				},
 			},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testMixinExec1", func(sc sdk.ScopeAccessor, ap sdk.ActionParams) (sdk.ActionHandler, error) {
 					vars := sc.Vars()
 					assert.NotEmptyf(t, vars["foo"], "parent job variables wasn't passed to mixin")
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Truef(t, r.done, "task from mixin was not processed")
 			},
 		},
@@ -284,14 +284,14 @@ func TestTaskRunner_Run(t *testing.T) {
 					},
 				},
 			},
-			before: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			before: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				_ = actions.HandleFunc("testSubTaskExec1", func(sc sdk.ScopeAccessor, ap sdk.ActionParams) (sdk.ActionHandler, error) {
 					vars := sc.Vars()
 					assert.NotEmptyf(t, vars["foo"], "parent job variables wasn't passed to mixin")
 					return &asyncTestHandle{data: &r}, nil
 				})
 			},
-			after: func(t *testing.T, _ *TaskRunner, _ *test.Log) {
+			after: func(t *testing.T, _ *TaskRunner, _ *test2.Log) {
 				assert.Truef(t, r.done, "subtask was not processed")
 			},
 		},
@@ -318,7 +318,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			continue
 		}
 		r = results{}
-		l := &test.Log{T: t}
+		l := &test2.Log{T: t}
 		t.Run("should "+name, func(t *testing.T) {
 			tr := NewTaskRunner(&c.m, "", l)
 			r.startTime = time.Now()
@@ -327,7 +327,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			}
 			err := tr.Run(c.taskName, nil)
 			if c.err != "" {
-				test.AssertErrorContains(t, err, c.err)
+				test2.AssertErrorContains(t, err, c.err)
 			} else {
 				assert.NoError(t, err)
 			}

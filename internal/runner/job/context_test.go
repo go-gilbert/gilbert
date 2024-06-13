@@ -3,12 +3,12 @@ package job
 import (
 	"context"
 	"errors"
+	"github.com/go-gilbert/gilbert/pkg/support/test"
 	"sync"
 	"testing"
 	"time"
 
 	sdk "github.com/go-gilbert/gilbert-sdk"
-	"github.com/go-gilbert/gilbert/internal/support/test"
 	"github.com/stretchr/testify/assert"
 )
 

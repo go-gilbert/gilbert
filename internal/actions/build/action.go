@@ -2,12 +2,11 @@ package build
 
 import (
 	"fmt"
+	shell2 "github.com/go-gilbert/gilbert/pkg/support/shell"
 	"os/exec"
 	"strings"
 
 	"github.com/go-gilbert/gilbert-sdk"
-
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 // Action represents Gilbert's plugin
@@ -34,7 +33,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 	}
 
 	if err = a.cmd.Wait(); err != nil {
-		return shell.FormatExitError(err)
+		return shell2.FormatExitError(err)
 	}
 
 	return nil
@@ -43,7 +42,7 @@ func (a *Action) Call(ctx sdk.JobContextAccessor, r sdk.JobRunner) (err error) {
 // Cancel cancels build process
 func (a *Action) Cancel(ctx sdk.JobContextAccessor) error {
 	if a.cmd != nil {
-		if err := shell.KillProcessGroup(a.cmd); err != nil {
+		if err := shell2.KillProcessGroup(a.cmd); err != nil {
 			ctx.Log().Debug(err.Error())
 		}
 	}

@@ -27,7 +27,7 @@ type logger struct {
 	writer    Writer
 }
 
-func (c *logger) log(level int, args ...interface{}) {
+func (c *logger) log(level int, args ...any) {
 	if level > c.level {
 		return
 	}
@@ -35,7 +35,7 @@ func (c *logger) log(level int, args ...interface{}) {
 	c.writer.Write(level, c.formatter.WrapString(fmt.Sprint(args...))+lineBreak)
 }
 
-func (c *logger) logf(level int, format string, args ...interface{}) {
+func (c *logger) logf(level int, format string, args ...any) {
 	if level > c.level {
 		return
 	}
@@ -51,55 +51,55 @@ func (c *logger) SubLogger() sdk.Logger {
 	}
 }
 
-func (c *logger) Format(format string, args ...interface{}) string {
+func (c *logger) Format(format string, args ...any) string {
 	return c.formatter.Format(format, args...)
 }
 
-func (c *logger) Log(args ...interface{}) {
+func (c *logger) Log(args ...any) {
 	c.log(LevelMsg, args...)
 }
 
-func (c *logger) Logf(format string, args ...interface{}) {
+func (c *logger) Logf(format string, args ...any) {
 	c.logf(LevelMsg, format, args...)
 }
 
-func (c *logger) Debug(args ...interface{}) {
+func (c *logger) Debug(args ...any) {
 	c.log(LevelDebug, args...)
 }
 
-func (c *logger) Debugf(format string, args ...interface{}) {
+func (c *logger) Debugf(format string, args ...any) {
 	c.logf(LevelDebug, format, args...)
 }
 
-func (c *logger) Warn(args ...interface{}) {
+func (c *logger) Warn(args ...any) {
 	c.log(LevelWarn, args...)
 }
 
-func (c *logger) Warnf(format string, args ...interface{}) {
+func (c *logger) Warnf(format string, args ...any) {
 	c.logf(LevelWarn, format, args...)
 }
 
-func (c *logger) Info(args ...interface{}) {
+func (c *logger) Info(args ...any) {
 	c.log(LevelInfo, args...)
 }
 
-func (c *logger) Infof(format string, args ...interface{}) {
+func (c *logger) Infof(format string, args ...any) {
 	c.logf(LevelInfo, format, args...)
 }
 
-func (c *logger) Success(args ...interface{}) {
+func (c *logger) Success(args ...any) {
 	c.log(LevelSuccess, args...)
 }
 
-func (c *logger) Successf(format string, args ...interface{}) {
+func (c *logger) Successf(format string, args ...any) {
 	c.logf(LevelSuccess, format, args...)
 }
 
-func (c *logger) Error(args ...interface{}) {
+func (c *logger) Error(args ...any) {
 	c.log(LevelError, args...)
 }
 
-func (c *logger) Errorf(format string, args ...interface{}) {
+func (c *logger) Errorf(format string, args ...any) {
 	c.logf(LevelError, format, args...)
 }
 

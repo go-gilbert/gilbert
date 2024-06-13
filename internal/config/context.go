@@ -8,7 +8,7 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/containers"
 )
 
-var ctxCell = containers.NewOnceCell(func() ctxPair {
+var ctxCell = containers.NewSyncOnceCell(func() ctxPair {
 	rootCtx := context.Background()
 	ctx, cancelFn := signal.NotifyContext(rootCtx, os.Interrupt, os.Kill)
 	return ctxPair{

@@ -3,12 +3,12 @@ package runner
 import (
 	"context"
 	"errors"
+	"github.com/go-gilbert/gilbert/pkg/support/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/runner/job"
-	"github.com/go-gilbert/gilbert/internal/support/test"
 )
 
 func TestTrackAsyncJobs(t *testing.T) {
