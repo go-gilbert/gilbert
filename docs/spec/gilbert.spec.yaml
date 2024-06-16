@@ -1,0 +1,166 @@
+version: 2.0
+
+# Attention:
+# ---------
+# This example is verbose by purpose to demonstrate a whole spec.
+# Real life projects will have much more compact files.
+
+# Include local yaml files.
+include:
+  - ./some-file.yaml
+
+# List of plugins to load
+plugins:
+  # GitHub shorthand, uses GitHub API and fetches releases.
+  - github://username/package@v1.2.0
+  - github://github.example.com/package@fedc174
+  # Gitlab + enterprise
+  - gitlab://gitlab.example.com/namespace/project/reponame@v1.2.0
+  # Git (SSH/HTTPS)
+  - git@example.com:/username/repo.git@fedc174
+  - https://github.com/username/repo.git@master
+  # Raw URL
+  - https://example.com/foo/bar/baz.zip
+  # Local (for development)
+  - file://./my-plugin
+
+# Constants (read-only)
+const:
+  outDir: ./target
+  pkgPath: ./cmd/gilbert
+
+# Global parameters - mapped to flags for 'run' command.
+# E.g. `gilbert run some-task --param1 foo`
+args:
+  version:
+    description:  'Program version'
+    type: string        # string is a default type
+    default: '1.0.0'    # default value
+    format: semver      # Optional validation format, can be regex
+    flag: version       # Optional, flag name. By default, uses key name (--version)
+    short: V            # Optional, short flag.
+    env: APP_VERSION    # Optional, fallback environment var name.
+  isCI:
+    type: boolean
+    default: false      # default is not necessary
+    env:
+      # Option might be multiple vars to check
+      - CI
+      - GITLAB_CI
+      - GITHUB_ACTIONS
+  sha-key:
+    type: bytes
+    format: base64      # Default. Used to parse for non-strings
+  targets:
+    type: list<string>
+    required: true              # Stop when empty or undefined. Works when 'default' is undefined.
+    format: /amd64|arm64|386/ # Format per item
+    delimiter: ','              # Custom delimiter character.
+    #delimiter: /(\S+)/         # Or using regex.
+  objects:
+    # --param=key=value&key=value
+    type: map<string,string>
+    format: url       # Applied only on a value
+    delimiter:        # Default (key=value,key=value)
+      entry: ','      # Items delimiter
+      key: '='        # Key-value delimiter.
+  seqId:
+    type: number
+    format: hex       # Custom format can be used to parse nums (e.g. bin)
+    min: 0            # Only for numbers
+    max: -1
+  matrixFile:
+    type: string
+
+tasks:
+  hello:
+    steps:
+      # Shorthand for 'action: echo'
+      - echo: 'hello world'
+
+  build:
+    # Optional, displayed in help.
+    description: 'Build a project for all platforms'
+    # Parallel matrix jobs similar to GitHub actions.
+    strategy:
+      parallel: ${host.nproc} # Alias to value below
+      #parallel: $(shell nproc)
+      fail-fast: true
+      matrix: {{ json.parse(readfile(matrixFile)) }}
+#      matrix:
+#        os: [ windows, linux, darwin ]
+#        arch: ${params.targets}
+    vars:
+      # Task-specific local variables.
+      destDir: ${outDir}/${os}-${arch}              # String interpolation.
+      #commitSha: $(shell 'git log -format=%H -n 1') # Eval shell command
+      commitSha: ${git.log.last.sha}
+    steps:
+      - action: fs:remove
+        # Precondition to run a job
+        # $(...) are expressions, for maths and func calls.
+        when: $(exists(destDir))
+        params:
+          path: ${destDir}
+      - action: go:build
+        # Display a message for build step to report progress.
+        message: 'Building for ${os}/${arch}...'
+        params:
+          package: ${pkgPath}
+          output: ${destDir}
+          target:
+            os: ${os}
+            arch: ${arch}
+          override:
+            'main.version': ${version}
+            'main.commit': ${destDir}
+
+  watch:
+    description: 'Start server with live-reload'
+    args:
+      # Task-specific parameters, similar to root 'params'
+      listen:
+        format: socket
+        description: 'Host and port to listen'
+        default: 127.0.0.1:8080
+    steps:
+      # All of this will be available as 'go:watch' plugin.
+      # This is just a vanilla demo.
+      - action: fs:watch
+        params:
+          path: './...'
+          debounce: 1s
+          # Ignore list already contains popular ignore entries.
+          ignore:
+            - '*.log'
+            - '.vscode'
+        # Actions can't directly change execution flow.
+        # Action can accept list of tasks to run on specific event with signals and slots.
+        hooks:
+          onChange:
+           steps:
+             - action: go:run
+               async: true # run program in parallel
+               params:
+                 package: ${pkgPath}
+                 args: [ '--listen', ${listen} ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,106 @@
+version: 2.0
+
+# Prefix for all functions and actions.
+namespace: go
+actions:
+    eval:
+      description: 'Eval Go expression'
+      params:
+        expression:
+          required: true
+      script:
+        type: yaegi
+        file: scripts/eval.go
+        entrypoint: RunEvalAction
+
+    watch:
+      description: 'Build and restart Go program on file change'
+      params:
+        package:
+          description: 'Path for package to build'
+          required: true
+        debounce:
+          description: 'Debounce time'
+          type: duration
+          default: 500ms
+        watch:
+          description: 'Path to watch for changes'
+          default: ./...
+        args:
+          description: 'Command line flags passed a program'
+          type: list<string>
+        ignore:
+          description: 'Ignore list for programs'
+          type: list<string>
+          default:
+            - '.vscode'
+            - '.idea'
+            - '*.log'
+      steps:
+        - action: fs:watch
+          params:
+            path: ${watch}
+            debounce: ${debounce}
+            ignore: ${ignore}
+          slots:
+            onChange:
+              - action: go:run
+                params:
+                  package: ${package}
+                  args: ${args}
+    lint:
+      params:
+        config:
+          required: false
+      steps:
+        - action: exec
+          workDir: ${project.workDir}
+          program: ${plugin.workDir}/golangci-lint
+          args:
+            - run
+            - '-c'
+            - ${config}
+
+templates:
+  unit:
+    params:
+      path:
+        required: true
+        position: 1
+      testify:
+        default: false
+    steps:
+      - action: template:eval
+        params:
+          destination: ${path}
+          source: templates/test.gotpl
+          vars:
+            packageName: $(dirname(path))
+            testify: ${testify}
+
+functions:
+  eval:
+    params:
+      expression:
+        type: string
+    returns:
+      type: any
+    script:
+      type: yaegi
+      eval: ${expression}
+  parseDate:
+    params:
+      format:
+        required: true
+      input:
+        required: true
+    returns:
+      type: date
+    script:
+      type: yaegi
+      eval: |
+        import (
+          "time"
+          "github.com/go-gilbert/sdk"
+        )
+        time.Parse(sdk.Params.String("format"), sdk.Params.String("input"))

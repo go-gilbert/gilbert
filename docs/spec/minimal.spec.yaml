@@ -1,0 +1,47 @@
+version: 2.0
+const:
+  outDir: ./target
+  pkgPath: ./cmd/gilbert
+
+params:
+  version:
+    default: '1.0.0'
+
+tasks:
+  build:
+#    description: 'Build production for multiple platforms'
+#    strategy:
+#      parallel: ${host.nproc}
+#      fail-fast: true
+#      matrix:
+#        os: [ windows, linux, darwin ]
+#        arch: [amd64, arm64, '386']
+#      vars:
+#        destDir: ${outDir}/${os}-${arch}
+      steps:
+        - action: go:build
+#          message: 'Building for ${os}/${arch}...'
+          params:
+            package: ${pkgPath}
+#            stripDebugInfo: true
+#            output: ${destDir}
+#            target:
+#              os: ${os}
+#              arch: ${arch}
+#            override:
+#              'main.version': ${version}
+
+  watch:
+    description: 'Start server with live-reload'
+    steps:
+      - action: fs:watch
+        params:
+          path: './...'
+          debounce: 1s
+        slots:
+          onChange:
+            async: true
+            steps:
+              - action: go:run
+                params:
+                  package: ${pkgPath}
