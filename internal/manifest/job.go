@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 )
 
 // ExecType represents job type
@@ -38,7 +38,7 @@ type ActionParams map[string]interface{}
 // Unmarshal extracts action params into provided structure
 func (p ActionParams) Unmarshal(dest interface{}) error {
 	if err := mapstructure.Decode(p, dest); err != nil {
-		return fmt.Errorf("failed to unmarshal action params, %s", err)
+		return fmt.Errorf("failed to unmarshal action params, %w", err)
 	}
 
 	return nil
