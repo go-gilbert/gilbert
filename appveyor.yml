@@ -9,7 +9,7 @@ clone_folder: c:\gilbert
 environment:
   GOPATH: c:\gopath
   DEPTESTBYPASS501: 1
-  GOVERSION: 1.12
+  GOVERSION: 1.23
 
 init:
   - git config --global core.autocrlf input

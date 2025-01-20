@@ -11,6 +11,7 @@ require (
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/rjeczalik/notify v0.9.2
 	github.com/stretchr/testify v1.3.0
 	github.com/urfave/cli v1.20.0
