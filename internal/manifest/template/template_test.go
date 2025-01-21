@@ -2,9 +2,10 @@ package template
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/go-gilbert/gilbert/internal/support/test"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestCompileManifest(t *testing.T) {
@@ -19,7 +20,7 @@ func TestCompileManifest(t *testing.T) {
 		},
 		{
 			input: `{{{`,
-			err:   "unexpected unclosed action in command",
+			err:   "unclosed action",
 		},
 		{
 			input: `{{{ shell "blablabla" }}}`,

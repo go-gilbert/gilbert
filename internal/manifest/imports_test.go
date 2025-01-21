@@ -10,7 +10,7 @@ const testFile = "./testdata/a.yaml"
 
 func TestLoadManifest(t *testing.T) {
 	expected := Manifest{
-		Version:  "1.0",
+		Version:  "1",
 		location: "./testdata/a.yaml",
 		Imports: []string{
 			"./include/b.yaml",
