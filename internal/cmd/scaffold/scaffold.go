@@ -2,15 +2,13 @@ package scaffold
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/go-gilbert/gilbert/internal/log"
 	"github.com/go-gilbert/gilbert/internal/manifest"
-
+	"github.com/goccy/go-yaml"
 	"github.com/urfave/cli"
-	"gopkg.in/yaml.v2"
 )
 
 var boilerplate = manifest.Manifest{
@@ -55,22 +53,22 @@ var boilerplate = manifest.Manifest{
 func RunScaffoldManifest(_ *cli.Context) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("cannot get current working directory, %s", err)
+		return fmt.Errorf("cannot get current working directory, %w", err)
 	}
 
-	log.Default.Debugf("current working directory is '%s'", cwd)
+	log.Default.Debugf("current working directory is %q", cwd)
 	out, err := yaml.Marshal(boilerplate)
 	if err != nil {
 		return fmt.Errorf("cannot create YAML file: %s", err)
 	}
 
 	destFile := filepath.Join(cwd, manifest.FileName)
-	err = ioutil.WriteFile(filepath.Join(cwd, manifest.FileName), out, 0655)
+	err = os.WriteFile(filepath.Join(cwd, manifest.FileName), out, 0655)
 	if err != nil {
-		return fmt.Errorf("failed to write '%s': %s", destFile, err)
+		return fmt.Errorf("failed to write '%q: %w", destFile, err)
 	}
 
-	log.Default.Successf("File '%s' successfully created", destFile)
+	log.Default.Successf("File %q successfully created", destFile)
 	log.Default.Info("Use 'gilbert run build' to build the project")
 	return nil
 }
