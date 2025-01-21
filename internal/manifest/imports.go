@@ -2,7 +2,7 @@ package manifest
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 )
@@ -103,7 +103,7 @@ func (t *importTree) buildImportsTree(n *importNode) error {
 	for _, importFile := range n.manifest.Imports {
 		// Join path since import path based on parent file location
 		filePath := filepath.Join(n.path, importFile)
-		data, err := ioutil.ReadFile(filePath)
+		data, err := os.ReadFile(filePath)
 		if err != nil {
 			return fmt.Errorf(errImportMsg, importFile, n.manifest.location, err)
 		}
