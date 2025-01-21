@@ -1,0 +1,49 @@
+#
+# Pull request check workflow
+#
+# Runs linter and tests on source branch to check code quality.
+#
+# see: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+#
+
+name: Check Pull Request
+on:
+  pull_request:
+    paths:
+      - '.github/**'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'pkg/**'
+      - 'go.mod'
+      - 'go.sum'
+env:
+  GOLANGCI_LINT_VERSION: "v1.61.0"
+  GO_VERSION: "^1.23.0"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6.2.0
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+  test:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
+      - run: go test ./...
+      - run: go build ./...

@@ -3,7 +3,7 @@ package profile
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -17,7 +17,7 @@ type packagesFile struct {
 
 func getCoverProfile(t *testing.T) gocovutil.Packages {
 	var out packagesFile
-	data, err := ioutil.ReadFile(filepath.Join(".", "testdata", "cover.json"))
+	data, err := os.ReadFile(filepath.Join(".", "testdata", "cover.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

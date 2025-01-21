@@ -10,7 +10,7 @@ func (v Vars) Append(newVars Vars) (out Vars) {
 	}
 
 	out = v.Clone()
-	if newVars == nil || len(newVars) == 0 {
+	if len(newVars) == 0 {
 		return out
 	}
 
@@ -28,7 +28,7 @@ func (v Vars) AppendNew(newVars Vars) (out Vars) {
 	}
 
 	out = v.Clone()
-	if newVars == nil || len(newVars) == 0 {
+	if len(newVars) == 0 {
 		return out
 	}
 
