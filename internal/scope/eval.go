@@ -4,20 +4,23 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
-// CommandEvaluator represents command runner and wraps shell calls
-type CommandEvaluator interface {
-	// Call executes a shell command
-	Call(string) ([]byte, error)
-}
+var (
+	_ expr.CommandProcessor = (*scopeExprAdapter)(nil)
+	_ expr.ValueResolver    = (*scopeExprAdapter)(nil)
+)
 
-type shellEvaluator struct {
+// scopeExprAdapter implements CommandProcessor and ValueResolver for expression parser to operate on a scope.
+//
+// This is a workaround type until expression parsing and evaluation won't be split.
+type scopeExprAdapter struct {
 	ctx *Scope
 }
 
-func (e *shellEvaluator) prepareProcess(cmd string) (proc *exec.Cmd) {
+func (e scopeExprAdapter) prepareProcess(cmd string) (proc *exec.Cmd) {
 	proc = shell.PrepareCommand(cmd)
 	vars := shell.Environment(e.ctx.Variables)
 	proc.Dir = e.ctx.environment.ProjectDirectory
@@ -30,8 +33,7 @@ func (e *shellEvaluator) prepareProcess(cmd string) (proc *exec.Cmd) {
 	return proc
 }
 
-// Call executes a shell command
-func (e *shellEvaluator) Call(cmd string) (result []byte, err error) {
+func (e scopeExprAdapter) EvalCommand(cmd string) (result []byte, err error) {
 	proc := e.prepareProcess(cmd)
 
 	data, err := proc.CombinedOutput()
@@ -42,6 +44,18 @@ func (e *shellEvaluator) Call(cmd string) (result []byte, err error) {
 	return data, nil
 }
 
-func newShellCommandEvaluator(ctx *Scope) CommandEvaluator {
-	return &shellEvaluator{ctx: ctx}
+func (e scopeExprAdapter) GetValue(varName string) (string, bool) {
+	_, val, ok := e.ctx.Var(varName)
+	return val, ok
+}
+
+func (e scopeExprAdapter) evalContext() expr.EvalContext {
+	return expr.EvalContext{
+		CommandProcessor: e,
+		Values:           e,
+	}
+}
+
+func newScopeExprAdapter(ctx *Scope) scopeExprAdapter {
+	return scopeExprAdapter{ctx: ctx}
 }

@@ -118,7 +118,7 @@ func importProjectPlugins(ctx context.Context, m *manifest.Manifest, cwd string)
 		return nil
 	}
 
-	s := scope.CreateScope(cwd, m.Vars)
+	s := scope.CreateScope(m.Parser, cwd, m.Vars)
 	for _, uri := range m.Plugins {
 		expanded, err := s.ExpandVariables(uri)
 		if err != nil {

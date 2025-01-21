@@ -15,19 +15,19 @@ func TestCompileManifest(t *testing.T) {
 		err      string
 	}{
 		{
-			input:    `{{{ shell "echo foo,bar" | split "," | yaml }}}`,
+			input:    `{{ shell "echo foo,bar" | split "," | yaml }}`,
 			expected: `["foo","bar"]`,
 		},
 		{
-			input: `{{{`,
+			input: `{{`,
 			err:   "unclosed action",
 		},
 		{
-			input: `{{{ shell "blablabla" }}}`,
+			input: `{{ shell "blablabla" }}`,
 			err:   "returned error",
 		},
 		{
-			input:    `{{{ slice "foo" "bar" | yaml }}}`,
+			input:    `{{ slice "foo" "bar" | yaml }}`,
 			expected: `["foo","bar"]`,
 		},
 	}

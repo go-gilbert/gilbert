@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-gilbert/gilbert/internal/support/shell"
 	"strings"
 	"text/template"
+
+	"github.com/go-gilbert/gilbert/internal/support/shell"
 )
 
 const (
 	templateName   = "manifest"
-	leftDelimiter  = "{{{"
-	rightDelimiter = "}}}"
+	leftDelimiter  = "{{"
+	rightDelimiter = "}}"
 )
 
 var (
@@ -35,11 +36,11 @@ func splitStringOperator(delimiter string, str string) []string {
 	return strings.Split(strings.TrimSpace(str), delimiter)
 }
 
-func createSliceOperator(args ...interface{}) []interface{} {
+func createSliceOperator(args ...any) []any {
 	return args
 }
 
-func convertToYamlOperator(arg interface{}) interface{} {
+func convertToYamlOperator(arg any) any {
 	data, err := json.Marshal(arg)
 	if err != nil {
 		panic(err)
@@ -51,7 +52,7 @@ func evalShellOperator(cmd string) string {
 	proc := shell.PrepareCommand(cmd)
 	data, err := proc.CombinedOutput()
 	if err != nil {
-		msg := fmt.Sprintf(`command "%s" returned error (%s)`, proc.Args, err)
+		msg := fmt.Sprintf(`command %q returned error (%s)`, proc.Args, err)
 		if data != nil {
 			msg += "\n\n" + string(data)
 		}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/manifest/template"
 	"github.com/goccy/go-yaml"
 )
@@ -36,6 +37,11 @@ func LoadManifest(path string) (*Manifest, error) {
 		return nil, fmt.Errorf("failed to parse manifest file:\n  %w", err)
 	}
 
+	exprParser, err := expr.GetParser(m.Version)
+	if err != nil {
+		return nil, err
+	}
+
 	m.location = path
 
 	// Return as-is if no imports declared
@@ -50,6 +56,7 @@ func LoadManifest(path string) (*Manifest, error) {
 	}
 
 	result := tree.result()
+	result.Parser = exprParser
 	return &result, nil
 }
 

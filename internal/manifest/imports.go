@@ -113,15 +113,17 @@ func (t *importTree) buildImportsTree(n *importNode) error {
 			return fmt.Errorf(errImportMsg, importFile, n.manifest.location, err)
 		}
 
+		// TODO: check version and convert template expressions in template.
+
 		yml.location = filePath
 		node := importNodeFromManifest(yml)
 		node.parent = n
 		node.level = nextLevel
 
-		// Process child imports if has one at least
+		// Process child imports if there is at least one
 		if len(yml.Imports) > 0 {
 			if err = t.buildImportsTree(node); err != nil {
-				return fmt.Errorf("cannot resolve imports of '%s': %s", yml.location, err)
+				return fmt.Errorf("cannot resolve imports of '%s': %w", yml.location, err)
 			}
 		} else {
 			// If node has no children, mark as leaf

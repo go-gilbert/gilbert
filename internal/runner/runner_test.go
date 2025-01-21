@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
+	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/runner/job"
 	"github.com/go-gilbert/gilbert/internal/scope"
 	"github.com/go-gilbert/gilbert/internal/support/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type results struct {
@@ -21,6 +23,8 @@ type results struct {
 }
 
 func TestTaskRunner_Run(t *testing.T) {
+	defaultParser := expr.SpecV2Parser{}
+
 	cases := map[string]struct {
 		skip     bool
 		taskName string
@@ -97,7 +101,7 @@ func TestTaskRunner_Run(t *testing.T) {
 		"skip job if condition expression is bad": {
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
-				manifest.Job{ActionName: "testBadConditionHook", Condition: "{{bad}} condition"},
+				manifest.Job{ActionName: "testBadConditionHook", Condition: "${bad} condition"},
 			}}},
 			before: func(t *testing.T, _ *TaskRunner, hs *HandlerSet, r *results) {
 				_ = hs.HandleFunc("testBadConditionHook", func(*scope.Scope, manifest.ActionParams) (ActionHandler, error) {
@@ -111,7 +115,7 @@ func TestTaskRunner_Run(t *testing.T) {
 		"run job if expression returns OK result": {
 			taskName: "foo",
 			m: manifest.Manifest{Tasks: manifest.TaskSet{"foo": manifest.Task{
-				manifest.Job{ActionName: "testOKConditionHook", Condition: "echo {{msg}}", Vars: manifest.Vars{"msg": "hello"}},
+				manifest.Job{ActionName: "testOKConditionHook", Condition: "echo ${msg}", Vars: manifest.Vars{"msg": "hello"}},
 			}}},
 			before: func(t *testing.T, _ *TaskRunner, hs *HandlerSet, r *results) {
 				_ = hs.HandleFunc("testOKConditionHook", func(*scope.Scope, manifest.ActionParams) (ActionHandler, error) {
@@ -167,7 +171,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{
 				Mixins: manifest.Mixins{
 					"mx1": manifest.Mixin{
-						manifest.Job{Description: "start {{foo}}", ActionName: "testMixinExec1"},
+						manifest.Job{Description: "start ${foo}", ActionName: "testMixinExec1"},
 					},
 				},
 				Tasks: manifest.TaskSet{
@@ -222,7 +226,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			m: manifest.Manifest{
 				Mixins: manifest.Mixins{
 					"mx1": manifest.Mixin{
-						manifest.Job{Description: "bad {{expr}}", ActionName: testAction},
+						manifest.Job{Description: "bad ${expr}", ActionName: testAction},
 					},
 				},
 				Tasks: manifest.TaskSet{
@@ -253,7 +257,7 @@ func TestTaskRunner_Run(t *testing.T) {
 					},
 					"bar": manifest.Task{
 						manifest.Job{ActionName: testAction, Async: true},
-						manifest.Job{Description: "start {{foo}}", ActionName: "testSubTaskExec1"},
+						manifest.Job{Description: "start ${foo}", ActionName: "testSubTaskExec1"},
 					},
 				},
 			},
@@ -291,12 +295,16 @@ func TestTaskRunner_Run(t *testing.T) {
 		}
 
 		tc := c
-		t.Run("should "+name, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			r := &results{}
 			l := &test.Log{T: t}
 			handlers := NewHandlerSet(ActionHandlers{
 				testAction: newTestAction,
 			})
+
+			if tc.m.Parser == nil {
+				tc.m.Parser = defaultParser
+			}
 
 			tr := NewTaskRunner(Config{
 				Logger:   l,
@@ -309,10 +317,12 @@ func TestTaskRunner_Run(t *testing.T) {
 			}
 			err := tr.Run(tc.taskName, nil)
 			if tc.err != "" {
-				test.AssertErrorContains(t, err, tc.err)
-			} else {
-				assert.NoError(t, err)
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err)
+				return
 			}
+
+			require.NoError(t, err)
 			if c.after != nil {
 				c.after(t, tr, l, r)
 			}

@@ -1,10 +1,12 @@
 package scope
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
+	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 )
 
 // Scope contains a set of globals and variables related to specific job
@@ -14,12 +16,12 @@ type Scope struct {
 
 	// Variables are set of variables for specific job
 	Variables   manifest.Vars
-	processor   ExpressionProcessor
+	parser      expr.Parser
 	environment ProjectEnvironment
 }
 
 // CreateScope creates a new context
-func CreateScope(projectDirectory string, vars manifest.Vars) (c *Scope) {
+func CreateScope(parser expr.Parser, projectDirectory string, vars manifest.Vars) (c *Scope) {
 	c = &Scope{
 		Globals: manifest.Vars{
 			"PROJECT": projectDirectory,
@@ -29,7 +31,7 @@ func CreateScope(projectDirectory string, vars manifest.Vars) (c *Scope) {
 		Variables: vars,
 	}
 
-	c.processor = NewExpressionProcessor(c)
+	c.parser = parser
 	c.environment.ProjectDirectory = projectDirectory
 	return
 }
@@ -73,20 +75,30 @@ func (c *Scope) Var(varName string) (isLocal bool, out string, ok bool) {
 		out, ok = c.Globals[varName]
 	}
 
-	return
+	return isLocal, out, ok
 }
 
 // ExpandVariables expands an expression stored inside a passed string
 func (c *Scope) ExpandVariables(str string) (out string, err error) {
-	return c.processor.ReadString(str)
+	if c.parser == nil {
+		return "", errors.New("scope.ExpandVariables: missing expression parser")
+	}
+
+	ctx := newScopeExprAdapter(c).evalContext()
+	return c.parser.ReadString(ctx, str)
 }
 
 // Scan does the same as ExpandVariables but with multiple variables and updates the value in pointer with expanded value
 //
 // Useful for bulk mapping of struct fields
 func (c *Scope) Scan(vals ...*string) (err error) {
+	if c.parser == nil {
+		return errors.New("scope.Scan: missing expression parser")
+	}
+
+	ctx := newScopeExprAdapter(c).evalContext()
 	for _, ptr := range vals {
-		*ptr, err = c.processor.ReadString(*ptr)
+		*ptr, err = c.parser.ReadString(ctx, *ptr)
 		if err != nil {
 			return err
 		}
