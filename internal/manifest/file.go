@@ -1,5 +1,7 @@
 package manifest
 
+import "github.com/go-gilbert/gilbert/internal/manifest/expr"
+
 const (
 	// FileName is default manifest filename
 	FileName = "gilbert.yaml"
@@ -7,6 +9,9 @@ const (
 
 // Manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
+	// Parser contains template expressions parser for a particular language spec.
+	Parser expr.Parser
+
 	// Plugins is plugins import list
 	Plugins []string `yaml:"plugins,omitempty"`
 
@@ -37,7 +42,6 @@ func (m *Manifest) Location() string {
 // includeParent includes parent manifest into the current
 func (m *Manifest) includeParent(parent *Manifest) {
 	m.Vars = m.Vars.AppendNew(parent.Vars)
-
 	if len(parent.Mixins) > 0 {
 		if m.Mixins == nil {
 			m.Mixins = make(Mixins)

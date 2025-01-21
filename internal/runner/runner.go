@@ -182,7 +182,7 @@ func (t *TaskRunner) startJobAndWait(job manifest.Job, ctx *job.RunContext) erro
 
 // handleJob handles specified job
 func (t *TaskRunner) handleJob(j manifest.Job, ctx *job.RunContext) {
-	s := scope.CreateScope(t.CurrentDirectory, j.Vars).
+	s := scope.CreateScope(t.manifest.Parser, t.CurrentDirectory, j.Vars).
 		AppendGlobals(t.manifest.Vars).
 		AppendVariables(ctx.Vars())
 
@@ -244,7 +244,7 @@ func (t *TaskRunner) handleActionCall(ctx *job.RunContext, j manifest.Job, s *sc
 		ctx.Result(actionHandler.Cancel(ctx))
 	}()
 
-	// Call actionHandler and send result
+	// EvalCommand actionHandler and send result
 	err = actionHandler.Call(ctx, t)
 	ctx.Result(err)
 }

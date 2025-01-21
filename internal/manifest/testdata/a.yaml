@@ -1,4 +1,4 @@
-version: 1
+version: 2
 imports:
   - ./include/b.yaml
   - ./include/c.yaml
