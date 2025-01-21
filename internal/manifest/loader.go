@@ -2,12 +2,11 @@ package manifest
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/go-gilbert/gilbert/internal/manifest/template"
-
-	"gopkg.in/yaml.v2"
+	"github.com/goccy/go-yaml"
 )
 
 // UnmarshalManifest parses yaml contents into manifest structure
@@ -27,14 +26,14 @@ func UnmarshalManifest(data []byte) (m *Manifest, err error) {
 
 // LoadManifest loads manifest from specified path and it's imports
 func LoadManifest(path string) (*Manifest, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("manifest file not found at '%s'", path)
+		return nil, fmt.Errorf("manifest file not found at %q", path)
 	}
 
 	m, err := UnmarshalManifest(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse manifest file:\n  %v", err)
+		return nil, fmt.Errorf("failed to parse manifest file:\n  %w", err)
 	}
 
 	m.location = path
@@ -47,7 +46,7 @@ func LoadManifest(path string) (*Manifest, error) {
 	// Load imports
 	tree := newImportTree(m)
 	if err := tree.resolveImports(); err != nil {
-		return nil, fmt.Errorf("failed to resolve imports in manifest file - %s", err)
+		return nil, fmt.Errorf("failed to resolve imports in manifest file - %w", err)
 	}
 
 	result := tree.result()
