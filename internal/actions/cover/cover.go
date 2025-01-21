@@ -2,7 +2,6 @@ package cover
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
@@ -23,7 +22,7 @@ func NewAction(scope *scope.Scope, params manifest.ActionParams) (runner.ActionH
 		return nil, err
 	}
 
-	f, err := ioutil.TempFile(os.TempDir(), coverFilePattern)
+	f, err := os.CreateTemp(os.TempDir(), coverFilePattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create coverage temporary file: %s", err)
 	}

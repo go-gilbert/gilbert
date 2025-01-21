@@ -12,10 +12,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/runner"
 )
 
-func formatPluginActionName(pluginName, actionName string) string {
-	return pluginName + ":" + actionName
-}
-
 func registerPluginAction(pName, hName string, handler runner.HandlerFactory) error {
 	// TODO: rewrite this from scratch
 	panic("NOT IMPLEMENTED")

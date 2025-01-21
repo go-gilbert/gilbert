@@ -2,7 +2,6 @@ package html
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -32,7 +31,7 @@ func NewAction(scope *scope.Scope, params manifest.ActionParams) (h runner.Actio
 		handler.Packages = []string{defaultCoverTarget}
 	}
 
-	handler.coverFile, err = ioutil.TempFile(os.TempDir(), coverFilePattern)
+	handler.coverFile, err = os.CreateTemp(os.TempDir(), coverFilePattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create coverage temporary file: %w", err)
 	}
