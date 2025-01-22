@@ -8,6 +8,9 @@
 
 > Build toolchain and task runner for Go
 
+> [!IMPORTANT]
+> The project is in a process of heavy refactoring. Please see [the issue](https://github.com/go-gilbert/gilbert/issues/81).
+
 ## Features
 
 **Gilbert** is task runner that aims to provide declarative way to define and run tasks like in other projects like _Gradle_, _Maven_ and etc.
