@@ -2,6 +2,7 @@ package expr
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 
 	"github.com/expr-lang/expr"
@@ -13,6 +14,10 @@ import (
 type Range struct {
 	StartCol int
 	EndCol   int
+}
+
+func (r Range) Empty() bool {
+	return r.StartCol == r.EndCol && r.EndCol == 0
 }
 
 func NewRange(start, end int) Range {
@@ -198,7 +203,7 @@ func (ce CompositeExpression) String(ctx EvalContext) ([]byte, error) {
 	for _, e := range ce.Parts {
 		val, err := e.String(ctx)
 		if err != nil {
-			return nil, newNestedExprError(err, e.Range(), ce.Pos)
+			return nil, decorateExprError(err, ce.Range())
 		}
 
 		sb.Write(val)
@@ -231,7 +236,12 @@ func (se ShellExpression) Evaluable() bool {
 }
 
 func (se ShellExpression) Eval(ctx EvalContext) (any, error) {
-	return se.String(ctx)
+	r, err := se.String(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return string(r), nil
 }
 
 func (se ShellExpression) String(ctx EvalContext) ([]byte, error) {
@@ -240,7 +250,7 @@ func (se ShellExpression) String(ctx EvalContext) ([]byte, error) {
 	for _, e := range se.Parts {
 		val, err := e.String(ctx)
 		if err != nil {
-			return nil, newNestedExprError(err, e.Range(), se.Range())
+			return nil, decorateExprError(err, se.Range())
 		}
 
 		sb.Write(val)
@@ -254,4 +264,15 @@ func (se ShellExpression) String(ctx EvalContext) ([]byte, error) {
 
 	result = bytes.TrimSpace(result)
 	return result, nil
+}
+
+// decorateExprError adds parent range to an error it's an expression error.
+func decorateExprError(err error, r Range) error {
+	var e *ExpressionError
+	if !errors.As(err, &e) || r.Empty() {
+		return err
+	}
+
+	e.ParentRange = r
+	return e
 }
