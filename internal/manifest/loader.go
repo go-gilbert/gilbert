@@ -20,7 +20,7 @@ func UnmarshalManifest(data []byte) (m *Manifest, err error) {
 	m = &Manifest{}
 	if err := yaml.Unmarshal(parsed, m); err != nil {
 		// Return formatted error
-		return nil, fmt.Errorf("%s\n\n[Error in file]:\n%s", err, string(parsed))
+		return nil, fmt.Errorf("%s\n\n[ExpressionError in file]:\n%s", err, string(parsed))
 	}
 	return
 }

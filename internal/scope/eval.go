@@ -44,7 +44,7 @@ func (e scopeExprAdapter) EvalCommand(cmd string) (result []byte, err error) {
 	return data, nil
 }
 
-func (e scopeExprAdapter) GetValue(varName string) (string, bool) {
+func (e scopeExprAdapter) ValueByName(varName string) (string, bool) {
 	_, val, ok := e.ctx.Var(varName)
 	return val, ok
 }
@@ -52,7 +52,7 @@ func (e scopeExprAdapter) GetValue(varName string) (string, bool) {
 func (e scopeExprAdapter) evalContext() expr.EvalContext {
 	return expr.EvalContext{
 		CommandProcessor: e,
-		Values:           e,
+		Env:              e,
 	}
 }
 
