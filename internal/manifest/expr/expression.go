@@ -145,11 +145,6 @@ func (ee EvalExpression) Eval(ctx EvalContext) (any, error) {
 		return nil, newExprError(err, ee.Range())
 	}
 
-	cfg := ee.EvalConfig
-	if cfg == nil {
-		cfg = conf.CreateNew()
-	}
-
 	vals := ctx.Env.Values()
 	output, err := expr.Run(program, vals)
 	if err != nil {
