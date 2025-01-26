@@ -1,6 +1,6 @@
 package expr
 
-import "errors"
+import "strings"
 
 type token int
 
@@ -120,18 +120,18 @@ func Parse(str string) (Expression, error) {
 	return root, nil
 }
 
-func consumeToken(parent Range, str string, pos tokenPos) (Expression, error) {
+func consumeToken(parent Range, str string, pos tokenPos) (Expression, *ExpressionError) {
 	switch pos.token {
 	case tokenExprStart:
 		return consumeExprToken(parent, str, pos)
 	case tokenShellStart:
 		return consumeShellToken(parent, str, pos)
 	default:
-		return nil, errors.New("invalid token")
+		return nil, newNestedExprError(ErrBadToken, NewRange(pos.startPos, pos.endPos), parent)
 	}
 }
 
-func consumeExprToken(parent Range, str string, pos tokenPos) (Expression, error) {
+func consumeExprToken(parent Range, str string, pos tokenPos) (Expression, *ExpressionError) {
 	endPos := -1
 	for i := pos.endPos + 1; i < len(str); i++ {
 		if str[i] == '}' {
@@ -142,7 +142,7 @@ func consumeExprToken(parent Range, str string, pos tokenPos) (Expression, error
 
 	if endPos == -1 {
 		return nil, newNestedExprError(
-			UnterminatedExpressionErr,
+			ErrUnterminatedExpression,
 			NewRange(pos.startPos, len(str)-1),
 			parent,
 		)
@@ -152,16 +152,21 @@ func consumeExprToken(parent Range, str string, pos tokenPos) (Expression, error
 	content := str[pos.endPos+1 : endPos]
 	if content == "" {
 		return nil, newNestedExprError(
-			EmptyExpressionErr,
+			ErrEmptyExpression,
 			tokenRng,
 			parent,
 		)
 	}
 
-	return NewEvalExpression(tokenRng, content, nil)
+	exp, err := NewEvalExpression(tokenRng, content, nil)
+	if err != nil {
+		return nil, newNestedExprError(err, tokenRng, parent)
+	}
+
+	return exp, nil
 }
 
-func consumeShellToken(parent Range, str string, pos tokenPos) (Expression, error) {
+func consumeShellToken(parent Range, str string, pos tokenPos) (Expression, *ExpressionError) {
 	se := NewShellExpression(
 		NewRange(pos.startPos, parent.EndCol),
 		make([]Expression, 0, 1),
@@ -174,9 +179,7 @@ func consumeShellToken(parent Range, str string, pos tokenPos) (Expression, erro
 		tok := findOpenToken(str, start, ')')
 		if tok.token == tokenEmpty {
 			// Reached EOL
-			return nil, newNestedExprError(
-				UnterminatedExpressionErr, se.Pos, parent,
-			)
+			break
 		}
 
 		// Append leftovers
@@ -189,26 +192,39 @@ func consumeShellToken(parent Range, str string, pos tokenPos) (Expression, erro
 		case tokenExprStart:
 			childExpr, err := consumeExprToken(se.Pos, str, tok)
 			if err != nil {
+				// Lookup possible shell expression statement end to set correct nested ranges.
+				endPos := strings.IndexByte(str[tok.endPos:], ')')
+				if endPos == -1 {
+					return nil, err
+				}
+
+				err.ParentRange.EndCol = tok.endPos + endPos
+				if isUnterminatedErr(err) {
+					err.Range.EndCol = tok.endPos + endPos - 1
+				}
+
 				return nil, err
 			}
 
 			se.Parts = append(se.Parts, childExpr)
+			start = childExpr.Range().EndCol + 1
 		case tokenShellStart:
 			return nil, newNestedExprError(
-				errors.New("shell expression cannot contain another shell expression"),
+				ErrNestedShellExpression,
 				NewRange(tok.startPos, tok.endPos),
 				se.Pos,
 			)
 		case tokenEnd:
 			// Reached expression close
+			se.Pos.EndCol = tok.endPos
 			return se, nil
 		default:
-			return nil, errors.New("invalid token")
+			return nil, newExprError(ErrBadToken, NewRange(tok.startPos, tok.endPos))
 		}
 	}
 
 	return nil, newNestedExprError(
-		UnterminatedExpressionErr,
+		ErrUnterminatedExpression,
 		se.Pos,
 		parent,
 	)
