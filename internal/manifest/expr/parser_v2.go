@@ -95,7 +95,7 @@ func (p SpecV2Parser) expandVariable(ctx EvalContext, varName string) (val strin
 	}
 
 	// find the var in the scope
-	val, ok := ctx.Values.GetValue(varName)
+	val, ok := ctx.Env.ValueByName(varName)
 	if !ok {
 		err = fmt.Errorf("%q is not defined", varName)
 		return

@@ -23,9 +23,9 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "bar",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				valRes := exprmock.NewMockValueResolver(ctrl)
-				valRes.EXPECT().GetValue("foo").Return("bar", true)
+				valRes.EXPECT().ValueByName("foo").Return("bar", true)
 				return EvalContext{
-					Values: valRes,
+					Env: valRes,
 				}
 			},
 		},
@@ -34,10 +34,10 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "result is 2+2 = 4!",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				valRes := exprmock.NewMockValueResolver(ctrl)
-				valRes.EXPECT().GetValue("foo").Return("2+2", true)
-				valRes.EXPECT().GetValue("bar").Return("4", true)
+				valRes.EXPECT().ValueByName("foo").Return("2+2", true)
+				valRes.EXPECT().ValueByName("bar").Return("4", true)
 				return EvalContext{
-					Values: valRes,
+					Env: valRes,
 				}
 			},
 		},
@@ -46,7 +46,7 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "foo.go",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().Call("ls -la").Return([]byte("foo.go"), nil)
+				cmdProc.EXPECT().EvalCommand("ls -la").Return([]byte("foo.go"), nil)
 				return EvalContext{
 					CommandProcessor: cmdProc,
 				}
@@ -57,14 +57,14 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "result of command uname -sm is Linux aarch64",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().Call("custom command").Return([]byte("Linux aarch64"), nil)
+				cmdProc.EXPECT().EvalCommand("custom command").Return([]byte("Linux aarch64"), nil)
 
 				varRes := exprmock.NewMockValueResolver(ctrl)
-				varRes.EXPECT().GetValue("cmdname").Return("uname -sm", true)
+				varRes.EXPECT().ValueByName("cmdname").Return("uname -sm", true)
 
 				return EvalContext{
 					CommandProcessor: cmdProc,
-					Values:           varRes,
+					Env:              varRes,
 				}
 			},
 		},
@@ -73,10 +73,10 @@ func TestParser_ReadString(t *testing.T) {
 			expectErr: `"foo.bar" is not defined`,
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				valRes := exprmock.NewMockValueResolver(ctrl)
-				valRes.EXPECT().GetValue("foo.bar").Return("", false)
+				valRes.EXPECT().ValueByName("foo.bar").Return("", false)
 
 				return EvalContext{
-					Values: valRes,
+					Env: valRes,
 				}
 			},
 		},
@@ -93,14 +93,14 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "result of command uname -sm is Linux aarch64",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().Call("uname -sm").Return([]byte("Linux aarch64"), nil)
+				cmdProc.EXPECT().EvalCommand("uname -sm").Return([]byte("Linux aarch64"), nil)
 
 				varRes := exprmock.NewMockValueResolver(ctrl)
-				varRes.EXPECT().GetValue("cmdname").Return("uname -sm", true)
+				varRes.EXPECT().ValueByName("cmdname").Return("uname -sm", true)
 
 				return EvalContext{
 					CommandProcessor: cmdProc,
-					Values:           varRes,
+					Env:              varRes,
 				}
 			},
 		},

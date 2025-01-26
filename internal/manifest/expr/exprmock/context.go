@@ -39,7 +39,7 @@ func (m *MockCommandProcessor) EXPECT() *MockCommandProcessorMockRecorder {
 	return m.recorder
 }
 
-// Call mocks base method.
+// EvalCommand mocks base method.
 func (m *MockCommandProcessor) EvalCommand(command string) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EvalCommand", command)
@@ -48,8 +48,8 @@ func (m *MockCommandProcessor) EvalCommand(command string) ([]byte, error) {
 	return ret0, ret1
 }
 
-// Call indicates an expected call of Call.
-func (mr *MockCommandProcessorMockRecorder) Call(command any) *gomock.Call {
+// EvalCommand indicates an expected call of EvalCommand.
+func (mr *MockCommandProcessorMockRecorder) EvalCommand(command any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EvalCommand", reflect.TypeOf((*MockCommandProcessor)(nil).EvalCommand), command)
 }
@@ -78,17 +78,31 @@ func (m *MockValueResolver) EXPECT() *MockValueResolverMockRecorder {
 	return m.recorder
 }
 
-// GetValue mocks base method.
-func (m *MockValueResolver) GetValue(varName string) (string, bool) {
+// ValueByName mocks base method.
+func (m *MockValueResolver) ValueByName(varName string) (string, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetValue", varName)
+	ret := m.ctrl.Call(m, "ValueByName", varName)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
-// GetValue indicates an expected call of GetValue.
-func (mr *MockValueResolverMockRecorder) GetValue(varName any) *gomock.Call {
+// ValueByName indicates an expected call of ValueByName.
+func (mr *MockValueResolverMockRecorder) ValueByName(varName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValue", reflect.TypeOf((*MockValueResolver)(nil).GetValue), varName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValueByName", reflect.TypeOf((*MockValueResolver)(nil).ValueByName), varName)
+}
+
+// Values mocks base method.
+func (m *MockValueResolver) Values() any {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Env")
+	ret0, _ := ret[0].(any)
+	return ret0
+}
+
+// Values indicates an expected call of Values.
+func (mr *MockValueResolverMockRecorder) Values() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Env", reflect.TypeOf((*MockValueResolver)(nil).Values))
 }

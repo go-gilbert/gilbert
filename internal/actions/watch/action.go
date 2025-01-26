@@ -35,7 +35,7 @@ func (a *Action) Call(ctx *job.RunContext, r *runner.TaskRunner) error {
 		ctx.Log().Debug("watch: watcher removed")
 	}()
 
-	// Start file watcher
+	// StartCol file watcher
 	go func() {
 		interval := a.DebounceTime.ToDuration()
 		t := time.NewTimer(interval) // Debounce timer
