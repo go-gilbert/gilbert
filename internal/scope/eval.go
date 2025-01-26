@@ -49,6 +49,11 @@ func (e scopeExprAdapter) ValueByName(varName string) (string, bool) {
 	return val, ok
 }
 
+func (e scopeExprAdapter) Values() any {
+	// TODO: Will be replaced.
+	return e.ctx.Variables
+}
+
 func (e scopeExprAdapter) evalContext() expr.EvalContext {
 	return expr.EvalContext{
 		CommandProcessor: e,
