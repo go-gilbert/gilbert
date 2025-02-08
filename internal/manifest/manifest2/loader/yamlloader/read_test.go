@@ -9,11 +9,22 @@ import (
 )
 
 func TestRead(t *testing.T) {
-	result, diags, err := yamltree.ReadSource(context.TODO(), jobFileSchema, yamltree.Source{
+	ctx := newLoaderContext(context.TODO(), loaderContext{
+		fileDir: "testdata",
+	})
+
+	result, diags, err := yamltree.ReadSource(ctx, jobFileSchema, yamltree.Source{
 		FilePath: "testdata/test.yml",
 	})
 
 	require.NoError(t, err)
-	t.Log(diags)
-	t.Log(result)
+	if len(diags) != 0 {
+		t.Log("== Diagnostics ==")
+		for _, diag := range diags {
+			t.Log(diag)
+		}
+		t.Log("== END ==")
+	}
+
+	t.Logf("%#v", result)
 }

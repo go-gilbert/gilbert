@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
+	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"golang.org/x/exp/constraints"
 )
@@ -134,4 +135,20 @@ func (v stringVisitor) VisitItem(_ context.Context, fi FileInfo, node ast.Node) 
 			fmt.Errorf("value of type %s cannot be converted to a string", typ),
 		),
 	}
+}
+
+type unmarshalVisitor[T any] struct{}
+
+func (v unmarshalVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics) {
+	var dst T
+
+	err := yaml.NewDecoder(nil).DecodeFromNodeContext(ctx, node, &dst)
+	if err != nil {
+		// TODO: map yaml to diagnostics
+		return dst, parsetypes.Diagnostics{
+			newErrDiagnosticFromNode(fi.FileName, node, err),
+		}
+	}
+
+	return dst, nil
 }

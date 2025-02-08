@@ -30,6 +30,36 @@ func IsNullNode(n ast.Node) bool {
 	return n.Type() == ast.NullType
 }
 
+// GetNodeRange returns node document range
+func GetNodeRange(node ast.Node) (parsetypes.Range, parsetypes.OffsetRange) {
+	startTok := node.GetToken()
+	startPos := startTok.Position
+	rng := parsetypes.NewRange(
+		parsetypes.NewPosition(startPos.Line, startPos.Column),
+		parsetypes.NewPosition(startPos.Line, startPos.Column),
+	)
+
+	offset := parsetypes.OffsetRange{
+		Start: startPos.Offset,
+		End:   startPos.Offset,
+	}
+
+	switch n := node.(type) {
+	case *ast.StringNode,
+		*ast.IntegerNode,
+		*ast.FloatNode,
+		*ast.BoolNode:
+		strlen := len(startTok.Value)
+		rng.End.Column += strlen
+		offset.End += strlen
+		break
+	case *ast.LiteralNode:
+		rng, offset = getLiteralRange(n)
+	}
+
+	return rng, offset
+}
+
 type Source struct {
 	// FilePath is file name passed to decoders and provide correct diagnostic messages.
 	//

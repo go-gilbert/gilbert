@@ -3,6 +3,8 @@ package yamlloader
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 )
@@ -24,8 +26,18 @@ var jobFileSchema = Struct[yamlJobFile](
 			false,
 			List[string](
 				Transform[string](String(), func(ctx context.Context, s string) (string, error) {
-					// TODO: check & transform
-					return s, nil
+					c, err := getLoaderContext(ctx)
+					if err != nil {
+						return "", err
+					}
+
+					absPath := filepath.Clean(filepath.Join(c.fileDir, s))
+					_, err = os.Stat(absPath)
+					if err != nil {
+						return s, fmt.Errorf("cannot resolve import: %w", err)
+					}
+
+					return absPath, nil
 				}),
 			),
 			func(ctx context.Context, dst *yamlJobFile, val []string) error {

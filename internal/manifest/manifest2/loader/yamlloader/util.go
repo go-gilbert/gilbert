@@ -8,21 +8,13 @@ import (
 )
 
 func newErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
-	tok := node.GetToken()
-	startPos := tok.Prev.Position
-	endPos := tok.Position
+	rng, offset := yamltree.GetNodeRange(node)
 	return &parsetypes.Diagnostic{
 		Err:      err,
 		Severity: parsetypes.DiagnosticSeverityError,
 		FileName: fileName,
-		Range: parsetypes.NewRange(
-			parsetypes.NewPosition(startPos.Line, startPos.Column),
-			parsetypes.NewPosition(endPos.Line, endPos.Column),
-		),
-		Offset: parsetypes.OffsetRange{
-			Start: startPos.Offset,
-			End:   endPos.Offset,
-		},
+		Range:    rng,
+		Offset:   offset,
 	}
 }
 

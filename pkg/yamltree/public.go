@@ -61,6 +61,8 @@ func String(opts ...func(*stringVisitor)) ValueVisitor[string] {
 	return v
 }
 
+// Arrays:
+
 // List returns decoder for arrays.
 func List[T any](itemDec ValueVisitor[T]) ValueVisitor[[]T] {
 	return listVisitor[T]{
@@ -139,6 +141,18 @@ func Map[T any](dec ValueVisitor[T], opts ...func(*dictVisitor[T])) ValueVisitor
 	}
 
 	return dv
+}
+
+// Misc:
+
+// Reflect returns visitor that calls `yaml.Unmarshal` to unmarshal using reflection.
+func Reflect[T any]() ValueVisitor[T] {
+	return unmarshalVisitor[T]{}
+}
+
+// Any returns visitor which decodes unknown value using reflection.
+func Any() ValueVisitor[any] {
+	return unmarshalVisitor[any]{}
 }
 
 // Helpers:
