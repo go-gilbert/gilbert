@@ -1,12 +1,5 @@
 package manifest
 
-import (
-	"fmt"
-	"time"
-
-	"github.com/go-viper/mapstructure/v2"
-)
-
 // ExecType represents job type
 type ExecType uint8
 
@@ -23,26 +16,6 @@ const (
 	// ExecTask means that job should execute another task
 	ExecTask
 )
-
-// Period is job period in milliseconds
-type Period uint
-
-// ToDuration returns value in milliseconds for time.Duration
-func (d Period) ToDuration() time.Duration {
-	return time.Duration(d) * time.Millisecond
-}
-
-// ActionParams is action params container
-type ActionParams map[string]interface{}
-
-// Unmarshal extracts action params into provided structure
-func (p ActionParams) Unmarshal(dest interface{}) error {
-	if err := mapstructure.Decode(p, dest); err != nil {
-		return fmt.Errorf("failed to unmarshal action params, %w", err)
-	}
-
-	return nil
-}
 
 // Job represents a single step in task
 type Job struct {

@@ -1,0 +1,80 @@
+package yamltree
+
+import (
+	"context"
+	"errors"
+	"io"
+	"os"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
+	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/ast"
+)
+
+func intoDictNode(fi FileInfo, node ast.Node) (*ast.MappingNode, parsetypes.Diagnostics) {
+	mn, ok := node.(*ast.MappingNode)
+	if !ok {
+		return nil, parsetypes.Diagnostics{
+			newErrDiagnosticFromNode(
+				fi.FileName, node,
+				errors.New("node should be a dictionary"),
+			),
+		}
+	}
+
+	return mn, nil
+}
+
+// IsNullNode checks whether node type is null.
+func IsNullNode(n ast.Node) bool {
+	return n.Type() == ast.NullType
+}
+
+type Source struct {
+	// FilePath is file name passed to decoders and provide correct diagnostic messages.
+	//
+	// If Reader is nil - used to open a source file for read.
+	FilePath string
+
+	// Reader is source stream to read.
+	//
+	// When nil - reader attempts to read a file using provided FilePath.
+	Reader io.Reader
+}
+
+func (src Source) getReader() (io.Reader, error) {
+	if src.Reader != nil {
+		return src.Reader, nil
+	}
+
+	f, err := os.Open(src.FilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// ReadSource unmarshals and decodes YAML from stream.
+func ReadSource[T any](ctx context.Context, v ValueVisitor[T], src Source) (val T, diags parsetypes.Diagnostics, err error) {
+	r, err := src.getReader()
+	if err != nil {
+		return val, diags, err
+	}
+
+	if closer, ok := r.(io.Closer); ok {
+		defer closer.Close()
+	}
+
+	var node ast.Node
+	if err := yaml.NewDecoder(r).DecodeContext(ctx, &node); err != nil {
+		// TODO: map yaml errors to diagnostics
+		return val, diags, err
+	}
+
+	val, diags = v.VisitItem(ctx, FileInfo{
+		FileName: src.FilePath,
+	}, node)
+
+	return val, diags, nil
+}

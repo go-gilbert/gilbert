@@ -1,0 +1,5 @@
+version: 2
+include:
+  - foo
+  - bar
+baz: true
