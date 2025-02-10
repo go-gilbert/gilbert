@@ -55,15 +55,25 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node 
 
 type FieldVisitor[T any] interface {
 	IsRequired() bool
+	IsDeferred() bool
 	Validate(ctx context.Context, dst *T) error
 	VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node, dst *T) parsetypes.Diagnostics
 }
 
 type StructFieldVisitor[TObject, TProp any] struct {
 	required     bool
+	deferred     bool
 	valueVisitor ValueVisitor[TProp]
 	validator    func(ctx context.Context, dst *TObject) error
 	setValue     func(ctx context.Context, dst *TObject, val TProp) error
+}
+
+// Defer defers struct field decoding to the end.
+//
+// This allows to implement validation and mapping in cases when rest of object should be decoded before.
+func (fv *StructFieldVisitor[TObject, TProp]) Defer() *StructFieldVisitor[TObject, TProp] {
+	fv.deferred = true
+	return fv
 }
 
 // Required marks struct field as required.
@@ -78,10 +88,17 @@ func (fv *StructFieldVisitor[TObject, TProp]) Validation(fn func(context.Context
 	return fv
 }
 
+// IsDeferred implements FieldVisitor interface.
+func (fv *StructFieldVisitor[TObject, TProp]) IsDeferred() bool {
+	return fv.deferred
+}
+
+// IsRequired implements FieldVisitor interface.
 func (fv *StructFieldVisitor[TObject, TProp]) IsRequired() bool {
 	return fv.required
 }
 
+// Validate implements FieldVisitor interface.
 func (fv *StructFieldVisitor[TObject, TProp]) Validate(ctx context.Context, dst *TObject) error {
 	if fv.validator != nil {
 		return fv.validator(ctx, dst)
@@ -90,6 +107,7 @@ func (fv *StructFieldVisitor[TObject, TProp]) Validate(ctx context.Context, dst 
 	return nil
 }
 
+// VisitItem implements FieldVisitor interface.
 func (fv *StructFieldVisitor[TObject, TProp]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node, dst *TObject) parsetypes.Diagnostics {
 	if fv.setValue == nil {
 		panic("propertyVisitor: missing value setter")
@@ -105,6 +123,12 @@ func (fv *StructFieldVisitor[TObject, TProp]) VisitItem(ctx context.Context, opt
 	}
 
 	return diags
+}
+
+type deferredFieldEntry[T any] struct {
+	key     string
+	node    *ast.MappingValueNode
+	decoder FieldVisitor[T]
 }
 
 type ObjectVisitor[T any] struct {
@@ -133,6 +157,7 @@ func (v *ObjectVisitor[T]) Constructor(fn func(context.Context, *T) error) *Obje
 
 func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics) {
 	visitedFields := make(map[string]ast.Node, len(v.fields))
+	var deferredFields []deferredFieldEntry[T]
 
 	var (
 		out   T
@@ -182,8 +207,22 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 			continue
 		}
 
+		if fv.IsDeferred() {
+			deferredFields = append(deferredFields, deferredFieldEntry[T]{
+				key:     kn.Value,
+				node:    n,
+				decoder: fv,
+			})
+			continue
+		}
+
 		visitedFields[kn.Value] = n.Key
 		diags = append(diags, fv.VisitItem(ctx, opts, n.Value, &out)...)
+	}
+
+	for _, e := range deferredFields {
+		visitedFields[e.key] = e.node
+		diags = append(diags, e.decoder.VisitItem(ctx, opts, e.node.Value, &out)...)
 	}
 
 	for key, f := range v.fields {
