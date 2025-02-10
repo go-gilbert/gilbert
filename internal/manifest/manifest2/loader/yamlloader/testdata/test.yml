@@ -8,8 +8,19 @@ const:
 
 inputs:
   release:
-    type: boolean
+    type: bool
     default: false
+  timeout:
+    type: string
+    format: duration
+    default: 10s
+    binding:
+      env: JOB_TIMEOUT
+  items:
+    type: list
+    items:
+      type: string
+      format: date
 
 tasks:
   # Build builds application

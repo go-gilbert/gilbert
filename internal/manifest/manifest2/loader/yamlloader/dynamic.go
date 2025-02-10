@@ -19,10 +19,10 @@ type endPosition struct {
 	cursor parsetypes.Position
 }
 
-func (endPos endPosition) referenceLocation(fi yamltree.FileInfo, startTok *token.Token) *manifest2.ReferenceLocation {
+func (endPos endPosition) referenceLocation(opts *yamltree.TraverseOpts, startTok *token.Token) *manifest2.ReferenceLocation {
 	startPos := startTok.Position
 	return &manifest2.ReferenceLocation{
-		FileName: fi.FileName,
+		FileName: opts.FileName,
 		Range: parsetypes.NewRange(
 			parsetypes.NewPosition(startPos.Line, startPos.Column),
 			endPos.cursor,
@@ -38,24 +38,24 @@ var _ yamltree.ValueVisitor[*binder.LazyValue] = (*lazyValueVisitor)(nil)
 
 type lazyValueVisitor struct{}
 
-func (_ lazyValueVisitor) VisitItem(_ context.Context, fi yamltree.FileInfo, node ast.Node) (*binder.LazyValue, parsetypes.Diagnostics) {
-	v, endPos, diags := lazyFromNode(fi, node)
+func (_ lazyValueVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*binder.LazyValue, parsetypes.Diagnostics) {
+	v, endPos, diags := lazyFromNode(opts, node)
 	if !diags.HasError() {
 		v = v.Optimize()
 	}
 
 	return &binder.LazyValue{
-		Location: endPos.referenceLocation(fi, node.GetToken()),
+		Location: endPos.referenceLocation(opts, node.GetToken()),
 		Value:    v,
 	}, diags
 }
 
-func lazyFromNode(fi yamltree.FileInfo, node ast.Node) (rawNode binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
+func lazyFromNode(opts *yamltree.TraverseOpts, node ast.Node) (rawNode binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
 	endPos = endPositionFromToken(node.GetToken())
 	if yamltree.IsNullNode(node) {
 		diags = append(diags,
 			newErrDiagnosticFromNode(
-				fi.FileName, node,
+				opts.FileName, node,
 				errors.New("list item cannot be empty"),
 			),
 		)
@@ -64,13 +64,13 @@ func lazyFromNode(fi yamltree.FileInfo, node ast.Node) (rawNode binder.AnySpec, 
 
 	switch n := node.(type) {
 	case *ast.SequenceNode:
-		return lazyFromSeqNode(fi, n)
+		return lazyFromSeqNode(opts, n)
 	case *ast.MappingNode:
-		return lazyFromDictNode(fi, n)
+		return lazyFromDictNode(opts, n)
 	case *ast.StringNode:
-		return lazyFromStringNode(fi, n)
+		return lazyFromStringNode(opts, n)
 	case *ast.LiteralNode:
-		return lazyFromLiteralNode(fi, n)
+		return lazyFromLiteralNode(opts, n)
 	case *ast.IntegerNode:
 		rawNode, endPos = lazyFromVal(n.Token, n.Value)
 	case *ast.FloatNode:
@@ -79,16 +79,16 @@ func lazyFromNode(fi yamltree.FileInfo, node ast.Node) (rawNode binder.AnySpec, 
 		rawNode, endPos = lazyFromVal(n.Token, n.Value)
 	default:
 		diags = append(diags,
-			newErrDiagnosticFromNode(fi.FileName, node, fmt.Errorf("unsupported node: %s", node.Type())),
+			newErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("unsupported node: %s", node.Type())),
 		)
 	}
 
 	return rawNode, endPos, diags
 }
 
-func lazyFromLiteralNode(fi yamltree.FileInfo, node *ast.LiteralNode) (binder.AnySpec, endPosition, parsetypes.Diagnostics) {
-	return lazyFromStringNode(fi, node.Value)
-	//s, diags := lazyFromStringNode(fi, node.Value)
+func lazyFromLiteralNode(opts *yamltree.TraverseOpts, node *ast.LiteralNode) (binder.AnySpec, endPosition, parsetypes.Diagnostics) {
+	return lazyFromStringNode(opts, node.Value)
+	//s, diags := lazyFromStringNode(opts, node.Value)
 	//if diags.HasError() {
 	//	return s, diags
 	//}
@@ -98,7 +98,7 @@ func lazyFromLiteralNode(fi yamltree.FileInfo, node *ast.LiteralNode) (binder.An
 	//}
 }
 
-func lazyFromStringNode(fi yamltree.FileInfo, node *ast.StringNode) (binder.AnySpec, endPosition, parsetypes.Diagnostics) {
+func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (binder.AnySpec, endPosition, parsetypes.Diagnostics) {
 	endPos := endPositionFromToken(node.Token)
 	if node.Value == "" {
 		return binder.AnySpec{
@@ -112,7 +112,7 @@ func lazyFromStringNode(fi yamltree.FileInfo, node *ast.StringNode) (binder.AnyS
 	e, err := expr.Parse(node.Value)
 	if err != nil {
 		return binder.AnySpec{}, endPos, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(fi.FileName, node, err),
+			newErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 
@@ -130,7 +130,7 @@ func lazyFromStringNode(fi yamltree.FileInfo, node *ast.StringNode) (binder.AnyS
 		BindingSpec: &binder.BindingSpec{
 			Expr: e,
 			Location: manifest2.ReferenceLocation{
-				FileName: fi.FileName,
+				FileName: opts.FileName,
 				Range:    parsetypes.NewRange(pos, pos.Add(0, len(node.Value)-1)),
 				Offset:   parsetypes.NewOffsetRange(node.Token.Position.Offset, len(node.Token.Origin)-1),
 			},
@@ -148,7 +148,7 @@ func lazyFromVal(tok *token.Token, val any) (binder.AnySpec, endPosition) {
 	}, endPos
 }
 
-func lazyFromSeqNode(fi yamltree.FileInfo, node *ast.SequenceNode) (sp binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
+func lazyFromSeqNode(opts *yamltree.TraverseOpts, node *ast.SequenceNode) (sp binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
 	endPos = endPositionFromToken(node.GetToken())
 	arr := binder.ArraySpec{
 		DynamicItems: make([]binder.AnySpec, len(node.Values)),
@@ -159,14 +159,14 @@ func lazyFromSeqNode(fi yamltree.FileInfo, node *ast.SequenceNode) (sp binder.An
 			endPos = endPositionFromToken(n.GetToken())
 			diags = append(diags,
 				newErrDiagnosticFromNode(
-					fi.FileName, n,
+					opts.FileName, n,
 					errors.New("list item cannot be empty"),
 				),
 			)
 			continue
 		}
 
-		elemSpec, lastPos, elemDiags := lazyFromNode(fi, n)
+		elemSpec, lastPos, elemDiags := lazyFromNode(opts, n)
 		endPos = lastPos
 		diags = append(diags, elemDiags...)
 		arr.DynamicItems[i] = elemSpec
@@ -181,7 +181,7 @@ func lazyFromSeqNode(fi yamltree.FileInfo, node *ast.SequenceNode) (sp binder.An
 	}, endPos, diags
 }
 
-func lazyFromDictNode(fi yamltree.FileInfo, node *ast.MappingNode) (sp binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
+func lazyFromDictNode(opts *yamltree.TraverseOpts, node *ast.MappingNode) (sp binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
 	sp.ObjectSpec = &binder.ObjectSpec{
 		Values: make(map[string]binder.AnySpec, len(node.Values)),
 	}
@@ -193,7 +193,7 @@ func lazyFromDictNode(fi yamltree.FileInfo, node *ast.MappingNode) (sp binder.An
 		if !ok {
 			diags = append(diags,
 				newErrDiagnosticFromMapping(
-					fi, n,
+					opts, n,
 					errors.New("key should be a string"),
 				),
 			)
@@ -203,7 +203,7 @@ func lazyFromDictNode(fi yamltree.FileInfo, node *ast.MappingNode) (sp binder.An
 		if yamltree.IsNullNode(n) {
 			diags = append(diags,
 				newErrDiagnosticFromMapping(
-					fi, n,
+					opts, n,
 					errors.New("node cannot be null"),
 				),
 			)
@@ -211,7 +211,7 @@ func lazyFromDictNode(fi yamltree.FileInfo, node *ast.MappingNode) (sp binder.An
 		}
 
 		key := kn.Value
-		nodeSpec, tokEndPos, nodeDiags := lazyFromNode(fi, n)
+		nodeSpec, tokEndPos, nodeDiags := lazyFromNode(opts, n)
 		diags = append(diags, nodeDiags...)
 		sp.ObjectSpec.Values[key] = nodeSpec
 		endPos = tokEndPos

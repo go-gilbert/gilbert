@@ -13,7 +13,7 @@ type listVisitor[T any] struct {
 	listItemVisitor ValueVisitor[T]
 }
 
-func (v listVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) ([]T, parsetypes.Diagnostics) {
+func (v listVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) ([]T, parsetypes.Diagnostics) {
 	if IsNullNode(node) {
 		return nil, nil
 	}
@@ -23,7 +23,7 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Nod
 	if !ok {
 		diags = append(diags,
 			newErrDiagnosticFromNode(
-				fi.FileName, node,
+				opts.FileName, node,
 				errors.New("node should be a list"),
 			),
 		)
@@ -35,13 +35,14 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Nod
 		if IsNullNode(n) {
 			diags = append(diags,
 				newErrDiagnosticFromNode(
-					fi.FileName, n,
+					opts.FileName, n,
 					errors.New("list item cannot be empty"),
 				),
 			)
+			continue
 		}
 
-		r, d := v.listItemVisitor.VisitItem(ctx, fi, n)
+		r, d := v.listItemVisitor.VisitItem(ctx, opts, n)
 		diags = append(diags, d...)
 
 		if !d.HasError() {
@@ -54,56 +55,102 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Nod
 
 type FieldVisitor[T any] interface {
 	IsRequired() bool
-	VisitItem(ctx context.Context, fi FileInfo, node ast.Node, dst *T) parsetypes.Diagnostics
+	Validate(ctx context.Context, dst *T) error
+	VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node, dst *T) parsetypes.Diagnostics
 }
 
-type fieldVisitor[TObject, TProp any] struct {
+type StructFieldVisitor[TObject, TProp any] struct {
 	required     bool
 	valueVisitor ValueVisitor[TProp]
+	validator    func(ctx context.Context, dst *TObject) error
 	setValue     func(ctx context.Context, dst *TObject, val TProp) error
 }
 
-func (fv *fieldVisitor[TObject, TProp]) IsRequired() bool {
+// Required marks struct field as required.
+func (fv *StructFieldVisitor[TObject, TProp]) Required() *StructFieldVisitor[TObject, TProp] {
+	fv.required = true
+	return fv
+}
+
+// Validation adds validation func to be called to validate field value.
+func (fv *StructFieldVisitor[TObject, TProp]) Validation(fn func(context.Context, *TObject) error) *StructFieldVisitor[TObject, TProp] {
+	fv.validator = fn
+	return fv
+}
+
+func (fv *StructFieldVisitor[TObject, TProp]) IsRequired() bool {
 	return fv.required
 }
 
-func (fv *fieldVisitor[TObject, TProp]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node, dst *TObject) parsetypes.Diagnostics {
+func (fv *StructFieldVisitor[TObject, TProp]) Validate(ctx context.Context, dst *TObject) error {
+	if fv.validator != nil {
+		return fv.validator(ctx, dst)
+	}
+
+	return nil
+}
+
+func (fv *StructFieldVisitor[TObject, TProp]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node, dst *TObject) parsetypes.Diagnostics {
 	if fv.setValue == nil {
 		panic("propertyVisitor: missing value setter")
 	}
 
-	v, diags := fv.valueVisitor.VisitItem(ctx, fi, node)
+	v, diags := fv.valueVisitor.VisitItem(ctx, opts, node)
 	if diags.HasError() {
 		return diags
 	}
 
 	if err := fv.setValue(ctx, dst, v); err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(fi.FileName, node, err))
+		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
 	}
 
 	return diags
 }
 
-type objectVisitor[T any] struct {
-	strict      bool
+type ObjectVisitor[T any] struct {
 	fields      map[string]FieldVisitor[T]
-	validatorFn func(ctx context.Context, v T) error
+	constructor func(context.Context, *T) error
 }
 
-func (v *objectVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics) {
-	visitedFields := make(map[string]struct{}, len(v.fields))
+func (v *ObjectVisitor[T]) handleUnknownField(opts *TraverseOpts, key string, node *ast.MappingValueNode) *parsetypes.Diagnostic {
+	if opts.UnknownFieldAction == UnknownFieldActionIgnore {
+		return nil
+	}
+
+	diag := newErrDiagnosticFromMapping(opts, node, fmt.Errorf("unknown field %q", key))
+	if opts.UnknownFieldAction == UnknownFieldActionWarn {
+		diag.Severity = parsetypes.DiagnosticSeverityWarning
+	}
+
+	return diag
+}
+
+// Constructor initializes object using given func before mapping.
+func (v *ObjectVisitor[T]) Constructor(fn func(context.Context, *T) error) *ObjectVisitor[T] {
+	v.constructor = fn
+	return v
+}
+
+func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics) {
+	visitedFields := make(map[string]ast.Node, len(v.fields))
 
 	var (
 		out   T
 		diags parsetypes.Diagnostics
 	)
 
+	if v.constructor != nil {
+		if err := v.constructor(ctx, &out); err != nil {
+			diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
+		}
+	}
+
 	mn, ok := node.(*ast.MappingNode)
 	if !ok {
 		diags = append(diags,
 			newErrDiagnosticFromNode(
-				fi.FileName, node,
-				errors.New("node should be an object"),
+				opts.FileName, node,
+				fmt.Errorf("node should be an object, got %s", node.Type()),
 			),
 		)
 
@@ -114,7 +161,7 @@ func (v *objectVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.
 		kn, ok := n.Key.(*ast.StringNode)
 		if !ok {
 			diags = append(diags,
-				newErrDiagnosticFromMapping(fi, n, errors.New("key should be a string")),
+				newErrDiagnosticFromMapping(opts, n, errors.New("key should be a string")),
 			)
 
 			continue
@@ -122,93 +169,107 @@ func (v *objectVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.
 
 		fv, ok := v.fields[kn.Value]
 		if !ok {
-			if v.strict {
-				diags = append(diags,
-					newErrDiagnosticFromMapping(fi, n, fmt.Errorf("unknown field %q", kn.Value)),
-				)
+			if diag := v.handleUnknownField(opts, kn.Value, n); diag != nil {
+				diags = append(diags, diag)
 			}
 			continue
 		}
 
 		if _, ok := visitedFields[kn.Value]; ok {
 			diags = append(diags,
-				newErrDiagnosticFromMapping(fi, n, fmt.Errorf("duplicate field %q", kn.Value)),
+				newErrDiagnosticFromMapping(opts, n, fmt.Errorf("duplicate field %q", kn.Value)),
 			)
 			continue
 		}
 
-		visitedFields[kn.Value] = struct{}{}
-		diags = append(diags, fv.VisitItem(ctx, fi, n.Value, &out)...)
+		visitedFields[kn.Value] = n.Key
+		diags = append(diags, fv.VisitItem(ctx, opts, n.Value, &out)...)
 	}
 
 	for key, f := range v.fields {
-		if !f.IsRequired() {
+		n, ok := visitedFields[key]
+		if !ok {
+			if f.IsRequired() {
+				diags = append(diags,
+					newErrDiagnosticFromNode(
+						opts.FileName, node,
+						fmt.Errorf("field %q is required", key),
+					),
+				)
+			}
 			continue
 		}
 
-		if _, ok := visitedFields[key]; !ok {
+		if err := f.Validate(ctx, &out); err != nil {
+			if !ok {
+				// Show error in parent if child is undefined.
+				n = node
+			}
 			diags = append(diags,
-				newErrDiagnosticFromNode(
-					fi.FileName, node,
-					fmt.Errorf("field %q is required", key),
-				),
+				newErrDiagnosticFromNode(opts.FileName, n, err),
 			)
-		}
-	}
-
-	if v.validatorFn != nil && !diags.HasError() {
-		if err := v.validatorFn(ctx, out); err != nil {
-			diags = append(diags, newErrDiagnosticFromNode(fi.FileName, node, err))
 		}
 	}
 
 	return out, diags
 }
 
-type dictVisitor[T any] struct {
+type MapVisitor[T any] struct {
 	handler              ValueVisitor[T]
 	keyTransformer       func(context.Context, string) (string, error)
 	duplicateItemHandler func(context.Context, string, T) error
 }
 
-func (v *dictVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (map[string]T, parsetypes.Diagnostics) {
+// OnDuplicateKey sets a function to format duplicate key errors.
+func (v *MapVisitor[T]) OnDuplicateKey(fn func(context.Context, string, T) error) *MapVisitor[T] {
+	v.duplicateItemHandler = fn
+	return v
+}
+
+// TransformKey set a function to transform dictionary keys during mapping.
+func (v *MapVisitor[T]) TransformKey(fn func(context.Context, string) (string, error)) *MapVisitor[T] {
+	v.keyTransformer = fn
+	return v
+}
+
+func (v *MapVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (map[string]T, parsetypes.Diagnostics) {
 	if IsNullNode(node) {
 		return nil, nil
 	}
 
-	mn, diags := intoDictNode(fi, node)
+	mn, diags := intoDictNode(opts, node)
 	if len(diags) != 0 {
 		return nil, diags
 	}
 
 	m := make(map[string]T, len(mn.Values))
-	diags = v.readNode(ctx, fi, mn, m)
+	diags = v.readNode(ctx, opts, mn, m)
 	return m, diags
 }
 
-func (v *dictVisitor[T]) VisitNodeInto(ctx context.Context, fi FileInfo, node ast.Node, dst map[string]T) parsetypes.Diagnostics {
+func (v *MapVisitor[T]) VisitNodeInto(ctx context.Context, opts *TraverseOpts, node ast.Node, dst map[string]T) parsetypes.Diagnostics {
 	if node.Type() == ast.NullType {
 		return nil
 	}
 
-	mn, diags := intoDictNode(fi, node)
+	mn, diags := intoDictNode(opts, node)
 	if len(diags) != 0 {
 		return diags
 	}
 
-	return v.readNode(ctx, fi, mn, dst)
+	return v.readNode(ctx, opts, mn, dst)
 }
 
-func (v *dictVisitor[T]) readNode(ctx context.Context, fi FileInfo, node *ast.MappingNode, dst map[string]T) parsetypes.Diagnostics {
+func (v *MapVisitor[T]) readNode(ctx context.Context, opts *TraverseOpts, node *ast.MappingNode, dst map[string]T) parsetypes.Diagnostics {
 	var diags parsetypes.Diagnostics
 	for _, n := range node.Values {
-		diags = append(diags, v.visitChild(ctx, fi, n, dst)...)
+		diags = append(diags, v.visitChild(ctx, opts, n, dst)...)
 	}
 
 	return diags
 }
 
-func (v *dictVisitor[T]) formatDuplicateError(ctx context.Context, key string, prev T) error {
+func (v *MapVisitor[T]) formatDuplicateError(ctx context.Context, key string, prev T) error {
 	if v.duplicateItemHandler != nil {
 		return v.duplicateItemHandler(ctx, key, prev)
 	}
@@ -216,7 +277,7 @@ func (v *dictVisitor[T]) formatDuplicateError(ctx context.Context, key string, p
 	return fmt.Errorf("duplicate key %q", key)
 }
 
-func (v *dictVisitor[T]) formatKey(ctx context.Context, k string) (string, error) {
+func (v *MapVisitor[T]) formatKey(ctx context.Context, k string) (string, error) {
 	if v.keyTransformer == nil {
 		return k, nil
 	}
@@ -224,13 +285,13 @@ func (v *dictVisitor[T]) formatKey(ctx context.Context, k string) (string, error
 	return v.keyTransformer(ctx, k)
 }
 
-func (v *dictVisitor[T]) visitChild(ctx context.Context, fi FileInfo, n *ast.MappingValueNode, dst map[string]T) parsetypes.Diagnostics {
+func (v *MapVisitor[T]) visitChild(ctx context.Context, opts *TraverseOpts, n *ast.MappingValueNode, dst map[string]T) parsetypes.Diagnostics {
 	var diags parsetypes.Diagnostics
 	kn, ok := n.Key.(*ast.StringNode)
 	if !ok {
 		diags = append(diags,
 			newErrDiagnosticFromNode(
-				fi.FileName, kn,
+				opts.FileName, kn,
 				errors.New("key should be a string"),
 			),
 		)
@@ -239,19 +300,19 @@ func (v *dictVisitor[T]) visitChild(ctx context.Context, fi FileInfo, n *ast.Map
 
 	key, err := v.formatKey(ctx, kn.Value)
 	if err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(fi.FileName, kn, err))
+		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, kn, err))
 		return diags
 	}
 
 	if prev, ok := dst[key]; ok {
 		diags = append(diags,
 			newErrDiagnosticFromNode(
-				fi.FileName, kn, v.formatDuplicateError(ctx, key, prev)),
+				opts.FileName, kn, v.formatDuplicateError(ctx, key, prev)),
 		)
 		return diags
 	}
 
-	item, d := v.handler.VisitItem(ctx, fi, n)
+	item, d := v.handler.VisitItem(ctx, opts, n.Value)
 	diags = append(diags, d...)
 	if !d.HasError() {
 		dst[key] = item

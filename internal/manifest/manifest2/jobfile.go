@@ -33,7 +33,7 @@ type Task struct {
 	Location    ReferenceLocation
 	Name        string
 	Description string
-	Inputs      map[string]InputSchema
+	Inputs      map[string]InputDefinition
 	Jobs        []Job
 }
 
@@ -41,13 +41,13 @@ type Mixin struct {
 	Location    ReferenceLocation
 	Name        string
 	Description string
-	Inputs      map[string]InputSchema
+	Inputs      map[string]InputDefinition
 	Jobs        []Job
 }
 
 type JobFile struct {
 	Consts map[string]any
-	Inputs map[string]InputSchema
+	Inputs map[string]InputDefinition
 	Tasks  map[string]*Task
 	Mixins map[string]*Mixin
 }

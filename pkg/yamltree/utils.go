@@ -11,7 +11,7 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
-func intoDictNode(fi FileInfo, node ast.Node) (*ast.MappingNode, parsetypes.Diagnostics) {
+func intoDictNode(fi *TraverseOpts, node ast.Node) (*ast.MappingNode, parsetypes.Diagnostics) {
 	mn, ok := node.(*ast.MappingNode)
 	if !ok {
 		return nil, parsetypes.Diagnostics{
@@ -85,8 +85,17 @@ func (src Source) getReader() (io.Reader, error) {
 	return f, nil
 }
 
+type ReadOption = func(*TraverseOpts)
+
+// WithUnknownFieldAction option configures unknown struct fields handling strategy.
+func WithUnknownFieldAction(action UnknownFieldAction) ReadOption {
+	return func(opts *TraverseOpts) {
+		opts.UnknownFieldAction = action
+	}
+}
+
 // ReadSource unmarshals and decodes YAML from stream.
-func ReadSource[T any](ctx context.Context, v ValueVisitor[T], src Source) (val T, diags parsetypes.Diagnostics, err error) {
+func ReadSource[T any](ctx context.Context, v ValueVisitor[T], src Source, opts ...ReadOption) (val T, diags parsetypes.Diagnostics, err error) {
 	r, err := src.getReader()
 	if err != nil {
 		return val, diags, err
@@ -102,9 +111,12 @@ func ReadSource[T any](ctx context.Context, v ValueVisitor[T], src Source) (val 
 		return val, diags, err
 	}
 
-	val, diags = v.VisitItem(ctx, FileInfo{
-		FileName: src.FilePath,
-	}, node)
+	cfg := &TraverseOpts{FileName: src.FilePath}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	val, diags = v.VisitItem(ctx, cfg, node)
 
 	return val, diags, nil
 }

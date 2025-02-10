@@ -3,6 +3,8 @@ package yamlloader
 import (
 	"context"
 	"errors"
+
+	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
 )
 
 type fileInfoCtxKeyType struct{}
@@ -10,7 +12,9 @@ type fileInfoCtxKeyType struct{}
 var fileInfoCtxKey = fileInfoCtxKeyType{}
 
 type loaderContext struct {
-	fileDir string
+	filePath string
+	fileDir  string
+	dst      *manifest2.JobFile
 }
 
 func newLoaderContext(parentCtx context.Context, info loaderContext) context.Context {

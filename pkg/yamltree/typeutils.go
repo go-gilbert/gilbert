@@ -12,11 +12,11 @@ import (
 )
 
 type visitorFunc[T any] struct {
-	fn func(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics)
+	fn func(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics)
 }
 
-func (v visitorFunc[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics) {
-	return v.fn(ctx, fi, node)
+func (v visitorFunc[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics) {
+	return v.fn(ctx, opts, node)
 }
 
 type validatorVisitor[T any] struct {
@@ -24,14 +24,14 @@ type validatorVisitor[T any] struct {
 	validationFn func(ctx context.Context, t T) error
 }
 
-func (v validatorVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics) {
-	val, diags := v.decoder.VisitItem(ctx, fi, node)
+func (v validatorVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics) {
+	val, diags := v.decoder.VisitItem(ctx, opts, node)
 	if diags.HasError() {
 		return val, diags
 	}
 
 	if err := v.validationFn(ctx, val); err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(fi.FileName, node, err))
+		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
 	}
 
 	return val, diags
@@ -39,7 +39,7 @@ func (v validatorVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node as
 
 type durationVisitor struct{}
 
-func (_ durationVisitor) VisitItem(_ context.Context, fi FileInfo, node ast.Node) (time.Duration, parsetypes.Diagnostics) {
+func (_ durationVisitor) VisitItem(_ context.Context, fi *TraverseOpts, node ast.Node) (time.Duration, parsetypes.Diagnostics) {
 	if IsNullNode(node) {
 		return 0, parsetypes.Diagnostics{
 			newErrDiagnosticFromNode(fi.FileName, node,
@@ -80,7 +80,7 @@ type optionalVisitor[T any] struct {
 	defaultValue T
 }
 
-func (v optionalVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics) {
+func (v optionalVisitor[T]) VisitItem(ctx context.Context, fi *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics) {
 	if node == nil || node.Type() == ast.NullType {
 		return v.defaultValue, nil
 	}
@@ -88,21 +88,20 @@ func (v optionalVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast
 	return v.valueVisitor.VisitItem(ctx, fi, node)
 }
 
-type transformVisitor[T any] struct {
-	dec         ValueVisitor[T]
-	transformFn func(ctx context.Context, t T) (T, error)
+type transformVisitor[TIn, TOut any] struct {
+	dec         ValueVisitor[TIn]
+	transformFn func(context.Context, ast.Node, TIn) (TOut, error)
 }
 
-func (tv transformVisitor[T]) VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics) {
-	v, diags := tv.dec.VisitItem(ctx, fi, node)
+func (tv transformVisitor[TIn, TOut]) VisitItem(ctx context.Context, fi *TraverseOpts, node ast.Node) (out TOut, diags parsetypes.Diagnostics) {
+	val, diags := tv.dec.VisitItem(ctx, fi, node)
 	if diags.HasError() {
-		return v, diags
+		return out, diags
 	}
 
-	next, err := tv.transformFn(ctx, v)
+	next, err := tv.transformFn(ctx, node, val)
 	if err != nil {
 		diags = append(diags, newErrDiagnosticFromNode(fi.FileName, node, err))
-		return v, diags
 	}
 
 	return next, diags

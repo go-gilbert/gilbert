@@ -10,16 +10,23 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type FileInfo struct {
-	FileName string
+type UnknownFieldAction uint8
+
+const (
+	UnknownFieldActionIgnore UnknownFieldAction = iota
+	UnknownFieldActionWarn
+	UnknownFieldActionError
+)
+
+type TraverseOpts struct {
+	FileName           string
+	UnknownFieldAction UnknownFieldAction
 }
 
 // ValueVisitor is interface to implement decoding YAML AST nodes to values.
 type ValueVisitor[T any] interface {
-	VisitItem(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics)
+	VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics)
 }
-
-// Primitives:
 
 // UInt returns decoder for unsigned integer values.
 func UInt[T constraints.Unsigned]() ValueVisitor[T] {
@@ -61,7 +68,12 @@ func String(opts ...func(*stringVisitor)) ValueVisitor[string] {
 	return v
 }
 
-// Arrays:
+// Pointer wraps a decoder to return a pointer to a value.
+func Pointer[T any](dec ValueVisitor[T]) ValueVisitor[*T] {
+	return ptrVisitor[T]{
+		visitor: dec,
+	}
+}
 
 // List returns decoder for arrays.
 func List[T any](itemDec ValueVisitor[T]) ValueVisitor[[]T] {
@@ -70,77 +82,31 @@ func List[T any](itemDec ValueVisitor[T]) ValueVisitor[[]T] {
 	}
 }
 
-// Structs:
-
 // Field returns decoder for object property.
 //
 // Meant to be passed inside Struct().
 func Field[TObject, TProp any](
-	isRequired bool,
 	propDec ValueVisitor[TProp],
 	setValue func(ctx context.Context, dst *TObject, val TProp) error,
-) FieldVisitor[TObject] {
-	return &fieldVisitor[TObject, TProp]{
+) *StructFieldVisitor[TObject, TProp] {
+	return &StructFieldVisitor[TObject, TProp]{
 		valueVisitor: propDec,
-		required:     isRequired,
 		setValue:     setValue,
 	}
 }
 
-// WithStructStrictFields option enables error report on unknown object property.
-func WithStructStrictFields[T any]() func(opts *objectVisitor[T]) {
-	return func(o *objectVisitor[T]) {
-		o.strict = true
-	}
-}
-
-// WithStructValidation validates object produced by Struct().
-func WithStructValidation[T any](fn func(ctx context.Context, v T) error) func(opts *objectVisitor[T]) {
-	return func(o *objectVisitor[T]) {
-		o.validatorFn = fn
-	}
-}
-
 // Struct returns decoder to read YAML dictionary into structs.
-func Struct[T any](props map[string]FieldVisitor[T], opts ...func(*objectVisitor[T])) ValueVisitor[T] {
-	v := &objectVisitor[T]{
+func Struct[T any](props map[string]FieldVisitor[T]) *ObjectVisitor[T] {
+	return &ObjectVisitor[T]{
 		fields: props,
-	}
-
-	for _, opt := range opts {
-		opt(v)
-	}
-
-	return v
-}
-
-// Maps:
-
-// WithMapKeyTransformer transforms and/or validates map keys before insertion.
-func WithMapKeyTransformer[T any](fn func(context.Context, string) (string, error)) func(*dictVisitor[T]) {
-	return func(o *dictVisitor[T]) {
-		o.keyTransformer = fn
-	}
-}
-
-// WithMapDuplicateKeyHandler allows to override customise duplicate map key error.
-func WithMapDuplicateKeyHandler[T any](fn func(context.Context, string, T) error) func(*dictVisitor[T]) {
-	return func(o *dictVisitor[T]) {
-		o.duplicateItemHandler = fn
 	}
 }
 
 // Map returns decoder to read YAML dictionaries into maps.
-func Map[T any](dec ValueVisitor[T], opts ...func(*dictVisitor[T])) ValueVisitor[map[string]T] {
-	dv := &dictVisitor[T]{
+func Map[T any](dec ValueVisitor[T]) *MapVisitor[T] {
+	return &MapVisitor[T]{
 		handler: dec,
 	}
-
-	for _, opt := range opts {
-		opt(dv)
-	}
-
-	return dv
 }
 
 // Misc:
@@ -171,7 +137,7 @@ func Duration() ValueVisitor[time.Duration] {
 }
 
 // VisitFunc returns visitor from a callback function.
-func VisitFunc[T any](fn func(ctx context.Context, fi FileInfo, node ast.Node) (T, parsetypes.Diagnostics)) ValueVisitor[T] {
+func VisitFunc[T any](fn func(ctx context.Context, fi *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics)) ValueVisitor[T] {
 	return visitorFunc[T]{
 		fn: fn,
 	}
@@ -186,8 +152,8 @@ func Validate[T any](dec ValueVisitor[T], validator func(ctx context.Context, t 
 }
 
 // Transform wraps decoder with value transformer.
-func Transform[T any](dec ValueVisitor[T], fn func(context.Context, T) (T, error)) ValueVisitor[T] {
-	return transformVisitor[T]{
+func Transform[TIn, TOut any](dec ValueVisitor[TIn], fn func(context.Context, ast.Node, TIn) (TOut, error)) ValueVisitor[TOut] {
+	return transformVisitor[TIn, TOut]{
 		dec:         dec,
 		transformFn: fn,
 	}
