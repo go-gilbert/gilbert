@@ -189,6 +189,11 @@ func Transform[TIn, TOut any](dec ValueVisitor[TIn], fn func(context.Context, as
 	}
 }
 
+// AnyScalar returns a visitor that accepts any scalar values (string, number, etc.).
+func AnyScalar() ValueVisitor[any] {
+	return scalarVisitor{}
+}
+
 // IntoAny converts result into any.
 func IntoAny[T any](v ValueVisitor[T]) ValueVisitor[any] {
 	return castToAnyVisitor[T]{

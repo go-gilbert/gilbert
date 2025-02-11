@@ -1,12 +1,6 @@
 package yamlloader
 
 import (
-	"context"
-	"fmt"
-	"net/url"
-	"time"
-
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
@@ -53,42 +47,24 @@ func endPositionFromToken(tok *token.Token) endPosition {
 	}
 }
 
-func getDefaultValueVisitor(_ context.Context, node ast.Node, def *manifest2.InputDefinition) (ValueVisitor[any], error) {
-	if !IsPrimitiveNode(node) {
-		return nil, fmt.Errorf("expected %s but got %s", def.Type, node.Type())
-	}
-
-	switch def.Type {
-	case manifest2.ValueTypeString:
-		return Transform[string, any](String(), func(ctx context.Context, node ast.Node, s string) (any, error) {
-			switch def.Format {
-			case manifest2.ValueFormatDate:
-				format := def.DateFormat
-				if format == "" {
-					format = manifest2.DefaultDateFormat
-				}
-
-				return time.Parse(format, s)
-			case manifest2.ValueFormatDuration:
-				return time.ParseDuration(s)
-			case manifest2.ValueFormatURL:
-				_, err := url.Parse(s)
-				return s, err
-			}
-			return s, nil
-		}), nil
-	case manifest2.ValueTypeInt:
-		return Transform[int64, any](Int[int64](), intoAny), nil
-	case manifest2.ValueTypeFloat:
-		return Transform[float64, any](Float[float64](), intoAny), nil
-	case manifest2.ValueTypeBool:
-		return Transform[bool, any](Bool(), intoAny), nil
-	default:
-		// TODO: support lists?
-		return nil, fmt.Errorf("default values for input of type %q are not supported", def.Type)
+// copyMapUniq does the same as maps.Copy but avoids duplicates.
+func copyMapUniq[V any](dst, src map[string]V) {
+	for k, v := range src {
+		if _, ok := dst[k]; !ok {
+			dst[k] = v
+		}
 	}
 }
 
-func intoAny[T any](_ context.Context, _ ast.Node, s T) (any, error) {
-	return s, nil
+// copyMapWithCheck copies src into dst and calls error function on collision.
+func copyMapWithCheck[T any](dst, src map[string]T, errFunc func(k string) error) error {
+	for k, v := range src {
+		if _, ok := dst[k]; ok {
+			return errFunc(k)
+		}
+
+		dst[k] = v
+	}
+
+	return nil
 }

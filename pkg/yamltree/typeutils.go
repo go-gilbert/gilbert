@@ -120,6 +120,19 @@ func (v castToAnyVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, 
 	return any(res), diags
 }
 
+type scalarVisitor struct{}
+
+func (v scalarVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (any, parsetypes.Diagnostics) {
+	sn, ok := node.(ast.ScalarNode)
+	if !ok {
+		return nil, parsetypes.Diagnostics{
+			newErrDiagnosticFromNode(opts.FileName, node, errors.New("expected scalar value")),
+		}
+	}
+
+	return sn.GetValue(), nil
+}
+
 type funcVisitor[T any] struct {
 	selectFunc func(context.Context, ast.Node) (ValueVisitor[T], error)
 }
