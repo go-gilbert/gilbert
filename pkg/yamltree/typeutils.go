@@ -106,3 +106,30 @@ func (tv transformVisitor[TIn, TOut]) VisitItem(ctx context.Context, fi *Travers
 
 	return next, diags
 }
+
+type castToAnyVisitor[T any] struct {
+	visitor ValueVisitor[T]
+}
+
+func (v castToAnyVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (any, parsetypes.Diagnostics) {
+	res, diags := v.visitor.VisitItem(ctx, opts, node)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return any(res), diags
+}
+
+type funcVisitor[T any] struct {
+	selectFunc func(context.Context, ast.Node) (ValueVisitor[T], error)
+}
+
+func (fv funcVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (out T, diags parsetypes.Diagnostics) {
+	v, err := fv.selectFunc(ctx, node)
+	if err != nil {
+		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
+		return out, diags
+	}
+
+	return v.VisitItem(ctx, opts, node)
+}

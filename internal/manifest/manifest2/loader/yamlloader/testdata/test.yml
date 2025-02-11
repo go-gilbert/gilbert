@@ -1,21 +1,26 @@
 version: 2
-include:
-  - foo
-  - bar/baz
+#include:
+#  - foo
+#  - bar/baz
+#  - test.yml
 
 const:
   foo: bar
 
 inputs:
   release:
-    type: bool
     default: false
+    type: bool
   timeout:
     type: string
     format: duration
     default: 10s
     binding:
       env: JOB_TIMEOUT
+  timestamp:
+    type: string
+    format: date
+    dateFormat: "Mon, 02 Jan 2006 15:04:05 MST"
   items:
     type: list
     items:

@@ -86,19 +86,49 @@ func List[T any](itemDec ValueVisitor[T]) ValueVisitor[[]T] {
 //
 // Meant to be passed inside Struct().
 func Field[TObject, TProp any](
+	name string,
 	propDec ValueVisitor[TProp],
 	setValue func(ctx context.Context, dst *TObject, val TProp) error,
 ) *StructFieldVisitor[TObject, TProp] {
 	return &StructFieldVisitor[TObject, TProp]{
+		name:         name,
 		valueVisitor: propDec,
 		setValue:     setValue,
 	}
 }
 
+// FieldFunc returns helper to select field decoder based on context.
+//
+// Meant to be passed inside Struct().
+func FieldFunc[TObject, TProp any](
+	name string,
+	selector func(ctx context.Context, node ast.Node, dst *TObject) (ValueVisitor[TProp], error),
+	setValue func(ctx context.Context, dst *TObject, val TProp) error,
+) *FuncFieldVisitor[TObject, TProp] {
+	return &FuncFieldVisitor[TObject, TProp]{
+		name:        name,
+		visitorFunc: selector,
+		setValue:    setValue,
+	}
+}
+
 // Struct returns decoder to read YAML dictionary into structs.
-func Struct[T any](props map[string]FieldVisitor[T]) *ObjectVisitor[T] {
+//
+// Note: field declaration order corresponds to field mapping order.
+func Struct[T any](fields ...FieldVisitor[T]) *ObjectVisitor[T] {
+	fieldsByName := make(map[string]struct{}, len(fields))
+	for _, field := range fields {
+		name := field.Name()
+		if _, ok := fieldsByName[name]; ok {
+			panic("duplicate field name: " + name)
+		}
+
+		fieldsByName[field.Name()] = struct{}{}
+	}
+
 	return &ObjectVisitor[T]{
-		fields: props,
+		fields:       fields,
+		fieldsByName: fieldsByName,
 	}
 }
 
@@ -156,5 +186,19 @@ func Transform[TIn, TOut any](dec ValueVisitor[TIn], fn func(context.Context, as
 	return transformVisitor[TIn, TOut]{
 		dec:         dec,
 		transformFn: fn,
+	}
+}
+
+// IntoAny converts result into any.
+func IntoAny[T any](v ValueVisitor[T]) ValueVisitor[any] {
+	return castToAnyVisitor[T]{
+		visitor: v,
+	}
+}
+
+// Selector allows dynamic decoder selector using provided function.
+func Selector[T any](selector func(context.Context, ast.Node) (ValueVisitor[T], error)) ValueVisitor[T] {
+	return funcVisitor[T]{
+		selectFunc: selector,
 	}
 }

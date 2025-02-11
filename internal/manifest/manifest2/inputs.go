@@ -1,6 +1,14 @@
 package manifest2
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
+
+// DefaultDateFormat is standard date format for inputs.
+//
+// Default is RFC3339 which is aka ISO8601.
+const DefaultDateFormat = time.RFC3339
 
 type ValueType uint8
 
@@ -40,7 +48,6 @@ const (
 	ValueFormatInvalid ValueFormat = iota
 	ValueFormatDuration
 	ValueFormatDate
-	ValueFormatRegex
 	ValueFormatURL
 )
 
@@ -50,8 +57,6 @@ func (v ValueFormat) String() string {
 		return "duration"
 	case ValueFormatDate:
 		return "date"
-	case ValueFormatRegex:
-		return "regex"
 	case ValueFormatURL:
 		return "url"
 	}
@@ -65,8 +70,6 @@ func ParseValueFormat(format string) (ValueFormat, error) {
 		return ValueFormatDuration, nil
 	case "date":
 		return ValueFormatDate, nil
-	case "regex":
-		return ValueFormatRegex, nil
 	case "url":
 		return ValueFormatURL, nil
 	}
@@ -92,9 +95,10 @@ func ParseValueType(value string) (ValueType, error) {
 }
 
 type TypeSchema struct {
-	Type   ValueType
-	Format ValueFormat
-	Items  *TypeSchema
+	Type       ValueType
+	Format     ValueFormat
+	DateFormat string
+	Items      *TypeSchema
 }
 
 type InputBinding struct {
@@ -103,5 +107,6 @@ type InputBinding struct {
 
 type InputDefinition struct {
 	TypeSchema
-	Binding *InputBinding
+	Binding      *InputBinding
+	DefaultValue any
 }

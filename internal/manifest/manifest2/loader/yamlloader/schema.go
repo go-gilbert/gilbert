@@ -15,8 +15,8 @@ import (
 
 const supportedManifestVersion = "2"
 
-var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefinition]{
-	"type": Field(
+var inputDefinitionSchema = Struct[manifest2.InputDefinition](
+	Field("type",
 		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueType, error) {
 			return manifest2.ParseValueType(s)
 		}),
@@ -25,7 +25,7 @@ var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefini
 			return nil
 		},
 	).Required(),
-	"format": Field(
+	Field("format",
 		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueFormat, error) {
 			return manifest2.ParseValueFormat(s)
 		}),
@@ -40,11 +40,31 @@ var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefini
 
 		return nil
 	}),
-	"binding": Field(
+	Field("dateFormat", String(),
+		func(_ context.Context, dst *manifest2.InputDefinition, s string) error {
+			if dst.Format != manifest2.ValueFormatDate {
+				return errors.New(`"dateFormat" can specified only when "format" field set to "date"`)
+			}
+
+			if s == "" {
+				return errors.New("empty format")
+			}
+
+			dst.DateFormat = s
+			return nil
+		},
+	),
+	FieldFunc("default",
+		getDefaultValueVisitor,
+		func(ctx context.Context, dst *manifest2.InputDefinition, val any) error {
+			dst.DefaultValue = val
+			return nil
+		},
+	),
+	Field("binding",
 		Pointer[manifest2.InputBinding](
-			Struct(map[string]FieldVisitor[manifest2.InputBinding]{
-				"env": Field(
-					String(),
+			Struct[manifest2.InputBinding](
+				Field("env", String(),
 					func(ctx context.Context, dst *manifest2.InputBinding, val string) error {
 						val = strings.TrimSpace(val)
 						if val == "" {
@@ -54,17 +74,17 @@ var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefini
 						return nil
 					},
 				),
-			}),
+			),
 		),
 		func(_ context.Context, dst *manifest2.InputDefinition, val *manifest2.InputBinding) error {
 			dst.Binding = val
 			return nil
 		},
 	),
-	"items": Field(
+	Field("items",
 		Pointer[manifest2.TypeSchema](
-			Struct(map[string]FieldVisitor[manifest2.TypeSchema]{
-				"type": Field(
+			Struct[manifest2.TypeSchema](
+				Field("type",
 					Transform(String(), func(_ context.Context, _ ast.Node, v string) (manifest2.ValueType, error) {
 						return manifest2.ParseValueType(v)
 					}),
@@ -77,7 +97,7 @@ var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefini
 						return nil
 					},
 				),
-				"format": Field(
+				Field("format",
 					Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueFormat, error) {
 						return manifest2.ParseValueFormat(s)
 					}),
@@ -92,7 +112,7 @@ var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefini
 
 					return nil
 				}),
-			}),
+			),
 		),
 		func(_ context.Context, dst *manifest2.InputDefinition, val *manifest2.TypeSchema) error {
 			if dst.Type == manifest2.ValueTypeList {
@@ -107,67 +127,66 @@ var inputDefinitionSchema = Struct(map[string]FieldVisitor[manifest2.InputDefini
 			return nil
 		},
 	),
-})
+)
 
-var jobFileSchema = Struct(
-	map[string]FieldVisitor[yamlJobFile]{
-		"version": Field[yamlJobFile, string](
-			String(),
-			func(ctx context.Context, dst *yamlJobFile, val string) error {
-				if val != supportedManifestVersion {
-					return fmt.Errorf("unsupported version: %s", val)
+var jobFileSchema = Struct[yamlJobFile](
+	Field[yamlJobFile, string]("version",
+		String(),
+		func(ctx context.Context, dst *yamlJobFile, val string) error {
+			if val != supportedManifestVersion {
+				return fmt.Errorf("unsupported version: %s", val)
+			}
+
+			dst.version = val
+			return nil
+		},
+	).Required(),
+	Field[yamlJobFile, []string]("include",
+		List(
+			Transform(String(), func(ctx context.Context, _ ast.Node, s string) (string, error) {
+				if s == "" {
+					return "", errors.New("empty path")
 				}
 
-				dst.version = val
-				return nil
-			},
-		).Required(),
-		"include": Field[yamlJobFile, []string](
-			List(
-				Transform(String(), func(ctx context.Context, _ ast.Node, s string) (string, error) {
-					if s == "" {
-						return "", errors.New("empty path")
-					}
-
-					c, err := getLoaderContext(ctx)
-					if err != nil {
-						return "", err
-					}
-
-					absPath := filepath.Clean(filepath.Join(c.fileDir, s))
-					if absPath == c.filePath {
-						return "", errors.New("recursive include")
-					}
-
-					st, err := os.Stat(absPath)
-					if err != nil {
-						return "", fmt.Errorf("cannot resolve include: %w", err)
-					}
-
-					if st.IsDir() {
-						return "", fmt.Errorf("invalid include path: %s is dir", absPath)
-					}
-
-					return absPath, nil
-				}),
-			),
-			func(ctx context.Context, dst *yamlJobFile, val []string) error {
-				dst.includes = val
-				return nil
-			},
-		),
-		"inputs": Field[yamlJobFile, map[string]manifest2.InputDefinition](
-			Map[manifest2.InputDefinition](inputDefinitionSchema),
-			func(_ context.Context, dst *yamlJobFile, val map[string]manifest2.InputDefinition) error {
-				if len(val) == 0 {
-					return errors.New("empty inputs list")
+				c, err := getLoaderContext(ctx)
+				if err != nil {
+					return "", err
 				}
 
-				dst.result.Inputs = val
-				return nil
-			},
+				absPath := filepath.Clean(filepath.Join(c.fileDir, s))
+				if absPath == c.filePath {
+					return "", errors.New("recursive include")
+				}
+
+				// drop non-existing imports.
+				st, err := os.Stat(absPath)
+				if err != nil {
+					return "", fmt.Errorf("cannot resolve include: %w", err)
+				}
+
+				if st.IsDir() {
+					return "", fmt.Errorf("invalid include path: %s is dir", absPath)
+				}
+
+				return absPath, nil
+			}),
 		),
-	},
+		func(ctx context.Context, dst *yamlJobFile, val []string) error {
+			dst.includes = val
+			return nil
+		},
+	),
+	Field[yamlJobFile, map[string]manifest2.InputDefinition]("inputs",
+		Map[manifest2.InputDefinition](inputDefinitionSchema),
+		func(_ context.Context, dst *yamlJobFile, val map[string]manifest2.InputDefinition) error {
+			if len(val) == 0 {
+				return errors.New("empty inputs list")
+			}
+
+			dst.result.Inputs = val
+			return nil
+		},
+	),
 ).Constructor(func(ctx context.Context, y *yamlJobFile) error {
 	c, err := getLoaderContext(ctx)
 	if err != nil {

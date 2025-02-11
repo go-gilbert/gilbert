@@ -53,87 +53,11 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node 
 	return out, diags
 }
 
-type FieldVisitor[T any] interface {
-	IsRequired() bool
-	IsDeferred() bool
-	Validate(ctx context.Context, dst *T) error
-	VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node, dst *T) parsetypes.Diagnostics
-}
-
-type StructFieldVisitor[TObject, TProp any] struct {
-	required     bool
-	deferred     bool
-	valueVisitor ValueVisitor[TProp]
-	validator    func(ctx context.Context, dst *TObject) error
-	setValue     func(ctx context.Context, dst *TObject, val TProp) error
-}
-
-// Defer defers struct field decoding to the end.
-//
-// This allows to implement validation and mapping in cases when rest of object should be decoded before.
-func (fv *StructFieldVisitor[TObject, TProp]) Defer() *StructFieldVisitor[TObject, TProp] {
-	fv.deferred = true
-	return fv
-}
-
-// Required marks struct field as required.
-func (fv *StructFieldVisitor[TObject, TProp]) Required() *StructFieldVisitor[TObject, TProp] {
-	fv.required = true
-	return fv
-}
-
-// Validation adds validation func to be called to validate field value.
-func (fv *StructFieldVisitor[TObject, TProp]) Validation(fn func(context.Context, *TObject) error) *StructFieldVisitor[TObject, TProp] {
-	fv.validator = fn
-	return fv
-}
-
-// IsDeferred implements FieldVisitor interface.
-func (fv *StructFieldVisitor[TObject, TProp]) IsDeferred() bool {
-	return fv.deferred
-}
-
-// IsRequired implements FieldVisitor interface.
-func (fv *StructFieldVisitor[TObject, TProp]) IsRequired() bool {
-	return fv.required
-}
-
-// Validate implements FieldVisitor interface.
-func (fv *StructFieldVisitor[TObject, TProp]) Validate(ctx context.Context, dst *TObject) error {
-	if fv.validator != nil {
-		return fv.validator(ctx, dst)
-	}
-
-	return nil
-}
-
-// VisitItem implements FieldVisitor interface.
-func (fv *StructFieldVisitor[TObject, TProp]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node, dst *TObject) parsetypes.Diagnostics {
-	if fv.setValue == nil {
-		panic("propertyVisitor: missing value setter")
-	}
-
-	v, diags := fv.valueVisitor.VisitItem(ctx, opts, node)
-	if diags.HasError() {
-		return diags
-	}
-
-	if err := fv.setValue(ctx, dst, v); err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
-	}
-
-	return diags
-}
-
-type deferredFieldEntry[T any] struct {
-	key     string
-	node    *ast.MappingValueNode
-	decoder FieldVisitor[T]
-}
-
 type ObjectVisitor[T any] struct {
-	fields      map[string]FieldVisitor[T]
-	constructor func(context.Context, *T) error
+	fields       []FieldVisitor[T]
+	fieldsByName map[string]struct{}
+	constructor  func(context.Context, *T) error
+	validator    func(ctx context.Context, dst *T) error
 }
 
 func (v *ObjectVisitor[T]) handleUnknownField(opts *TraverseOpts, key string, node *ast.MappingValueNode) *parsetypes.Diagnostic {
@@ -155,9 +79,14 @@ func (v *ObjectVisitor[T]) Constructor(fn func(context.Context, *T) error) *Obje
 	return v
 }
 
+// Validation adds object validation after all fields are mapped.
+func (v *ObjectVisitor[T]) Validation(fn func(context.Context, *T) error) *ObjectVisitor[T] {
+	v.validator = fn
+	return v
+}
+
 func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (T, parsetypes.Diagnostics) {
-	visitedFields := make(map[string]ast.Node, len(v.fields))
-	var deferredFields []deferredFieldEntry[T]
+	nodes := make(map[string]*ast.MappingValueNode, len(v.fields))
 
 	var (
 		out   T
@@ -182,6 +111,7 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 		return out, diags
 	}
 
+	// Collect field members & validate key names
 	for _, n := range mn.Values {
 		kn, ok := n.Key.(*ast.StringNode)
 		if !ok {
@@ -192,43 +122,29 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 			continue
 		}
 
-		fv, ok := v.fields[kn.Value]
-		if !ok {
+		if _, ok := v.fieldsByName[kn.Value]; !ok {
 			if diag := v.handleUnknownField(opts, kn.Value, n); diag != nil {
 				diags = append(diags, diag)
 			}
 			continue
 		}
 
-		if _, ok := visitedFields[kn.Value]; ok {
+		if _, ok := nodes[kn.Value]; ok {
 			diags = append(diags,
 				newErrDiagnosticFromMapping(opts, n, fmt.Errorf("duplicate field %q", kn.Value)),
 			)
 			continue
 		}
 
-		if fv.IsDeferred() {
-			deferredFields = append(deferredFields, deferredFieldEntry[T]{
-				key:     kn.Value,
-				node:    n,
-				decoder: fv,
-			})
-			continue
-		}
-
-		visitedFields[kn.Value] = n.Key
-		diags = append(diags, fv.VisitItem(ctx, opts, n.Value, &out)...)
+		nodes[kn.Value] = n
 	}
 
-	for _, e := range deferredFields {
-		visitedFields[e.key] = e.node
-		diags = append(diags, e.decoder.VisitItem(ctx, opts, e.node.Value, &out)...)
-	}
-
-	for key, f := range v.fields {
-		n, ok := visitedFields[key]
+	// Map fields respecting schema order
+	for _, dec := range v.fields {
+		key := dec.Name()
+		n, ok := nodes[key]
 		if !ok {
-			if f.IsRequired() {
+			if dec.IsRequired() {
 				diags = append(diags,
 					newErrDiagnosticFromNode(
 						opts.FileName, node,
@@ -239,14 +155,22 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 			continue
 		}
 
-		if err := f.Validate(ctx, &out); err != nil {
-			if !ok {
-				// Show error in parent if child is undefined.
-				n = node
-			}
+		fieldDiags := dec.VisitItem(ctx, opts, n.Value, &out)
+		diags = append(diags, fieldDiags...)
+		if fieldDiags.HasError() {
+			continue
+		}
+
+		if err := dec.Validate(ctx, &out); err != nil {
 			diags = append(diags,
 				newErrDiagnosticFromNode(opts.FileName, n, err),
 			)
+		}
+	}
+
+	if !diags.HasError() && v.validator != nil {
+		if err := v.validator(ctx, &out); err != nil {
+			diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
 		}
 	}
 

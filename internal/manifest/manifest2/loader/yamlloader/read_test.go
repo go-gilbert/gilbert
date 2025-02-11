@@ -12,13 +12,14 @@ import (
 func TestRead(t *testing.T) {
 	dst := &manifest2.JobFile{}
 	ctx := newLoaderContext(context.TODO(), loaderContext{
-		fileDir: "testdata",
-		dst:     dst,
+		fileDir:  "testdata",
+		filePath: "testdata/test.yml",
+		dst:      dst,
 	})
 
 	result, diags, err := yamltree.ReadSource[yamlJobFile](ctx, jobFileSchema, yamltree.Source{
 		FilePath: "testdata/test.yml",
-	})
+	}, yamltree.WithUnknownFieldAction(yamltree.UnknownFieldActionWarn))
 
 	require.NoError(t, err)
 	if len(diags) != 0 {

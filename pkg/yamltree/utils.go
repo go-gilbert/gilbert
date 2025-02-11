@@ -30,6 +30,26 @@ func IsNullNode(n ast.Node) bool {
 	return n.Type() == ast.NullType
 }
 
+// IsPrimitiveNode returns whether node is a string, bool or other scalar type.
+func IsPrimitiveNode(n ast.Node) bool {
+	switch n.Type() {
+	case ast.StringType, ast.IntegerType, ast.FloatType, ast.BoolType, ast.LiteralType:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsStringNode returns whether node is a string (including multiline).
+func IsStringNode(n ast.Node) bool {
+	switch n.Type() {
+	case ast.StringType, ast.LiteralType:
+		return true
+	default:
+		return false
+	}
+}
+
 // GetNodeRange returns node document range
 func GetNodeRange(node ast.Node) (parsetypes.Range, parsetypes.OffsetRange) {
 	startTok := node.GetToken()
