@@ -73,9 +73,9 @@ var jobFileSchema = Struct[yamlJobFile](
 			return nil
 		},
 	),
-	Field[yamlJobFile, map[string]manifest2.InputDefinition](
-		"inputs", Map[manifest2.InputDefinition](inputDefinitionSchema),
-		func(_ context.Context, dst *yamlJobFile, val map[string]manifest2.InputDefinition) error {
+	Field[yamlJobFile, map[string]*manifest2.InputDefinition](
+		"inputs", Map(Pointer[manifest2.InputDefinition](inputDefinitionSchema)),
+		func(_ context.Context, dst *yamlJobFile, val map[string]*manifest2.InputDefinition) error {
 			if len(val) == 0 {
 				return errors.New("empty inputs list")
 			}
@@ -84,9 +84,12 @@ var jobFileSchema = Struct[yamlJobFile](
 				dst.result.Inputs = val
 			}
 
-			// TODO: provide previous declaration path
-			return copyMapWithCheck(dst.result.Inputs, val, func(k string) error {
-				return fmt.Errorf("duplicate input %q", k)
+			return copyMapWithCheck(dst.result.Inputs, val, func(k string, dup *manifest2.InputDefinition) error {
+				loc := dup.Location
+				return fmt.Errorf(
+					"duplicate input block %q (previous declaration at %s:%s)", k,
+					loc.FileName, loc.Range.Start,
+				)
 			})
 		},
 	),

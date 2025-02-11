@@ -95,6 +95,7 @@ func ParseValueType(value string) (ValueType, error) {
 }
 
 type TypeSchema struct {
+	Location   ReferenceLocation
 	Type       ValueType
 	Format     ValueFormat
 	DateFormat string

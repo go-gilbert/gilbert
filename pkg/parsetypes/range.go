@@ -1,5 +1,7 @@
 package parsetypes
 
+import "fmt"
+
 type Position struct {
 	Line   int
 	Column int
@@ -13,6 +15,10 @@ func (p Position) Add(line int, column int) Position {
 
 func (p Position) IsEmpty() bool {
 	return p.Line == 0 && p.Column == 0
+}
+
+func (p Position) String() string {
+	return fmt.Sprintf("%d:%d", p.Line, p.Column)
 }
 
 func NewPosition(line int, column int) Position {

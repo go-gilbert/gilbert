@@ -57,7 +57,7 @@ type ObjectVisitor[T any] struct {
 	fields       []FieldVisitor[T]
 	fieldsByName map[string]struct{}
 	constructor  func(context.Context, *T) error
-	validator    func(ctx context.Context, dst *T) error
+	validator    func(ctx context.Context, n ast.Node, dst *T) error
 }
 
 func (v *ObjectVisitor[T]) handleUnknownField(opts *TraverseOpts, key string, node *ast.MappingValueNode) *parsetypes.Diagnostic {
@@ -80,7 +80,7 @@ func (v *ObjectVisitor[T]) Constructor(fn func(context.Context, *T) error) *Obje
 }
 
 // Validation adds object validation after all fields are mapped.
-func (v *ObjectVisitor[T]) Validation(fn func(context.Context, *T) error) *ObjectVisitor[T] {
+func (v *ObjectVisitor[T]) Validation(fn func(context.Context, ast.Node, *T) error) *ObjectVisitor[T] {
 	v.validator = fn
 	return v
 }
@@ -169,7 +169,7 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 	}
 
 	if !diags.HasError() && v.validator != nil {
-		if err := v.validator(ctx, &out); err != nil {
+		if err := v.validator(ctx, node, &out); err != nil {
 			diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
 		}
 	}

@@ -139,7 +139,21 @@ var inputDefinitionSchema = Struct[manifest2.InputDefinition](
 			return nil
 		},
 	),
-)
+).Validation(func(ctx context.Context, n ast.Node, dst *manifest2.InputDefinition) error {
+	c, err := getLoaderContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	rng, offset := GetNodeRange(n)
+	dst.Location = manifest2.ReferenceLocation{
+		FileName: c.filePath,
+		Range:    rng,
+		Offset:   offset,
+	}
+
+	return nil
+})
 
 func getDefaultValueVisitor(_ context.Context, node ast.Node, def *manifest2.InputDefinition) (ValueVisitor[any], error) {
 	if !IsPrimitiveNode(node) {

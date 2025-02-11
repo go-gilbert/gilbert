@@ -47,7 +47,7 @@ type Mixin struct {
 
 type JobFile struct {
 	Consts map[string]any
-	Inputs map[string]InputDefinition
+	Inputs map[string]*InputDefinition
 	Tasks  map[string]*Task
 	Mixins map[string]*Mixin
 }

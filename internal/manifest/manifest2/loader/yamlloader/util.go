@@ -57,10 +57,10 @@ func copyMapUniq[V any](dst, src map[string]V) {
 }
 
 // copyMapWithCheck copies src into dst and calls error function on collision.
-func copyMapWithCheck[T any](dst, src map[string]T, errFunc func(k string) error) error {
+func copyMapWithCheck[T any](dst, src map[string]T, errFunc func(k string, v T) error) error {
 	for k, v := range src {
-		if _, ok := dst[k]; ok {
-			return errFunc(k)
+		if dup, ok := dst[k]; ok {
+			return errFunc(k, dup)
 		}
 
 		dst[k] = v
