@@ -155,7 +155,7 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 			continue
 		}
 
-		fieldDiags := dec.VisitItem(ctx, opts, n.Value, &out)
+		fieldDiags := dec.VisitField(ctx, opts, n, &out)
 		diags = append(diags, fieldDiags...)
 		if fieldDiags.HasError() {
 			continue
@@ -181,6 +181,7 @@ type MapVisitor[T any] struct {
 	handler              ValueVisitor[T]
 	keyTransformer       func(context.Context, string) (string, error)
 	duplicateItemHandler func(context.Context, string, T) error
+	docHandler           func(context.Context, FieldInfo, T) T
 }
 
 // OnDuplicateKey sets a function to format duplicate key errors.
@@ -192,6 +193,12 @@ func (v *MapVisitor[T]) OnDuplicateKey(fn func(context.Context, string, T) error
 // TransformKey set a function to transform dictionary keys during mapping.
 func (v *MapVisitor[T]) TransformKey(fn func(context.Context, string) (string, error)) *MapVisitor[T] {
 	v.keyTransformer = fn
+	return v
+}
+
+// CollectDoc sets handler to collect field documentation.
+func (v *MapVisitor[T]) CollectDoc(fn func(context.Context, FieldInfo, T) T) *MapVisitor[T] {
+	v.docHandler = fn
 	return v
 }
 
@@ -278,6 +285,15 @@ func (v *MapVisitor[T]) visitChild(ctx context.Context, opts *TraverseOpts, n *a
 	item, d := v.handler.VisitItem(ctx, opts, n.Value)
 	diags = append(diags, d...)
 	if !d.HasError() {
+		if v.docHandler != nil {
+			fi := FieldInfo{
+				Key: key,
+				Doc: collectFieldDoc(n),
+			}
+
+			item = v.docHandler(ctx, fi, item)
+		}
+
 		dst[key] = item
 	}
 

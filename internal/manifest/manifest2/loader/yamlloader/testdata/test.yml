@@ -8,9 +8,14 @@ const:
   foo: bar
 
 inputs:
+  # Inputs are set of global input parameters.
+  # Inputs automatically bind to command-line flags, but can also be populated from environment.
+
+  # Is build a production release or not
   release:
     default: false
     type: bool
+  # Job build timeout
   timeout:
     type: string
     format: duration

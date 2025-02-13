@@ -67,6 +67,7 @@ var jobFileSchema = Struct[yamlJobFile](
 		func(_ context.Context, dst *yamlJobFile, val map[string]any) error {
 			if dst.result.Consts == nil {
 				dst.result.Consts = val
+				return nil
 			}
 
 			copyMapUniq(dst.result.Consts, val)
@@ -74,7 +75,12 @@ var jobFileSchema = Struct[yamlJobFile](
 		},
 	),
 	Field[yamlJobFile, map[string]*manifest2.InputDefinition](
-		"inputs", Map(Pointer[manifest2.InputDefinition](inputDefinitionSchema)),
+		"inputs", Map(Pointer[manifest2.InputDefinition](inputDefinitionSchema)).
+			CollectDoc(func(_ context.Context, fi FieldInfo, def *manifest2.InputDefinition) *manifest2.InputDefinition {
+				def.Name = fi.Key
+				def.Doc = fi.Doc
+				return def
+			}),
 		func(_ context.Context, dst *yamlJobFile, val map[string]*manifest2.InputDefinition) error {
 			if len(val) == 0 {
 				return errors.New("empty inputs list")
@@ -82,6 +88,7 @@ var jobFileSchema = Struct[yamlJobFile](
 
 			if dst.result.Inputs == nil {
 				dst.result.Inputs = val
+				return nil
 			}
 
 			return copyMapWithCheck(dst.result.Inputs, val, func(k string, dup *manifest2.InputDefinition) error {

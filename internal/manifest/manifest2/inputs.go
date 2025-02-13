@@ -107,6 +107,7 @@ type InputBinding struct {
 }
 
 type InputDefinition struct {
+	DocHeader
 	TypeSchema
 	Binding      *InputBinding
 	DefaultValue any

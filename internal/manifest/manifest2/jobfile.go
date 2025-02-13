@@ -13,6 +13,12 @@ const (
 	JobKindTask
 )
 
+// DocHeader is generic structure for embedding field metadata such as name, location or doc string.
+type DocHeader struct {
+	Name string
+	Doc  []string
+}
+
 type ExecStrategy struct {
 	Delay   time.Duration
 	Timeout time.Duration
@@ -30,24 +36,15 @@ type Job struct {
 }
 
 type Task struct {
-	Location    ReferenceLocation
-	Name        string
-	Description string
-	Inputs      map[string]InputDefinition
-	Jobs        []Job
-}
-
-type Mixin struct {
-	Location    ReferenceLocation
-	Name        string
-	Description string
-	Inputs      map[string]InputDefinition
-	Jobs        []Job
+	DocHeader
+	Position ReferenceLocation
+	Inputs   map[string]InputDefinition
+	Jobs     []Job
 }
 
 type JobFile struct {
 	Consts map[string]any
 	Inputs map[string]*InputDefinition
 	Tasks  map[string]*Task
-	Mixins map[string]*Mixin
+	Mixins map[string]*Task
 }
