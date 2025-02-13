@@ -101,7 +101,7 @@ type yamlJobFile struct {
 //
 //	hasError := false
 //	for _, n := range mn.Values {
-//		task := manifest2.Task{
+//		task := manifest2.JobGroup{
 //			Inputs:   nil,
 //			Jobs:     nil,
 //			Location: nodeToLocation(fileName, n),

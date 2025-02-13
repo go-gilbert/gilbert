@@ -5,6 +5,6 @@ import (
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 )
 
-var taskSchema = Struct[manifest2.Task](
-// Field[manifest2.Task, string]
+var taskSchema = Struct[manifest2.JobGroup](
+// Field[manifest2.JobGroup, string]
 )

@@ -13,6 +13,14 @@ const (
 	JobKindTask
 )
 
+type JobGroupType uint8
+
+const (
+	JobGroupKindUnknown JobGroupType = iota
+	JobGroupTypeTask
+	JobGroupTypeMixin
+)
+
 // DocHeader is generic structure for embedding field metadata such as name, location or doc string.
 type DocHeader struct {
 	Name string
@@ -35,8 +43,12 @@ type Job struct {
 	Inputs    map[string]*LazyValue
 }
 
-type Task struct {
+// JobGroup is collection of jobs to execute with input parameters.
+//
+// Acts as a base for tasks and mixins.
+type JobGroup struct {
 	DocHeader
+	Type     JobGroupType
 	Position ReferenceLocation
 	Inputs   map[string]InputDefinition
 	Jobs     []Job
@@ -45,6 +57,6 @@ type Task struct {
 type JobFile struct {
 	Consts map[string]any
 	Inputs map[string]*InputDefinition
-	Tasks  map[string]*Task
-	Mixins map[string]*Task
+	Tasks  map[string]*JobGroup
+	Mixins map[string]*JobGroup
 }
