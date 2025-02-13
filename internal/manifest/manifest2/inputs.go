@@ -114,6 +114,8 @@ type InputBinding struct {
 	EnvVarName string
 }
 
+type Inputs = map[string]*InputDefinition
+
 type InputDefinition struct {
 	DocHeader
 	TypeSchema

@@ -59,6 +59,13 @@ var listTypeSchema = Struct[manifest2.TypeSchema](
 	),
 )
 
+var inputsSchema = Map(Pointer[manifest2.InputDefinition](inputDefinitionSchema)).
+	CollectDoc(func(_ context.Context, fi FieldInfo, def *manifest2.InputDefinition) *manifest2.InputDefinition {
+		def.Name = fi.Key
+		def.Doc = fi.Doc
+		return def
+	})
+
 var inputDefinitionSchema = Struct[manifest2.InputDefinition](
 	Field("type",
 		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueType, error) {
@@ -100,7 +107,7 @@ var inputDefinitionSchema = Struct[manifest2.InputDefinition](
 	),
 	FieldFunc("default",
 		func(_ context.Context, _ ast.Node, dst *manifest2.InputDefinition) (ValueVisitor[*manifest2.TypedLazyValue], error) {
-			return newInputDefDefaultValVisitor(dst), nil
+			return newDefaultValVisitor(dst), nil
 		},
 		func(ctx context.Context, dst *manifest2.InputDefinition, val *manifest2.TypedLazyValue) error {
 			dst.DefaultValue = val
@@ -158,15 +165,15 @@ var inputDefinitionSchema = Struct[manifest2.InputDefinition](
 	return nil
 })
 
-type inputDefDefaultValVisitor struct {
+type defaultValVisitor struct {
 	inputDef *manifest2.InputDefinition
 }
 
-func newInputDefDefaultValVisitor(inputDef *manifest2.InputDefinition) inputDefDefaultValVisitor {
-	return inputDefDefaultValVisitor{inputDef: inputDef}
+func newDefaultValVisitor(inputDef *manifest2.InputDefinition) defaultValVisitor {
+	return defaultValVisitor{inputDef: inputDef}
 }
 
-func (v inputDefDefaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts, loc *manifest2.ReferenceLocation, node ast.Node) (*manifest2.TypedLazyValue, parsetypes.Diagnostics) {
+func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts, loc *manifest2.ReferenceLocation, node ast.Node) (*manifest2.TypedLazyValue, parsetypes.Diagnostics) {
 	var itemReader ValueVisitor[any]
 	switch v.inputDef.Type {
 	case manifest2.ValueTypeInt:
@@ -201,7 +208,7 @@ func (v inputDefDefaultValVisitor) readOtherNode(ctx context.Context, opts *Trav
 	}, nil
 }
 
-func (v inputDefDefaultValVisitor) readString(n *ast.StringNode, loc manifest2.ReferenceLocation) (*manifest2.TypedLazyValue, error) {
+func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest2.ReferenceLocation) (*manifest2.TypedLazyValue, error) {
 	exp, err := expr.Parse(n.Value)
 	if err != nil {
 		return nil, err
@@ -253,7 +260,7 @@ func (v inputDefDefaultValVisitor) readString(n *ast.StringNode, loc manifest2.R
 	return typedVal, nil
 }
 
-func (v inputDefDefaultValVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (*manifest2.TypedLazyValue, parsetypes.Diagnostics) {
+func (v defaultValVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (*manifest2.TypedLazyValue, parsetypes.Diagnostics) {
 	rng, offset := GetNodeRange(node)
 	loc := manifest2.ReferenceLocation{
 		FileName: opts.FileName,

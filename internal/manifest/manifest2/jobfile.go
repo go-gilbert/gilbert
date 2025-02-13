@@ -34,14 +34,32 @@ type ExecStrategy struct {
 }
 
 type Job struct {
-	Location  ReferenceLocation
-	Kind      JobKind
-	Name      string
-	Async     bool
-	Strategy  ExecStrategy
+	// Location contains information about where job is defined.
+	Location ReferenceLocation
+
+	// Kind defines whether job is a mixin or action call.
+	Kind JobKind
+
+	// Name is action or mixin name.
+	Name string
+
+	// Async tells whether runner should wait until job finishes before starting next job.
+	Async bool
+
+	// Strategy is job execution parameters.
+	Strategy ExecStrategy
+
+	// Condition is expression to check whether job should be executed.
 	Condition *LazyValue
-	Inputs    map[string]*LazyValue
+
+	// Args is job arguments.
+	Args *LazyValue
+
+	// Hooks is key-value pair of event name and actions to be run on event.
+	Hooks map[string][]Job
 }
+
+type JobGroups = map[string]*JobGroup
 
 // JobGroup is collection of jobs to execute with input parameters.
 //
@@ -49,14 +67,14 @@ type Job struct {
 type JobGroup struct {
 	DocHeader
 	Type     JobGroupType
-	Position ReferenceLocation
-	Inputs   map[string]InputDefinition
+	Location ReferenceLocation
+	Inputs   Inputs
 	Jobs     []Job
 }
 
 type JobFile struct {
 	Consts map[string]any
-	Inputs map[string]*InputDefinition
-	Tasks  map[string]*JobGroup
-	Mixins map[string]*JobGroup
+	Inputs Inputs
+	Tasks  JobGroups
+	Mixins JobGroups
 }

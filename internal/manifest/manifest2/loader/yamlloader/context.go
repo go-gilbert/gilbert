@@ -34,3 +34,25 @@ func getLoaderContext(ctx context.Context) (*loaderContext, error) {
 
 	return c, nil
 }
+
+type jobGroupCtxKeyType struct{}
+
+var jobGroupCtxKey = jobGroupCtxKeyType{}
+
+type jobGroupInfo struct {
+	jobGroupType manifest2.JobGroupType
+}
+
+func jobGroupContext(parentCtx context.Context, info *jobGroupInfo) context.Context {
+	return context.WithValue(parentCtx, jobGroupCtxKey, info)
+}
+
+func jobGroupInfoFromContext(ctx context.Context) (*jobGroupInfo, bool) {
+	v := ctx.Value(jobGroupCtxKey)
+	if v == nil {
+		return nil, false
+	}
+
+	c, ok := v.(*jobGroupInfo)
+	return c, ok
+}

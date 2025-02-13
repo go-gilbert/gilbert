@@ -65,41 +65,38 @@ var jobFileSchema = Struct[yamlJobFile](
 		"const",
 		Map[any](AnyScalar()),
 		func(_ context.Context, dst *yamlJobFile, val map[string]any) error {
-			if dst.result.Consts == nil {
-				dst.result.Consts = val
-				return nil
-			}
-
-			copyMapUniq(dst.result.Consts, val)
-			return nil
+			return dst.appendConsts(val)
 		},
 	),
-	Field[yamlJobFile, map[string]*manifest2.InputDefinition](
-		"inputs", Map(Pointer[manifest2.InputDefinition](inputDefinitionSchema)).
-			CollectDoc(func(_ context.Context, fi FieldInfo, def *manifest2.InputDefinition) *manifest2.InputDefinition {
-				def.Name = fi.Key
-				def.Doc = fi.Doc
-				return def
-			}),
-		func(_ context.Context, dst *yamlJobFile, val map[string]*manifest2.InputDefinition) error {
-			if len(val) == 0 {
-				return errors.New("empty inputs list")
-			}
-
-			if dst.result.Inputs == nil {
-				dst.result.Inputs = val
-				return nil
-			}
-
-			return copyMapWithCheck(dst.result.Inputs, val, func(k string, dup *manifest2.InputDefinition) error {
-				loc := dup.Location
-				return fmt.Errorf(
-					"duplicate input block %q (previous declaration at %s:%s)", k,
-					loc.FileName, loc.Range.Start,
-				)
-			})
+	Field[yamlJobFile, manifest2.Inputs](
+		"inputs",
+		inputsSchema,
+		func(_ context.Context, dst *yamlJobFile, val manifest2.Inputs) error {
+			return dst.appendInputs(val)
 		},
 	),
+	Field[yamlJobFile, manifest2.JobGroups](
+		"tasks",
+		nil,
+		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
+			return dst.appendTasks(val)
+		},
+	).WithContext(func(ctx context.Context) context.Context {
+		return jobGroupContext(ctx, &jobGroupInfo{
+			jobGroupType: manifest2.JobGroupTypeTask,
+		})
+	}),
+	Field[yamlJobFile, manifest2.JobGroups](
+		"mixins",
+		nil,
+		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
+			return dst.appendMixins(val)
+		},
+	).WithContext(func(ctx context.Context) context.Context {
+		return jobGroupContext(ctx, &jobGroupInfo{
+			jobGroupType: manifest2.JobGroupTypeMixin,
+		})
+	}),
 ).Constructor(func(ctx context.Context, y *yamlJobFile) error {
 	c, err := getLoaderContext(ctx)
 	if err != nil {

@@ -1,6 +1,9 @@
 package yamlloader
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
 )
 
@@ -8,6 +11,73 @@ type yamlJobFile struct {
 	result   *manifest2.JobFile
 	version  string
 	includes []string
+}
+
+func (j *yamlJobFile) appendConsts(newItems map[string]any) error {
+	if j.result.Consts == nil {
+		j.result.Consts = newItems
+		return nil
+	}
+
+	copyMapUniq(j.result.Consts, newItems)
+	return nil
+}
+
+func (j *yamlJobFile) appendInputs(newItems manifest2.Inputs) error {
+	if len(newItems) == 0 {
+		return errors.New("empty inputs list")
+	}
+
+	if j.result.Inputs == nil {
+		j.result.Inputs = newItems
+		return nil
+	}
+
+	return copyMapWithCheck(j.result.Inputs, newItems, func(k string, dup *manifest2.InputDefinition) error {
+		loc := dup.Location
+		return fmt.Errorf(
+			"duplicate input block %q (previous declaration at %s:%s)", k,
+			loc.FileName, loc.Range.Start,
+		)
+	})
+}
+
+func (j *yamlJobFile) appendTasks(newItems manifest2.JobGroups) error {
+	if len(newItems) == 0 {
+		return nil
+	}
+
+	if j.result.Mixins == nil {
+		j.result.Mixins = newItems
+		return nil
+	}
+
+	return copyMapWithCheck(j.result.Tasks, newItems, func(k string, dup *manifest2.JobGroup) error {
+		loc := dup.Location
+		return fmt.Errorf(
+			"duplicate task block %q (previous declaration at %s:%s)", k,
+			loc.FileName, loc.Range.Start,
+		)
+	})
+}
+
+func (j *yamlJobFile) appendMixins(newItems manifest2.JobGroups) error {
+	if len(newItems) == 0 {
+		return nil
+	}
+
+	if j.result.Mixins == nil {
+		j.result.Mixins = newItems
+		return nil
+	}
+
+	return copyMapWithCheck(j.result.Mixins, newItems, func(k string, dup *manifest2.JobGroup) error {
+		loc := dup.Location
+		return fmt.Errorf(
+			"duplicate mixin block %q (previous declaration at %s:%s)", k,
+			loc.FileName, loc.Range.Start,
+		)
+	})
 }
 
 //type yamlJobFile2 struct {

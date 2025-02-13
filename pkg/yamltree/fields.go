@@ -81,6 +81,7 @@ type StructFieldVisitor[TObject, TProp any] struct {
 	validator     func(ctx context.Context, dst *TObject) error
 	setValue      func(ctx context.Context, dst *TObject, val TProp) error
 	docReaderFunc func(ctx context.Context, fi FieldInfo, dst *TObject)
+	ctxFunc       func(ctx context.Context) context.Context
 }
 
 // Required marks struct field as required.
@@ -97,6 +98,12 @@ func (fv *StructFieldVisitor[TObject, TProp]) CollectDoc(fn func(ctx context.Con
 // Validation adds validation func to be called to validate field value.
 func (fv *StructFieldVisitor[TObject, TProp]) Validation(fn func(context.Context, *TObject) error) *StructFieldVisitor[TObject, TProp] {
 	fv.validator = fn
+	return fv
+}
+
+// WithContext adds a function to wrap context with custom value during decoding.
+func (fv *StructFieldVisitor[TObject, TProp]) WithContext(fn func(ctx context.Context) context.Context) *StructFieldVisitor[TObject, TProp] {
+	fv.ctxFunc = fn
 	return fv
 }
 
@@ -123,6 +130,10 @@ func (fv *StructFieldVisitor[TObject, TProp]) Validate(ctx context.Context, dst 
 func (fv *StructFieldVisitor[TObject, TProp]) VisitField(ctx context.Context, opts *TraverseOpts, node *ast.MappingValueNode, dst *TObject) parsetypes.Diagnostics {
 	if fv.setValue == nil {
 		panic("propertyVisitor: missing value setter")
+	}
+
+	if fv.ctxFunc != nil {
+		ctx = fv.ctxFunc(ctx)
 	}
 
 	v, diags := fv.valueVisitor.VisitItem(ctx, opts, node.Value)
