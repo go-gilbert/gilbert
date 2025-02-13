@@ -50,6 +50,18 @@ func IsStringNode(n ast.Node) bool {
 	}
 }
 
+// IntoStringNode attempts to retreive a string node out of untyped node.
+func IntoStringNode(n ast.Node) (*ast.StringNode, bool) {
+	switch n := n.(type) {
+	case *ast.StringNode:
+		return n, true
+	case *ast.LiteralNode:
+		return n.Value, true
+	default:
+		return nil, false
+	}
+}
+
 // GetNodeRange returns node document range
 func GetNodeRange(node ast.Node) (parsetypes.Range, parsetypes.OffsetRange) {
 	startTok := node.GetToken()

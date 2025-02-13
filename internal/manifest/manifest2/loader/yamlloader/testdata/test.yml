@@ -35,18 +35,24 @@ inputs:
 tasks:
   # Build builds application
   build:
-    - action: go/build
-      if: ${!matrix.os == "darwin" && matrix.arch == "386"}
-      strategy:
-        delay: 5s
-        deadline: 30s
-        matrix:
-          os: [windows, linux, darwin]
-          arch: [amd64, 386, arm64]
-      with:
-        package: .
-        os: ${matrix.os}
-        arch: ${matrix.arch}
-        cgo: false
-        tags:
-          - ${if(inputs.release, "release", "debug")}
+    inputs:
+      # App version
+      version:
+        type: string
+        default: $(git describe --tags --abbrev=0)
+    steps:
+      - action: go/build
+        if: ${!matrix.os == "darwin" && matrix.arch == "386"}
+        strategy:
+          delay: 5s
+          deadline: 30s
+          matrix:
+            os: [windows, linux, darwin]
+            arch: [amd64, 386, arm64]
+        with:
+          package: .
+          os: ${matrix.os}
+          arch: ${matrix.arch}
+          cgo: false
+          tags:
+            - ${if(inputs.release, "release", "debug")}

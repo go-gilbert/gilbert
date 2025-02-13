@@ -102,6 +102,14 @@ type TypeSchema struct {
 	Items      *TypeSchema
 }
 
+func (s TypeSchema) DateFormatOrDefault() string {
+	if s.DateFormat == "" {
+		return DefaultDateFormat
+	}
+
+	return s.DateFormat
+}
+
 type InputBinding struct {
 	EnvVarName string
 }
@@ -110,5 +118,5 @@ type InputDefinition struct {
 	DocHeader
 	TypeSchema
 	Binding      *InputBinding
-	DefaultValue any
+	DefaultValue *TypedLazyValue
 }

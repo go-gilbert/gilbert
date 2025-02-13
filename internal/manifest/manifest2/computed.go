@@ -11,6 +11,12 @@ type ReferenceLocation struct {
 	Offset   parsetypes.OffsetRange
 }
 
+type TypedLazyValue struct {
+	Type   ValueType
+	Format ValueFormat
+	Value  LazyValue
+}
+
 // LazyValue represents a computed value that contains template expression
 // that needs to be evaluated in runtime.
 type LazyValue struct {
