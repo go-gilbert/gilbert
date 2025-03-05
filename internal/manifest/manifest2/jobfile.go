@@ -28,9 +28,7 @@ type DocHeader struct {
 }
 
 type ExecStrategy struct {
-	Delay   time.Duration
-	Timeout time.Duration
-	Matrix  map[string]*LazyValue
+	Matrix map[string]*LazyValue
 }
 
 type Job struct {
@@ -46,8 +44,14 @@ type Job struct {
 	// Async tells whether runner should wait until job finishes before starting next job.
 	Async bool
 
-	// Strategy is job execution parameters.
+	// Strategy sets up matrix execution strategy.
 	Strategy ExecStrategy
+
+	// Delay is interval to wait before executing a job.
+	Delay time.Duration
+
+	// Timeout is maximum job execution duration limit.
+	Timeout time.Duration
 
 	// Condition is expression to check whether job should be executed.
 	Condition *LazyValue

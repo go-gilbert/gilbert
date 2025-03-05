@@ -43,9 +43,9 @@ tasks:
     steps:
       - action: go/build
         if: ${!(matrix.os == "darwin" && matrix.arch == "386")}
+        delay: 5s
+        deadline: 30s
         strategy:
-          delay: 5s
-          deadline: 30s
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]
@@ -60,14 +60,15 @@ tasks:
     inputs:
       configFile:
         type: string
-        default: 'dev.env'
+        default: "dev.env"
     steps:
       - action: fs/watch
+        async: true
         with:
-          path: './...'
+          path: "./..."
           debounceTime: 100ms
           ignore:
-            - '*.log'
+            - "*.log"
         on:
           change:
             - action: go/run

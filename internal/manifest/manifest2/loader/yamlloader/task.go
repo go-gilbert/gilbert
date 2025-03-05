@@ -65,6 +65,20 @@ var jobSchema = Struct(
 		},
 	),
 	Field(
+		"delay", Duration(),
+		func(_ context.Context, dst *manifest2.Job, v time.Duration) error {
+			dst.Delay = v
+			return nil
+		},
+	),
+	Field(
+		"timeout", Duration(),
+		func(_ context.Context, dst *manifest2.Job, v time.Duration) error {
+			dst.Timeout = v
+			return nil
+		},
+	),
+	Field(
 		"if",
 		Transform(
 			String(), func(ctx context.Context, n ast.Node, val string) (*manifest2.LazyValue, error) {
@@ -117,7 +131,7 @@ var jobSchema = Struct(
 		),
 		func(_ context.Context, dst *manifest2.Job, v map[string][]manifest2.Job) error {
 			if !dst.Async {
-				return errors.New(`"async" should be true to have hooks`)
+				return errors.New(`"on" block can be used only when "async" is true`)
 			}
 
 			dst.Hooks = v
@@ -150,20 +164,6 @@ func setJobTarget(j *manifest2.Job, targetType manifest2.JobKind, name string) e
 }
 
 var strategySchema = Struct(
-	Field(
-		"delay", Duration(),
-		func(_ context.Context, dst *manifest2.ExecStrategy, v time.Duration) error {
-			dst.Delay = v
-			return nil
-		},
-	),
-	Field(
-		"timeout", Duration(),
-		func(_ context.Context, dst *manifest2.ExecStrategy, v time.Duration) error {
-			dst.Timeout = v
-			return nil
-		},
-	),
 	Field(
 		"matrix", Map(lazyArrayVisitor{}),
 		func(_ context.Context, dst *manifest2.ExecStrategy, v map[string]*manifest2.LazyValue) error {
