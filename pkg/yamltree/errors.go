@@ -7,7 +7,7 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
-func newErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
+func NewErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
 	rng, offset := GetNodeRange(node)
 	return &parsetypes.Diagnostic{
 		Err:      err,

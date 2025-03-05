@@ -14,7 +14,7 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
-var listTypeSchema = Struct[manifest2.TypeSchema](
+var listTypeSchema = Struct(
 	Field("type",
 		Transform(String(), func(_ context.Context, _ ast.Node, v string) (manifest2.ValueType, error) {
 			return manifest2.ParseValueType(v)
@@ -59,14 +59,14 @@ var listTypeSchema = Struct[manifest2.TypeSchema](
 	),
 )
 
-var inputsSchema = Map(Pointer[manifest2.InputDefinition](inputDefinitionSchema)).
+var inputsSchema = Map(Pointer(inputDefinitionSchema)).
 	CollectDoc(func(_ context.Context, fi FieldInfo, def *manifest2.InputDefinition) *manifest2.InputDefinition {
 		def.Name = fi.Key
 		def.Doc = fi.Doc
 		return def
 	})
 
-var inputDefinitionSchema = Struct[manifest2.InputDefinition](
+var inputDefinitionSchema = Struct(
 	Field("type",
 		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueType, error) {
 			return manifest2.ParseValueType(s)
@@ -115,8 +115,8 @@ var inputDefinitionSchema = Struct[manifest2.InputDefinition](
 		},
 	),
 	Field("binding",
-		Pointer[manifest2.InputBinding](
-			Struct[manifest2.InputBinding](
+		Pointer(
+			Struct(
 				Field("env", String(),
 					func(ctx context.Context, dst *manifest2.InputBinding, val string) error {
 						val = strings.TrimSpace(val)
@@ -135,7 +135,7 @@ var inputDefinitionSchema = Struct[manifest2.InputDefinition](
 		},
 	),
 	Field("items",
-		Pointer[manifest2.TypeSchema](listTypeSchema),
+		Pointer(listTypeSchema),
 		func(_ context.Context, dst *manifest2.InputDefinition, val *manifest2.TypeSchema) error {
 			if dst.Type == manifest2.ValueTypeList {
 				if val == nil {
@@ -177,9 +177,9 @@ func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts
 	var itemReader ValueVisitor[any]
 	switch v.inputDef.Type {
 	case manifest2.ValueTypeInt:
-		itemReader = IntoAny[int64](Int[int64]())
+		itemReader = IntoAny(Int[int64]())
 	case manifest2.ValueTypeBool:
-		itemReader = IntoAny[bool](Bool())
+		itemReader = IntoAny(Bool())
 	default:
 		return nil, parsetypes.Diagnostics{
 			newErrDiagnosticFromNode(
@@ -250,6 +250,10 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest2.Reference
 		outVal, err = time.ParseDuration(string(rawVal))
 	default:
 		break
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	typedVal.Value.Value = manifest2.AnySpec{

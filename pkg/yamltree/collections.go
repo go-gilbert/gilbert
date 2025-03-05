@@ -22,7 +22,7 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node 
 	sq, ok := node.(*ast.SequenceNode)
 	if !ok {
 		diags = append(diags,
-			newErrDiagnosticFromNode(
+			NewErrDiagnosticFromNode(
 				opts.FileName, node,
 				errors.New("node should be a list"),
 			),
@@ -34,7 +34,7 @@ func (v listVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node 
 	for _, n := range sq.Values {
 		if IsNullNode(n) {
 			diags = append(diags,
-				newErrDiagnosticFromNode(
+				NewErrDiagnosticFromNode(
 					opts.FileName, n,
 					errors.New("list item cannot be empty"),
 				),
@@ -95,14 +95,14 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 
 	if v.constructor != nil {
 		if err := v.constructor(ctx, &out); err != nil {
-			diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
+			diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, node, err))
 		}
 	}
 
 	mn, ok := node.(*ast.MappingNode)
 	if !ok {
 		diags = append(diags,
-			newErrDiagnosticFromNode(
+			NewErrDiagnosticFromNode(
 				opts.FileName, node,
 				fmt.Errorf("node should be an object, got %s", node.Type()),
 			),
@@ -146,7 +146,7 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 		if !ok {
 			if dec.IsRequired() {
 				diags = append(diags,
-					newErrDiagnosticFromNode(
+					NewErrDiagnosticFromNode(
 						opts.FileName, node,
 						fmt.Errorf("field %q is required", key),
 					),
@@ -163,14 +163,14 @@ func (v *ObjectVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, no
 
 		if err := dec.Validate(ctx, &out); err != nil {
 			diags = append(diags,
-				newErrDiagnosticFromNode(opts.FileName, n, err),
+				NewErrDiagnosticFromNode(opts.FileName, n, err),
 			)
 		}
 	}
 
 	if !diags.HasError() && v.validator != nil {
 		if err := v.validator(ctx, node, &out); err != nil {
-			diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
+			diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, node, err))
 		}
 	}
 
@@ -260,7 +260,7 @@ func (v *MapVisitor[T]) visitChild(ctx context.Context, opts *TraverseOpts, n *a
 	kn, ok := n.Key.(*ast.StringNode)
 	if !ok {
 		diags = append(diags,
-			newErrDiagnosticFromNode(
+			NewErrDiagnosticFromNode(
 				opts.FileName, kn,
 				errors.New("key should be a string"),
 			),
@@ -270,13 +270,13 @@ func (v *MapVisitor[T]) visitChild(ctx context.Context, opts *TraverseOpts, n *a
 
 	key, err := v.formatKey(ctx, kn.Value)
 	if err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, kn, err))
+		diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, kn, err))
 		return diags
 	}
 
 	if prev, ok := dst[key]; ok {
 		diags = append(diags,
-			newErrDiagnosticFromNode(
+			NewErrDiagnosticFromNode(
 				opts.FileName, kn, v.formatDuplicateError(ctx, key, prev)),
 		)
 		return diags

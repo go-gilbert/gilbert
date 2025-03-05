@@ -77,7 +77,7 @@ var jobFileSchema = Struct[yamlJobFile](
 	),
 	Field[yamlJobFile, manifest2.JobGroups](
 		"tasks",
-		nil,
+		jobGroupsSchema,
 		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
 			return dst.appendTasks(val)
 		},
@@ -88,7 +88,7 @@ var jobFileSchema = Struct[yamlJobFile](
 	}),
 	Field[yamlJobFile, manifest2.JobGroups](
 		"mixins",
-		nil,
+		jobGroupsSchema,
 		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
 			return dst.appendMixins(val)
 		},

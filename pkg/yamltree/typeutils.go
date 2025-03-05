@@ -31,7 +31,7 @@ func (v validatorVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, 
 	}
 
 	if err := v.validationFn(ctx, val); err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
+		diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, node, err))
 	}
 
 	return val, diags
@@ -42,7 +42,7 @@ type durationVisitor struct{}
 func (_ durationVisitor) VisitItem(_ context.Context, fi *TraverseOpts, node ast.Node) (time.Duration, parsetypes.Diagnostics) {
 	if IsNullNode(node) {
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(fi.FileName, node,
+			NewErrDiagnosticFromNode(fi.FileName, node,
 				errors.New("missing duration value"),
 			),
 		}
@@ -56,7 +56,7 @@ func (_ durationVisitor) VisitItem(_ context.Context, fi *TraverseOpts, node ast
 		n = v.Value
 	default:
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(fi.FileName, node,
+			NewErrDiagnosticFromNode(fi.FileName, node,
 				fmt.Errorf("expected duration string, got %s", v.Type()),
 			),
 		}
@@ -66,7 +66,7 @@ func (_ durationVisitor) VisitItem(_ context.Context, fi *TraverseOpts, node ast
 	dur, err := time.ParseDuration(val)
 	if err != nil {
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(fi.FileName, n,
+			NewErrDiagnosticFromNode(fi.FileName, n,
 				fmt.Errorf("invalid duration string format: %w", err),
 			),
 		}
@@ -101,7 +101,7 @@ func (tv transformVisitor[TIn, TOut]) VisitItem(ctx context.Context, fi *Travers
 
 	next, err := tv.transformFn(ctx, node, val)
 	if err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(fi.FileName, node, err))
+		diags = append(diags, NewErrDiagnosticFromNode(fi.FileName, node, err))
 	}
 
 	return next, diags
@@ -126,7 +126,7 @@ func (v scalarVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, node a
 	sn, ok := node.(ast.ScalarNode)
 	if !ok {
 		return nil, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, errors.New("expected scalar value")),
+			NewErrDiagnosticFromNode(opts.FileName, node, errors.New("expected scalar value")),
 		}
 	}
 
@@ -140,7 +140,7 @@ type funcVisitor[T any] struct {
 func (fv funcVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (out T, diags parsetypes.Diagnostics) {
 	v, err := fv.selectFunc(ctx, node)
 	if err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node, err))
+		diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, node, err))
 		return out, diags
 	}
 

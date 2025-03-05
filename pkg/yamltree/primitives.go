@@ -23,14 +23,14 @@ func (_ uintVisitor[T]) VisitItem(_ context.Context, opts *TraverseOpts, node as
 		break
 	default:
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("value should be unsigned integer, got %s", t)),
+			NewErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("value should be unsigned integer, got %s", t)),
 		}
 	}
 
 	v, err := strconv.ParseUint(node.GetToken().Value, 0, 64)
 	if err != nil {
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, err),
+			NewErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 
@@ -47,14 +47,14 @@ func (_ intVisitor[T]) VisitItem(_ context.Context, opts *TraverseOpts, node ast
 		break
 	default:
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("value should be integer, got %s", t)),
+			NewErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("value should be integer, got %s", t)),
 		}
 	}
 
 	v, err := strconv.ParseInt(node.GetToken().Value, 0, 64)
 	if err != nil {
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, err),
+			NewErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 
@@ -72,14 +72,14 @@ func (_ floatVisitor[T]) VisitItem(_ context.Context, opts *TraverseOpts, node a
 		return 0, nil
 	default:
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("value should be float, got %s", t)),
+			NewErrDiagnosticFromNode(opts.FileName, node, fmt.Errorf("value should be float, got %s", t)),
 		}
 	}
 
 	v, err := strconv.ParseFloat(val, 64)
 	if err != nil {
 		return 0, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, err),
+			NewErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 
@@ -91,7 +91,7 @@ type boolVisitor struct{}
 func (_ boolVisitor) VisitItem(_ context.Context, opts *TraverseOpts, node ast.Node) (bool, parsetypes.Diagnostics) {
 	if IsNullNode(node) {
 		return false, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node,
+			NewErrDiagnosticFromNode(opts.FileName, node,
 				errors.New("missing value"),
 			),
 		}
@@ -100,7 +100,7 @@ func (_ boolVisitor) VisitItem(_ context.Context, opts *TraverseOpts, node ast.N
 	v, ok := node.(*ast.BoolNode)
 	if !ok {
 		return false, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node,
+			NewErrDiagnosticFromNode(opts.FileName, node,
 				fmt.Errorf("expected boolean value, got %s", node.Type()),
 			),
 		}
@@ -131,7 +131,7 @@ func (v stringVisitor) VisitItem(_ context.Context, opts *TraverseOpts, node ast
 	}
 
 	return "", parsetypes.Diagnostics{
-		newErrDiagnosticFromNode(opts.FileName, node,
+		NewErrDiagnosticFromNode(opts.FileName, node,
 			fmt.Errorf("value of type %s cannot be converted to a string", typ),
 		),
 	}
@@ -159,7 +159,7 @@ func (v unmarshalVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, 
 	if err != nil {
 		// TODO: map yaml to diagnostics
 		return dst, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, err),
+			NewErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 

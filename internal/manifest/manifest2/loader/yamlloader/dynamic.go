@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/binder"
 	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -34,23 +33,23 @@ func (endPos endPosition) referenceLocation(opts *yamltree.TraverseOpts, startTo
 	}
 }
 
-var _ yamltree.ValueVisitor[*binder.LazyValue] = (*lazyValueVisitor)(nil)
+var _ yamltree.ValueVisitor[*manifest2.LazyValue] = (*lazyValueVisitor)(nil)
 
 type lazyValueVisitor struct{}
 
-func (_ lazyValueVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*binder.LazyValue, parsetypes.Diagnostics) {
+func (_ lazyValueVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*manifest2.LazyValue, parsetypes.Diagnostics) {
 	v, endPos, diags := lazyFromNode(opts, node)
 	if !diags.HasError() {
 		v = v.Optimize()
 	}
 
-	return &binder.LazyValue{
+	return &manifest2.LazyValue{
 		Location: endPos.referenceLocation(opts, node.GetToken()),
 		Value:    v,
 	}, diags
 }
 
-func lazyFromNode(opts *yamltree.TraverseOpts, node ast.Node) (rawNode binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
+func lazyFromNode(opts *yamltree.TraverseOpts, node ast.Node) (rawNode manifest2.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
 	endPos = endPositionFromToken(node.GetToken())
 	if yamltree.IsNullNode(node) {
 		diags = append(diags,
@@ -86,7 +85,7 @@ func lazyFromNode(opts *yamltree.TraverseOpts, node ast.Node) (rawNode binder.An
 	return rawNode, endPos, diags
 }
 
-func lazyFromLiteralNode(opts *yamltree.TraverseOpts, node *ast.LiteralNode) (binder.AnySpec, endPosition, parsetypes.Diagnostics) {
+func lazyFromLiteralNode(opts *yamltree.TraverseOpts, node *ast.LiteralNode) (manifest2.AnySpec, endPosition, parsetypes.Diagnostics) {
 	return lazyFromStringNode(opts, node.Value)
 	//s, diags := lazyFromStringNode(opts, node.Value)
 	//if diags.HasError() {
@@ -98,11 +97,11 @@ func lazyFromLiteralNode(opts *yamltree.TraverseOpts, node *ast.LiteralNode) (bi
 	//}
 }
 
-func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (binder.AnySpec, endPosition, parsetypes.Diagnostics) {
+func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (manifest2.AnySpec, endPosition, parsetypes.Diagnostics) {
 	endPos := endPositionFromToken(node.Token)
 	if node.Value == "" {
-		return binder.AnySpec{
-			LiteralSpec: &binder.LiteralSpec{
+		return manifest2.AnySpec{
+			LiteralSpec: &manifest2.LiteralSpec{
 				Value: "",
 			},
 		}, endPos, nil
@@ -111,14 +110,14 @@ func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (bind
 	// TODO: unwrap
 	e, err := expr.Parse(node.Value)
 	if err != nil {
-		return binder.AnySpec{}, endPos, parsetypes.Diagnostics{
+		return manifest2.AnySpec{}, endPos, parsetypes.Diagnostics{
 			newErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 
 	if !e.Evaluable() {
-		return binder.AnySpec{
-			LiteralSpec: &binder.LiteralSpec{
+		return manifest2.AnySpec{
+			LiteralSpec: &manifest2.LiteralSpec{
 				Value: node.Value,
 			},
 		}, endPos, nil
@@ -126,8 +125,8 @@ func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (bind
 
 	// FIXME: set correct bounds for multiline strings from *ast.LiteralNode.
 	pos := parsetypes.NewPosition(node.Token.Position.Line, node.Token.Position.Column)
-	return binder.AnySpec{
-		BindingSpec: &binder.BindingSpec{
+	return manifest2.AnySpec{
+		BindingSpec: &manifest2.BindingSpec{
 			Expr: e,
 			Location: manifest2.ReferenceLocation{
 				FileName: opts.FileName,
@@ -138,20 +137,20 @@ func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (bind
 	}, endPos, nil
 }
 
-func lazyFromVal(tok *token.Token, val any) (binder.AnySpec, endPosition) {
+func lazyFromVal(tok *token.Token, val any) (manifest2.AnySpec, endPosition) {
 	endPos := endPositionFromToken(tok)
 
-	return binder.AnySpec{
-		LiteralSpec: &binder.LiteralSpec{
+	return manifest2.AnySpec{
+		LiteralSpec: &manifest2.LiteralSpec{
 			Value: val,
 		},
 	}, endPos
 }
 
-func lazyFromSeqNode(opts *yamltree.TraverseOpts, node *ast.SequenceNode) (sp binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
+func lazyFromSeqNode(opts *yamltree.TraverseOpts, node *ast.SequenceNode) (sp manifest2.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
 	endPos = endPositionFromToken(node.GetToken())
-	arr := binder.ArraySpec{
-		DynamicItems: make([]binder.AnySpec, len(node.Values)),
+	arr := manifest2.ArraySpec{
+		DynamicItems: make([]manifest2.AnySpec, len(node.Values)),
 	}
 
 	for i, n := range node.Values {
@@ -176,14 +175,14 @@ func lazyFromSeqNode(opts *yamltree.TraverseOpts, node *ast.SequenceNode) (sp bi
 	//	return arr.Optimize(), diags
 	//}
 
-	return binder.AnySpec{
+	return manifest2.AnySpec{
 		ArraySpec: &arr,
 	}, endPos, diags
 }
 
-func lazyFromDictNode(opts *yamltree.TraverseOpts, node *ast.MappingNode) (sp binder.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
-	sp.ObjectSpec = &binder.ObjectSpec{
-		Values: make(map[string]binder.AnySpec, len(node.Values)),
+func lazyFromDictNode(opts *yamltree.TraverseOpts, node *ast.MappingNode) (sp manifest2.AnySpec, endPos endPosition, diags parsetypes.Diagnostics) {
+	sp.ObjectSpec = &manifest2.ObjectSpec{
+		Values: make(map[string]manifest2.AnySpec, len(node.Values)),
 	}
 
 	endPos = endPositionFromToken(node.GetToken())

@@ -42,7 +42,7 @@ tasks:
         default: $(git describe --tags --abbrev=0)
     steps:
       - action: go/build
-        if: ${!matrix.os == "darwin" && matrix.arch == "386"}
+        if: ${!(matrix.os == "darwin" && matrix.arch == "386")}
         strategy:
           delay: 5s
           deadline: 30s

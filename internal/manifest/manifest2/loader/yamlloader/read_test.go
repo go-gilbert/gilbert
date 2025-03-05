@@ -17,7 +17,7 @@ func TestRead(t *testing.T) {
 		dst:      dst,
 	})
 
-	result, diags, err := yamltree.ReadSource[yamlJobFile](ctx, jobFileSchema, yamltree.Source{
+	result, diags, err := yamltree.ReadSource(ctx, jobFileSchema, yamltree.Source{
 		FilePath: "testdata/test.yml",
 	}, yamltree.WithUnknownFieldAction(yamltree.UnknownFieldActionWarn))
 

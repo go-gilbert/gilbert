@@ -15,7 +15,7 @@ func intoDictNode(fi *TraverseOpts, node ast.Node) (*ast.MappingNode, parsetypes
 	mn, ok := node.(*ast.MappingNode)
 	if !ok {
 		return nil, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(
+			NewErrDiagnosticFromNode(
 				fi.FileName, node,
 				errors.New("node should be a dictionary"),
 			),

@@ -52,7 +52,7 @@ func (f *FuncFieldVisitor[TObject, TProp]) VisitField(ctx context.Context, opts 
 	v, err := f.visitorFunc(ctx, node.Value, dst)
 	if err != nil {
 		return parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, err),
+			NewErrDiagnosticFromNode(opts.FileName, node, err),
 		}
 	}
 
@@ -62,7 +62,7 @@ func (f *FuncFieldVisitor[TObject, TProp]) VisitField(ctx context.Context, opts 
 	}
 
 	if err := f.setValue(ctx, dst, result); err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node.Value, err))
+		diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, node.Value, err))
 	}
 
 	return diags
@@ -151,7 +151,7 @@ func (fv *StructFieldVisitor[TObject, TProp]) VisitField(ctx context.Context, op
 	}
 
 	if err := fv.setValue(ctx, dst, v); err != nil {
-		diags = append(diags, newErrDiagnosticFromNode(opts.FileName, node.Value, err))
+		diags = append(diags, NewErrDiagnosticFromNode(opts.FileName, node.Value, err))
 	}
 
 	return diags

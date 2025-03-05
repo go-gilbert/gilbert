@@ -47,8 +47,8 @@ func (j *yamlJobFile) appendTasks(newItems manifest2.JobGroups) error {
 		return nil
 	}
 
-	if j.result.Mixins == nil {
-		j.result.Mixins = newItems
+	if j.result.Tasks == nil {
+		j.result.Tasks = newItems
 		return nil
 	}
 

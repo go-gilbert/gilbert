@@ -53,7 +53,7 @@ type Job struct {
 	Condition *LazyValue
 
 	// Args is job arguments.
-	Args *LazyValue
+	Args map[string]*LazyValue
 
 	// Hooks is key-value pair of event name and actions to be run on event.
 	Hooks map[string][]Job
@@ -67,7 +67,7 @@ type JobGroups = map[string]*JobGroup
 type JobGroup struct {
 	DocHeader
 	Type     JobGroupType
-	Location ReferenceLocation
+	Location *ReferenceLocation
 	Inputs   Inputs
 	Jobs     []Job
 }
