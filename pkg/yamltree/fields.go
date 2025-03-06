@@ -2,6 +2,7 @@ package yamltree
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -129,7 +130,11 @@ func (fv *StructFieldVisitor[TObject, TProp]) Validate(ctx context.Context, dst 
 // VisitField implements FieldVisitor interface.
 func (fv *StructFieldVisitor[TObject, TProp]) VisitField(ctx context.Context, opts *TraverseOpts, node *ast.MappingValueNode, dst *TObject) parsetypes.Diagnostics {
 	if fv.setValue == nil {
-		panic("propertyVisitor: missing value setter")
+		panic(fmt.Sprintf("StructFieldVisitor: missing value setter for field %q", fv.name))
+	}
+
+	if fv.valueVisitor == nil {
+		panic(fmt.Sprintf("StructFieldVisitor: missing value decoder for field %q", fv.name))
 	}
 
 	if fv.ctxFunc != nil {
