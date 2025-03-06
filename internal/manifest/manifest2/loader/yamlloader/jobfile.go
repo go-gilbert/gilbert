@@ -13,8 +13,61 @@ type yamlJobFile struct {
 	includes []string
 }
 
+func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
+	// Includes only permit merging plugins with same URL and import slug.
+	aliasByURLs := make(map[string]string, len(j.result.Plugins))
+	dst := j.result.Plugins
+
+	if len(dst) == 0 {
+		for k, plug := range newItems {
+			if prevAlias, ok := aliasByURLs[plug.URL]; ok {
+				prevLoc := dst[prevAlias].Location
+				return fmt.Errorf(
+					"plugin was already imported under a different alias (previous declaration at %s:%s)",
+					prevLoc.FileName, prevLoc.Range.Start,
+				)
+			}
+
+			aliasByURLs[plug.URL] = k
+		}
+
+		j.result.Plugins = newItems
+		return nil
+	}
+
+	for k, imp := range newItems {
+		// Check if same plugin was imported with a different alias.
+		prevAlias, ok := aliasByURLs[imp.URL]
+		if ok && prevAlias != k {
+			prevLoc := dst[prevAlias].Location
+			return fmt.Errorf(
+				"plugin was already imported under a different alias (previous declaration at %s:%s)",
+				prevLoc.FileName, prevLoc.Range.Start,
+			)
+		}
+
+		// Check if same alias used by different plugin.
+		dup, ok := dst[k]
+		if ok {
+			if dup.URL == imp.URL {
+				continue
+			}
+
+			return fmt.Errorf(
+				"import alias already taken by a different plugin %q (previous declaration at %s:%s)",
+				k, dup.Location.FileName, dup.Location.Range.Start,
+			)
+		}
+
+		dst[k] = imp
+		aliasByURLs[imp.URL] = k
+	}
+
+	return nil
+}
+
 func (j *yamlJobFile) appendConsts(newItems map[string]any) error {
-	if j.result.Consts == nil {
+	if len(j.result.Consts) == 0 {
 		j.result.Consts = newItems
 		return nil
 	}
@@ -28,7 +81,7 @@ func (j *yamlJobFile) appendInputs(newItems manifest2.Inputs) error {
 		return errors.New("empty inputs list")
 	}
 
-	if j.result.Inputs == nil {
+	if len(j.result.Inputs) == 0 {
 		j.result.Inputs = newItems
 		return nil
 	}

@@ -14,8 +14,8 @@ import (
 
 const supportedManifestVersion = "2"
 
-var jobFileSchema = Struct[yamlJobFile](
-	Field[yamlJobFile, string]("version",
+var jobFileSchema = Struct(
+	Field("version",
 		String(),
 		func(ctx context.Context, dst *yamlJobFile, val string) error {
 			if val != supportedManifestVersion {
@@ -26,7 +26,7 @@ var jobFileSchema = Struct[yamlJobFile](
 			return nil
 		},
 	).Required(),
-	Field[yamlJobFile, []string]("include",
+	Field("include",
 		List(
 			Transform(String(), func(ctx context.Context, _ ast.Node, s string) (string, error) {
 				if s == "" {
@@ -61,21 +61,27 @@ var jobFileSchema = Struct[yamlJobFile](
 			return nil
 		},
 	),
-	Field[yamlJobFile, map[string]any](
+	Field(
+		"plugins", importsSchema,
+		func(_ context.Context, dst *yamlJobFile, val manifest2.PluginImports) error {
+			return dst.appendPlugins(val)
+		},
+	),
+	Field(
 		"const",
-		Map[any](AnyScalar()),
+		Map(AnyScalar()),
 		func(_ context.Context, dst *yamlJobFile, val map[string]any) error {
 			return dst.appendConsts(val)
 		},
 	),
-	Field[yamlJobFile, manifest2.Inputs](
+	Field(
 		"inputs",
 		inputsSchema,
 		func(_ context.Context, dst *yamlJobFile, val manifest2.Inputs) error {
 			return dst.appendInputs(val)
 		},
 	),
-	Field[yamlJobFile, manifest2.JobGroups](
+	Field(
 		"tasks",
 		jobGroupsSchema,
 		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
@@ -86,7 +92,7 @@ var jobFileSchema = Struct[yamlJobFile](
 			jobGroupType: manifest2.JobGroupTypeTask,
 		})
 	}),
-	Field[yamlJobFile, manifest2.JobGroups](
+	Field(
 		"mixins",
 		jobGroupsSchema,
 		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {

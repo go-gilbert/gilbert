@@ -76,9 +76,17 @@ type JobGroup struct {
 	Jobs     []Job
 }
 
+type PluginImports = map[string]*PluginImport
+
+type PluginImport struct {
+	Location *ReferenceLocation
+	URL      string
+}
+
 type JobFile struct {
-	Consts map[string]any
-	Inputs Inputs
-	Tasks  JobGroups
-	Mixins JobGroups
+	Plugins PluginImports
+	Consts  map[string]any
+	Inputs  Inputs
+	Tasks   JobGroups
+	Mixins  JobGroups
 }

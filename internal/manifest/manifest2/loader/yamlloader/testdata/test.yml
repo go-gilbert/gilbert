@@ -4,6 +4,11 @@ version: 2
 #  - bar/baz
 #  - test.yml
 
+plugins:
+  githubMod: github://go-gilbert/example-plugin@v1.0.0
+  httpMod: http://example.com/plugin.zip
+  localMod: ./my-plugin
+
 const:
   foo: bar
 
@@ -33,6 +38,12 @@ inputs:
       format: date
 
 tasks:
+  test:
+    steps:
+      - action: githubMod/actionName
+        with:
+          key: value
+
   # Build builds application
   build:
     inputs:
