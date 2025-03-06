@@ -153,6 +153,7 @@ func lazyFromSeqNode(opts *yamltree.TraverseOpts, node *ast.SequenceNode) (sp ma
 		DynamicItems: make([]manifest2.AnySpec, len(node.Values)),
 	}
 
+	// TODO: store primitive items in a typed array if possible.
 	for i, n := range node.Values {
 		if yamltree.IsNullNode(n) {
 			endPos = endPositionFromToken(n.GetToken())

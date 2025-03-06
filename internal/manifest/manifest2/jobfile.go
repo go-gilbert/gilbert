@@ -56,7 +56,7 @@ type Job struct {
 	// Condition is expression to check whether job should be executed.
 	Condition *LazyValue
 
-	// Args is job arguments.
+	// Args contains arguments passed to action or mixin.
 	Args map[string]*LazyValue
 
 	// Hooks is key-value pair of event name and actions to be run on event.

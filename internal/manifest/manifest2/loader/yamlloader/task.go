@@ -120,7 +120,16 @@ var jobSchema = Struct(
 		},
 	),
 	Field(
-		"on", Map(
+		"with",
+		Map(lazyValueVisitor{}),
+		func(_ context.Context, dst *manifest2.Job, v map[string]*manifest2.LazyValue) error {
+			dst.Args = v
+			return nil
+		},
+	),
+	Field(
+		"on",
+		Map(
 			List(
 				Selector(
 					func(_ context.Context, _ ast.Node) (ValueVisitor[manifest2.Job], error) {
