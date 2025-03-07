@@ -21,7 +21,6 @@ func TestRead(t *testing.T) {
 		fileDir:           "testdata",
 		filePath:          "testdata/test.yml",
 		dst:               dst,
-		knownNamespaces:   set.From(predefinedTestNamespaces),
 		builtinNamespaces: set.From(predefinedTestNamespaces),
 	})
 

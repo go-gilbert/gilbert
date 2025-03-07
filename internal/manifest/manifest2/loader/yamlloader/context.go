@@ -16,7 +16,6 @@ type loaderContext struct {
 	filePath          string
 	fileDir           string
 	dst               *manifest2.JobFile
-	knownNamespaces   *set.Set[string]
 	builtinNamespaces *set.Set[string]
 }
 

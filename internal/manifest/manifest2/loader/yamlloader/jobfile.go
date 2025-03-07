@@ -19,12 +19,6 @@ type yamlJobFile struct {
 	// includes is list of files included by a file.
 	includes []string
 
-	// knownNamespaces contains import plugin aliases from all includes.
-	//
-	// Used for static validation of action names during parsing.
-	// Populated from loader context.
-	knownNamespaces *set.Set[string]
-
 	// builtinNamespaces contains reserved namespaces that can't be used
 	// for importing custom plugins.
 	builtinNamespaces *set.Set[string]
@@ -49,7 +43,6 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 				)
 			}
 
-			j.knownNamespaces.Insert(k)
 			aliasByURLs[plug.URI] = k
 		}
 
@@ -87,7 +80,6 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 
 		dst[k] = imp
 		aliasByURLs[imp.URI] = k
-		j.knownNamespaces.Insert(k)
 	}
 
 	return nil

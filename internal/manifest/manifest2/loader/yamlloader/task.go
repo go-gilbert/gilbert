@@ -176,15 +176,6 @@ func setJobTarget(ctx context.Context, j *manifest2.Job, targetType manifest2.Jo
 			return err
 		}
 
-		ldCtx, err := getLoaderContext(ctx)
-		if err != nil {
-			return err
-		}
-
-		if !ldCtx.knownNamespaces.Contains(h.Namespace) {
-			return fmt.Errorf("namespace %q is not imported", h.Namespace)
-		}
-
 		j.Handler = h
 		return nil
 	case manifest2.JobKindMixin, manifest2.JobKindTask:
