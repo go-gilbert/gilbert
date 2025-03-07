@@ -2,13 +2,13 @@ package yamlloader
 
 import (
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
-	. "github.com/go-gilbert/gilbert/pkg/yamltree"
+	"github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/token"
 )
 
 func newErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
-	rng, offset := GetNodeRange(node)
+	rng, offset := yamltree.GetNodeRange(node)
 	return &parsetypes.Diagnostic{
 		Err:      err,
 		Severity: parsetypes.DiagnosticSeverityError,
@@ -18,7 +18,7 @@ func newErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parset
 	}
 }
 
-func newErrDiagnosticFromMapping(opts *TraverseOpts, node *ast.MappingValueNode, err error) *parsetypes.Diagnostic {
+func newErrDiagnosticFromMapping(opts *yamltree.TraverseOpts, node *ast.MappingValueNode, err error) *parsetypes.Diagnostic {
 	startPos := node.Start.Position
 	endPos := node.Key.GetToken().Position
 

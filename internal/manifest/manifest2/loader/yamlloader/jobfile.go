@@ -8,6 +8,11 @@ import (
 	"github.com/hashicorp/go-set/v3"
 )
 
+type includeDecl struct {
+	filePath string
+	location *manifest2.ReferenceLocation
+}
+
 // yamlJobFile resembles a final job file accumulated from all imports
 type yamlJobFile struct {
 	// result is destination job file where all yamls decoded into.
@@ -17,7 +22,7 @@ type yamlJobFile struct {
 	version string
 
 	// includes is list of files included by a file.
-	includes []string
+	includes []*includeDecl
 
 	// builtinNamespaces contains reserved namespaces that can't be used
 	// for importing custom plugins.

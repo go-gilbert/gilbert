@@ -206,10 +206,14 @@ func buildRefLocation(ctx context.Context, n ast.Node) (*manifest2.ReferenceLoca
 		return nil, err
 	}
 
+	return buildRefLocationWithCtx(c, n), nil
+}
+
+func buildRefLocationWithCtx(c *loaderContext, n ast.Node) *manifest2.ReferenceLocation {
 	rng, offset := GetNodeRange(n)
 	return &manifest2.ReferenceLocation{
 		FileName: c.filePath,
 		Range:    rng,
 		Offset:   offset,
-	}, nil
+	}
 }

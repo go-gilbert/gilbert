@@ -28,35 +28,38 @@ var jobFileSchema = Struct(
 	).Required(),
 	Field("include",
 		List(
-			Transform(String(), func(ctx context.Context, _ ast.Node, s string) (string, error) {
+			Transform(String(), func(ctx context.Context, n ast.Node, s string) (*includeDecl, error) {
 				if s == "" {
-					return "", errors.New("empty path")
+					return nil, errors.New("empty path")
 				}
 
 				c, err := getLoaderContext(ctx)
 				if err != nil {
-					return "", err
+					return nil, err
 				}
 
 				absPath := filepath.Clean(filepath.Join(c.fileDir, s))
 				if absPath == c.filePath {
-					return "", errors.New("recursive include")
+					return nil, errors.New("recursive include")
 				}
 
 				// drop non-existing imports.
 				st, err := os.Stat(absPath)
 				if err != nil {
-					return "", fmt.Errorf("cannot resolve include: %w", err)
+					return nil, fmt.Errorf("cannot resolve include: %w", err)
 				}
 
 				if st.IsDir() {
-					return "", fmt.Errorf("invalid include path: %s is dir", absPath)
+					return nil, fmt.Errorf("invalid include path: %s is dir", absPath)
 				}
 
-				return absPath, nil
+				return &includeDecl{
+					filePath: absPath,
+					location: buildRefLocationWithCtx(c, n),
+				}, nil
 			}),
 		),
-		func(_ context.Context, dst *yamlJobFile, val []string) error {
+		func(_ context.Context, dst *yamlJobFile, val []*includeDecl) error {
 			dst.includes = val
 			return nil
 		},

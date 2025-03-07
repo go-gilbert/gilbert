@@ -1,8 +1,7 @@
 version: 2
-#include:
-#  - foo
-#  - bar/baz
-#  - test.yml
+
+include:
+  - include.yml
 
 plugins:
   githubMod: github://go-gilbert/example-plugin@v1.0.0

@@ -1,8 +1,8 @@
 module github.com/go-gilbert/gilbert
 
-go 1.23
+go 1.24
 
-toolchain go1.23.4
+toolchain go1.24.0
 
 require (
 	github.com/axw/gocov v0.0.0-20170322000131-3a69a0d2a4ef
