@@ -20,7 +20,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 
 	if len(dst) == 0 {
 		for k, plug := range newItems {
-			if prevAlias, ok := aliasByURLs[plug.URL]; ok {
+			if prevAlias, ok := aliasByURLs[plug.URI]; ok {
 				prevLoc := dst[prevAlias].Location
 				return fmt.Errorf(
 					"plugin was already imported under a different alias (previous declaration at %s:%s)",
@@ -28,7 +28,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 				)
 			}
 
-			aliasByURLs[plug.URL] = k
+			aliasByURLs[plug.URI] = k
 		}
 
 		j.result.Plugins = newItems
@@ -37,7 +37,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 
 	for k, imp := range newItems {
 		// Check if same plugin was imported with a different alias.
-		prevAlias, ok := aliasByURLs[imp.URL]
+		prevAlias, ok := aliasByURLs[imp.URI]
 		if ok && prevAlias != k {
 			prevLoc := dst[prevAlias].Location
 			return fmt.Errorf(
@@ -49,7 +49,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 		// Check if same alias used by different plugin.
 		dup, ok := dst[k]
 		if ok {
-			if dup.URL == imp.URL {
+			if dup.URI == imp.URI {
 				continue
 			}
 
@@ -60,7 +60,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 		}
 
 		dst[k] = imp
-		aliasByURLs[imp.URL] = k
+		aliasByURLs[imp.URI] = k
 	}
 
 	return nil

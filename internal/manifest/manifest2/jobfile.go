@@ -38,8 +38,8 @@ type Job struct {
 	// Kind defines whether job is a mixin or action call.
 	Kind JobKind
 
-	// Name is action or mixin name.
-	Name string
+	// Handler specifies mixin or action to run a job.
+	Handler JobHandlerRef
 
 	// Async tells whether runner should wait until job finishes before starting next job.
 	Async bool
@@ -74,13 +74,6 @@ type JobGroup struct {
 	Location *ReferenceLocation
 	Inputs   Inputs
 	Jobs     []Job
-}
-
-type PluginImports = map[string]*PluginImport
-
-type PluginImport struct {
-	Location *ReferenceLocation
-	URL      string
 }
 
 type JobFile struct {

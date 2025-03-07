@@ -3,6 +3,7 @@ package yamlloader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/manifest/expr"
@@ -168,8 +169,25 @@ func setJobTarget(j *manifest2.Job, targetType manifest2.JobKind, name string) e
 	}
 
 	j.Kind = targetType
-	j.Name = name
-	return nil
+	switch targetType {
+	case manifest2.JobKindAction:
+		h, err := manifest2.SplitActionName(name)
+		if err != nil {
+			return err
+		}
+
+		j.Handler = h
+		return nil
+	case manifest2.JobKindMixin, manifest2.JobKindTask:
+		if err := manifest2.ValidateTaskName(name); err != nil {
+			return err
+		}
+
+		j.Handler.Name = name
+		return nil
+	}
+
+	return fmt.Errorf("unknown job kind: %v", targetType)
 }
 
 var strategySchema = Struct(
