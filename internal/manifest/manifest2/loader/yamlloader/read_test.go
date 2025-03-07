@@ -18,10 +18,11 @@ var predefinedTestNamespaces = []string{
 func TestRead(t *testing.T) {
 	dst := &manifest2.JobFile{}
 	ctx := newLoaderContext(context.TODO(), loaderContext{
-		fileDir:         "testdata",
-		filePath:        "testdata/test.yml",
-		dst:             dst,
-		knownNamespaces: set.From(predefinedTestNamespaces),
+		fileDir:           "testdata",
+		filePath:          "testdata/test.yml",
+		dst:               dst,
+		knownNamespaces:   set.From(predefinedTestNamespaces),
+		builtinNamespaces: set.From(predefinedTestNamespaces),
 	})
 
 	result, diags, err := yamltree.ReadSource(ctx, jobFileSchema, yamltree.Source{

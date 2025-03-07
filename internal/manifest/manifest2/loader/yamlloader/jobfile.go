@@ -19,11 +19,15 @@ type yamlJobFile struct {
 	// includes is list of files included by a file.
 	includes []string
 
-	// knownNamespaces is set import plugin aliases from all includes.
+	// knownNamespaces contains import plugin aliases from all includes.
 	//
 	// Used for static validation of action names during parsing.
 	// Populated from loader context.
 	knownNamespaces *set.Set[string]
+
+	// builtinNamespaces contains reserved namespaces that can't be used
+	// for importing custom plugins.
+	builtinNamespaces *set.Set[string]
 }
 
 func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
@@ -33,6 +37,10 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 
 	if len(dst) == 0 {
 		for k, plug := range newItems {
+			if j.builtinNamespaces.Contains(k) {
+				return fmt.Errorf("import namespace %q is reserved", k)
+			}
+
 			if prevAlias, ok := aliasByURLs[plug.URI]; ok {
 				prevLoc := dst[prevAlias].Location
 				return fmt.Errorf(
@@ -50,6 +58,10 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 	}
 
 	for k, imp := range newItems {
+		if j.builtinNamespaces.Contains(k) {
+			return fmt.Errorf("import namespace %q is reserved", k)
+		}
+
 		// Check if same plugin was imported with a different alias.
 		prevAlias, ok := aliasByURLs[imp.URI]
 		if ok && prevAlias != k {

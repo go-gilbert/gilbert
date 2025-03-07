@@ -13,10 +13,11 @@ type fileInfoCtxKeyType struct{}
 var fileInfoCtxKey = fileInfoCtxKeyType{}
 
 type loaderContext struct {
-	filePath        string
-	fileDir         string
-	dst             *manifest2.JobFile
-	knownNamespaces *set.Set[string]
+	filePath          string
+	fileDir           string
+	dst               *manifest2.JobFile
+	knownNamespaces   *set.Set[string]
+	builtinNamespaces *set.Set[string]
 }
 
 func newLoaderContext(parentCtx context.Context, info loaderContext) context.Context {

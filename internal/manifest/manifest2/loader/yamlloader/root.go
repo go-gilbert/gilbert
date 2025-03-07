@@ -111,5 +111,6 @@ var jobFileSchema = Struct(
 
 	y.result = c.dst
 	y.knownNamespaces = c.knownNamespaces
+	y.builtinNamespaces = c.knownNamespaces
 	return nil
 })
