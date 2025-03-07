@@ -6,15 +6,22 @@ import (
 
 	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
+	"github.com/hashicorp/go-set/v3"
 	"github.com/stretchr/testify/require"
 )
+
+var predefinedTestNamespaces = []string{
+	"go",
+	"fs",
+}
 
 func TestRead(t *testing.T) {
 	dst := &manifest2.JobFile{}
 	ctx := newLoaderContext(context.TODO(), loaderContext{
-		fileDir:  "testdata",
-		filePath: "testdata/test.yml",
-		dst:      dst,
+		fileDir:         "testdata",
+		filePath:        "testdata/test.yml",
+		dst:             dst,
+		knownNamespaces: set.From(predefinedTestNamespaces),
 	})
 
 	result, diags, err := yamltree.ReadSource(ctx, jobFileSchema, yamltree.Source{

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	"github.com/hashicorp/go-set/v3"
 )
 
 type fileInfoCtxKeyType struct{}
@@ -12,9 +13,10 @@ type fileInfoCtxKeyType struct{}
 var fileInfoCtxKey = fileInfoCtxKeyType{}
 
 type loaderContext struct {
-	filePath string
-	fileDir  string
-	dst      *manifest2.JobFile
+	filePath        string
+	fileDir         string
+	dst             *manifest2.JobFile
+	knownNamespaces *set.Set[string]
 }
 
 func newLoaderContext(parentCtx context.Context, info loaderContext) context.Context {

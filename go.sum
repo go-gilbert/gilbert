@@ -17,6 +17,8 @@ github.com/google/go-github/v25 v25.0.2 h1:MqXE7nOlIF91NJ/PXAcvS2dC+XXCDbY7RvJzj
 github.com/google/go-github/v25 v25.0.2/go.mod h1:6z5pC69qHtrPJ0sXPsj4BLnd82b+r6sLB7qcBoRZqpw=
 github.com/google/go-querystring v1.0.0 h1:Xkwi/a1rcvNg1PPYe5vI8GbeBY/jrVuDX5ASuANWTrk=
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
+github.com/hashicorp/go-set/v3 v3.0.0 h1:CaJBQvQCOWoftrBcDt7Nwgo0kdpmrKxar/x2o6pV9JA=
+github.com/hashicorp/go-set/v3 v3.0.0/go.mod h1:IEghM2MpE5IaNvL+D7X480dfNtxjRXZ6VMpK3C8s2ok=
 github.com/mattn/go-colorable v0.0.9 h1:UVL0vNpWh04HeJXV0KLcaT7r06gOH2l4OW6ddYRUIY4=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-isatty v0.0.7 h1:UvyT9uN+3r7yLEYSlJsbQGdsaB/a0DlgWP3pql6iwOc=

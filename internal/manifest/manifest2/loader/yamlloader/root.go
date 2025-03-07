@@ -56,7 +56,7 @@ var jobFileSchema = Struct(
 				return absPath, nil
 			}),
 		),
-		func(ctx context.Context, dst *yamlJobFile, val []string) error {
+		func(_ context.Context, dst *yamlJobFile, val []string) error {
 			dst.includes = val
 			return nil
 		},
@@ -110,5 +110,6 @@ var jobFileSchema = Struct(
 	}
 
 	y.result = c.dst
+	y.knownNamespaces = c.knownNamespaces
 	return nil
 })

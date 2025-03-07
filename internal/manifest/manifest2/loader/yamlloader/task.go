@@ -48,14 +48,14 @@ var jobGroupSchema = Struct(
 var jobSchema = Struct(
 	Field(
 		"action", String(),
-		func(_ context.Context, dst *manifest2.Job, val string) error {
-			return setJobTarget(dst, manifest2.JobKindAction, val)
+		func(ctx context.Context, dst *manifest2.Job, val string) error {
+			return setJobTarget(ctx, dst, manifest2.JobKindAction, val)
 		},
 	),
 	Field(
 		"mixin", String(),
-		func(_ context.Context, dst *manifest2.Job, val string) error {
-			return setJobTarget(dst, manifest2.JobKindMixin, val)
+		func(ctx context.Context, dst *manifest2.Job, val string) error {
+			return setJobTarget(ctx, dst, manifest2.JobKindMixin, val)
 		},
 	),
 	Field(
@@ -163,7 +163,7 @@ var jobSchema = Struct(
 		return nil
 	})
 
-func setJobTarget(j *manifest2.Job, targetType manifest2.JobKind, name string) error {
+func setJobTarget(ctx context.Context, j *manifest2.Job, targetType manifest2.JobKind, name string) error {
 	if j.Kind != manifest2.JobKindUnknown {
 		return errors.New(`only one of "action" or "mixin" fields can be set`)
 	}
@@ -174,6 +174,15 @@ func setJobTarget(j *manifest2.Job, targetType manifest2.JobKind, name string) e
 		h, err := manifest2.SplitActionName(name)
 		if err != nil {
 			return err
+		}
+
+		ldCtx, err := getLoaderContext(ctx)
+		if err != nil {
+			return err
+		}
+
+		if !ldCtx.knownNamespaces.Contains(h.Namespace) {
+			return fmt.Errorf("namespace %q is not imported", h.Namespace)
 		}
 
 		j.Handler = h

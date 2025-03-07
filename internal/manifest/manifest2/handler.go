@@ -24,13 +24,8 @@ type JobHandlerRef struct {
 func SplitActionName(str string) (JobHandlerRef, error) {
 	var dst JobHandlerRef
 	chunks := strings.SplitN(str, namespaceDelimiter, 2)
-	if len(chunks) == 1 {
-		if chunks[0] == "" {
-			return dst, errors.New("empty value")
-		}
-
-		dst.Name = chunks[0]
-		return dst, nil
+	if len(chunks) != 2 {
+		return dst, errors.New("action name should be in format {namespace}/{action}")
 	}
 
 	dst.Namespace = chunks[0]

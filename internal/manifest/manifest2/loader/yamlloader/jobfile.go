@@ -5,12 +5,25 @@ import (
 	"fmt"
 
 	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	"github.com/hashicorp/go-set/v3"
 )
 
+// yamlJobFile resembles a final job file accumulated from all imports
 type yamlJobFile struct {
-	result   *manifest2.JobFile
-	version  string
+	// result is destination job file where all yamls decoded into.
+	result *manifest2.JobFile
+
+	// version is YAML file version.
+	version string
+
+	// includes is list of files included by a file.
 	includes []string
+
+	// knownNamespaces is set import plugin aliases from all includes.
+	//
+	// Used for static validation of action names during parsing.
+	// Populated from loader context.
+	knownNamespaces *set.Set[string]
 }
 
 func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
@@ -28,6 +41,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 				)
 			}
 
+			j.knownNamespaces.Insert(k)
 			aliasByURLs[plug.URI] = k
 		}
 
@@ -61,6 +75,7 @@ func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
 
 		dst[k] = imp
 		aliasByURLs[imp.URI] = k
+		j.knownNamespaces.Insert(k)
 	}
 
 	return nil
