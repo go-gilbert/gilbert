@@ -4,19 +4,19 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	manifest3 "github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/hashicorp/go-set/v3"
 )
 
 type includeDecl struct {
 	filePath string
-	location *manifest2.ReferenceLocation
+	location *manifest3.ReferenceLocation
 }
 
 // yamlJobFile resembles a final job file accumulated from all imports
 type yamlJobFile struct {
 	// result is destination job file where all yamls decoded into.
-	result *manifest2.JobFile
+	result *manifest3.JobFile
 
 	// version is YAML file version.
 	version string
@@ -29,7 +29,7 @@ type yamlJobFile struct {
 	builtinNamespaces *set.Set[string]
 }
 
-func (j *yamlJobFile) appendPlugins(newItems manifest2.PluginImports) error {
+func (j *yamlJobFile) appendPlugins(newItems manifest3.PluginImports) error {
 	// Includes only permit merging plugins with same URL and import slug.
 	aliasByURLs := make(map[string]string, len(j.result.Plugins))
 	dst := j.result.Plugins
@@ -100,7 +100,7 @@ func (j *yamlJobFile) appendConsts(newItems map[string]any) error {
 	return nil
 }
 
-func (j *yamlJobFile) appendInputs(newItems manifest2.Inputs) error {
+func (j *yamlJobFile) appendInputs(newItems manifest3.Inputs) error {
 	if len(newItems) == 0 {
 		return errors.New("empty inputs list")
 	}
@@ -110,7 +110,7 @@ func (j *yamlJobFile) appendInputs(newItems manifest2.Inputs) error {
 		return nil
 	}
 
-	return copyMapWithCheck(j.result.Inputs, newItems, func(k string, dup *manifest2.InputDefinition) error {
+	return copyMapWithCheck(j.result.Inputs, newItems, func(k string, dup *manifest3.InputDefinition) error {
 		loc := dup.Location
 		return fmt.Errorf(
 			"duplicate input block %q (previous declaration at %s:%s)", k,
@@ -119,7 +119,7 @@ func (j *yamlJobFile) appendInputs(newItems manifest2.Inputs) error {
 	})
 }
 
-func (j *yamlJobFile) appendTasks(newItems manifest2.JobGroups) error {
+func (j *yamlJobFile) appendTasks(newItems manifest3.JobGroups) error {
 	if len(newItems) == 0 {
 		return nil
 	}
@@ -129,7 +129,7 @@ func (j *yamlJobFile) appendTasks(newItems manifest2.JobGroups) error {
 		return nil
 	}
 
-	return copyMapWithCheck(j.result.Tasks, newItems, func(k string, dup *manifest2.JobGroup) error {
+	return copyMapWithCheck(j.result.Tasks, newItems, func(k string, dup *manifest3.JobGroup) error {
 		loc := dup.Location
 		return fmt.Errorf(
 			"duplicate task block %q (previous declaration at %s:%s)", k,
@@ -138,7 +138,7 @@ func (j *yamlJobFile) appendTasks(newItems manifest2.JobGroups) error {
 	})
 }
 
-func (j *yamlJobFile) appendMixins(newItems manifest2.JobGroups) error {
+func (j *yamlJobFile) appendMixins(newItems manifest3.JobGroups) error {
 	if len(newItems) == 0 {
 		return nil
 	}
@@ -148,7 +148,7 @@ func (j *yamlJobFile) appendMixins(newItems manifest2.JobGroups) error {
 		return nil
 	}
 
-	return copyMapWithCheck(j.result.Mixins, newItems, func(k string, dup *manifest2.JobGroup) error {
+	return copyMapWithCheck(j.result.Mixins, newItems, func(k string, dup *manifest3.JobGroup) error {
 		loc := dup.Location
 		return fmt.Errorf(
 			"duplicate mixin block %q (previous declaration at %s:%s)", k,

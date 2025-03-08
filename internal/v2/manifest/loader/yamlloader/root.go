@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	manifest3 "github.com/go-gilbert/gilbert/internal/v2/manifest"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
 )
@@ -66,7 +66,7 @@ var jobFileSchema = Struct(
 	),
 	Field(
 		"plugins", importsSchema,
-		func(_ context.Context, dst *yamlJobFile, val manifest2.PluginImports) error {
+		func(_ context.Context, dst *yamlJobFile, val manifest3.PluginImports) error {
 			return dst.appendPlugins(val)
 		},
 	),
@@ -80,30 +80,30 @@ var jobFileSchema = Struct(
 	Field(
 		"inputs",
 		inputsSchema,
-		func(_ context.Context, dst *yamlJobFile, val manifest2.Inputs) error {
+		func(_ context.Context, dst *yamlJobFile, val manifest3.Inputs) error {
 			return dst.appendInputs(val)
 		},
 	),
 	Field(
 		"tasks",
 		jobGroupsSchema,
-		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
+		func(_ context.Context, dst *yamlJobFile, val manifest3.JobGroups) error {
 			return dst.appendTasks(val)
 		},
 	).WithContext(func(ctx context.Context) context.Context {
 		return jobGroupContext(ctx, &jobGroupInfo{
-			jobGroupType: manifest2.JobGroupTypeTask,
+			jobGroupType: manifest3.JobGroupTypeTask,
 		})
 	}),
 	Field(
 		"mixins",
 		jobGroupsSchema,
-		func(_ context.Context, dst *yamlJobFile, val manifest2.JobGroups) error {
+		func(_ context.Context, dst *yamlJobFile, val manifest3.JobGroups) error {
 			return dst.appendMixins(val)
 		},
 	).WithContext(func(ctx context.Context) context.Context {
 		return jobGroupContext(ctx, &jobGroupInfo{
-			jobGroupType: manifest2.JobGroupTypeMixin,
+			jobGroupType: manifest3.JobGroupTypeMixin,
 		})
 	}),
 ).Constructor(func(ctx context.Context, y *yamlJobFile) error {

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	manifest3 "github.com/go-gilbert/gilbert/internal/v2/manifest"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
 )
 
-var nestedJobSchema *ObjectVisitor[manifest2.Job]
+var nestedJobSchema *ObjectVisitor[manifest3.Job]
 
 func init() {
 	// hack for recursive job schema reference.
@@ -20,7 +20,7 @@ func init() {
 }
 
 var jobGroupsSchema = Map(Pointer(jobGroupSchema)).
-	CollectDoc(func(_ context.Context, fi FieldInfo, g *manifest2.JobGroup) *manifest2.JobGroup {
+	CollectDoc(func(_ context.Context, fi FieldInfo, g *manifest3.JobGroup) *manifest3.JobGroup {
 		g.Name = fi.Key
 		g.Doc = fi.Doc
 		return g
@@ -30,7 +30,7 @@ var jobGroupSchema = Struct(
 	Field(
 		"inputs",
 		inputsSchema,
-		func(_ context.Context, dst *manifest2.JobGroup, v manifest2.Inputs) error {
+		func(_ context.Context, dst *manifest3.JobGroup, v manifest3.Inputs) error {
 			dst.Inputs = v
 			return nil
 		},
@@ -38,7 +38,7 @@ var jobGroupSchema = Struct(
 	Field(
 		"steps",
 		List(jobSchema),
-		func(_ context.Context, dst *manifest2.JobGroup, v []manifest2.Job) error {
+		func(_ context.Context, dst *manifest3.JobGroup, v []manifest3.Job) error {
 			dst.Jobs = v
 			return nil
 		},
@@ -48,33 +48,33 @@ var jobGroupSchema = Struct(
 var jobSchema = Struct(
 	Field(
 		"action", String(),
-		func(ctx context.Context, dst *manifest2.Job, val string) error {
-			return setJobTarget(ctx, dst, manifest2.JobKindAction, val)
+		func(ctx context.Context, dst *manifest3.Job, val string) error {
+			return setJobTarget(ctx, dst, manifest3.JobKindAction, val)
 		},
 	),
 	Field(
 		"mixin", String(),
-		func(ctx context.Context, dst *manifest2.Job, val string) error {
-			return setJobTarget(ctx, dst, manifest2.JobKindMixin, val)
+		func(ctx context.Context, dst *manifest3.Job, val string) error {
+			return setJobTarget(ctx, dst, manifest3.JobKindMixin, val)
 		},
 	),
 	Field(
 		"async", Bool(),
-		func(_ context.Context, dst *manifest2.Job, v bool) error {
+		func(_ context.Context, dst *manifest3.Job, v bool) error {
 			dst.Async = v
 			return nil
 		},
 	),
 	Field(
 		"delay", Duration(),
-		func(_ context.Context, dst *manifest2.Job, v time.Duration) error {
+		func(_ context.Context, dst *manifest3.Job, v time.Duration) error {
 			dst.Delay = v
 			return nil
 		},
 	),
 	Field(
 		"timeout", Duration(),
-		func(_ context.Context, dst *manifest2.Job, v time.Duration) error {
+		func(_ context.Context, dst *manifest3.Job, v time.Duration) error {
 			dst.Timeout = v
 			return nil
 		},
@@ -82,7 +82,7 @@ var jobSchema = Struct(
 	Field(
 		"if",
 		Transform(
-			String(), func(ctx context.Context, n ast.Node, val string) (*manifest2.LazyValue, error) {
+			String(), func(ctx context.Context, n ast.Node, val string) (*manifest3.LazyValue, error) {
 				ex, err := expr.Parse(val)
 				if err != nil {
 					return nil, err
@@ -97,10 +97,10 @@ var jobSchema = Struct(
 					return nil, err
 				}
 
-				return &manifest2.LazyValue{
+				return &manifest3.LazyValue{
 					Location: loc,
-					Value: manifest2.AnySpec{
-						BindingSpec: &manifest2.BindingSpec{
+					Value: manifest3.AnySpec{
+						BindingSpec: &manifest3.BindingSpec{
 							Location: *loc,
 							Expr:     ex,
 						},
@@ -108,14 +108,14 @@ var jobSchema = Struct(
 				}, nil
 			},
 		),
-		func(_ context.Context, dst *manifest2.Job, v *manifest2.LazyValue) error {
+		func(_ context.Context, dst *manifest3.Job, v *manifest3.LazyValue) error {
 			dst.Condition = v
 			return nil
 		},
 	),
 	Field(
 		"strategy", strategySchema,
-		func(_ context.Context, dst *manifest2.Job, v manifest2.ExecStrategy) error {
+		func(_ context.Context, dst *manifest3.Job, v manifest3.ExecStrategy) error {
 			dst.Strategy = v
 			return nil
 		},
@@ -123,7 +123,7 @@ var jobSchema = Struct(
 	Field(
 		"with",
 		Map(lazyValueVisitor{}),
-		func(_ context.Context, dst *manifest2.Job, v map[string]*manifest2.LazyValue) error {
+		func(_ context.Context, dst *manifest3.Job, v map[string]*manifest3.LazyValue) error {
 			dst.Args = v
 			return nil
 		},
@@ -133,13 +133,13 @@ var jobSchema = Struct(
 		Map(
 			List(
 				Selector(
-					func(_ context.Context, _ ast.Node) (ValueVisitor[manifest2.Job], error) {
+					func(_ context.Context, _ ast.Node) (ValueVisitor[manifest3.Job], error) {
 						return nestedJobSchema, nil
 					},
 				),
 			),
 		),
-		func(_ context.Context, dst *manifest2.Job, v map[string][]manifest2.Job) error {
+		func(_ context.Context, dst *manifest3.Job, v map[string][]manifest3.Job) error {
 			if !dst.Async {
 				return errors.New(`"on" block can be used only when "async" is true`)
 			}
@@ -149,8 +149,8 @@ var jobSchema = Struct(
 		},
 	),
 ).
-	Validation(func(ctx context.Context, n ast.Node, dst *manifest2.Job) error {
-		if dst.Kind == manifest2.JobKindUnknown {
+	Validation(func(ctx context.Context, n ast.Node, dst *manifest3.Job) error {
+		if dst.Kind == manifest3.JobKindUnknown {
 			return errors.New(`missing action target, please set either "action" or "mixin" field`)
 		}
 
@@ -163,23 +163,23 @@ var jobSchema = Struct(
 		return nil
 	})
 
-func setJobTarget(ctx context.Context, j *manifest2.Job, targetType manifest2.JobKind, name string) error {
-	if j.Kind != manifest2.JobKindUnknown {
+func setJobTarget(ctx context.Context, j *manifest3.Job, targetType manifest3.JobKind, name string) error {
+	if j.Kind != manifest3.JobKindUnknown {
 		return errors.New(`only one of "action" or "mixin" fields can be set`)
 	}
 
 	j.Kind = targetType
 	switch targetType {
-	case manifest2.JobKindAction:
-		h, err := manifest2.SplitActionName(name)
+	case manifest3.JobKindAction:
+		h, err := manifest3.SplitActionName(name)
 		if err != nil {
 			return err
 		}
 
 		j.Handler = h
 		return nil
-	case manifest2.JobKindMixin, manifest2.JobKindTask:
-		if err := manifest2.ValidateTaskName(name); err != nil {
+	case manifest3.JobKindMixin, manifest3.JobKindTask:
+		if err := manifest3.ValidateTaskName(name); err != nil {
 			return err
 		}
 
@@ -193,14 +193,14 @@ func setJobTarget(ctx context.Context, j *manifest2.Job, targetType manifest2.Jo
 var strategySchema = Struct(
 	Field(
 		"matrix", Map(lazyArrayVisitor{}),
-		func(_ context.Context, dst *manifest2.ExecStrategy, v map[string]*manifest2.LazyValue) error {
+		func(_ context.Context, dst *manifest3.ExecStrategy, v map[string]*manifest3.LazyValue) error {
 			dst.Matrix = v
 			return nil
 		},
 	),
 )
 
-func buildRefLocation(ctx context.Context, n ast.Node) (*manifest2.ReferenceLocation, error) {
+func buildRefLocation(ctx context.Context, n ast.Node) (*manifest3.ReferenceLocation, error) {
 	c, err := getLoaderContext(ctx)
 	if err != nil {
 		return nil, err
@@ -209,9 +209,9 @@ func buildRefLocation(ctx context.Context, n ast.Node) (*manifest2.ReferenceLoca
 	return buildRefLocationWithCtx(c, n), nil
 }
 
-func buildRefLocationWithCtx(c *loaderContext, n ast.Node) *manifest2.ReferenceLocation {
+func buildRefLocationWithCtx(c *loaderContext, n ast.Node) *manifest3.ReferenceLocation {
 	rng, offset := GetNodeRange(n)
-	return &manifest2.ReferenceLocation{
+	return &manifest3.ReferenceLocation{
 		FileName: c.filePath,
 		Range:    rng,
 		Offset:   offset,

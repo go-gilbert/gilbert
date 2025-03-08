@@ -3,7 +3,7 @@ package expr
 import (
 	"testing"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr/exprmock"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr/exprmock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

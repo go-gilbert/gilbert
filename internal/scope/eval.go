@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/support/shell"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 )
 
 var (

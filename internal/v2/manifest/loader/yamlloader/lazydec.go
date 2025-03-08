@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
@@ -13,7 +13,7 @@ import (
 
 type lazyArrayVisitor struct{}
 
-func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*manifest2.LazyValue, parsetypes.Diagnostics) {
+func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*manifest.LazyValue, parsetypes.Diagnostics) {
 	switch t := node.(type) {
 	case *ast.StringNode:
 		// allow expressions
@@ -28,7 +28,7 @@ func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOp
 			}
 		}
 
-		return &manifest2.LazyValue{
+		return &manifest.LazyValue{
 			Value:    v,
 			Location: &v.BindingSpec.Location,
 		}, nil
@@ -39,9 +39,9 @@ func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOp
 		}
 
 		rng, offset := yamltree.GetNodeRange(node)
-		return &manifest2.LazyValue{
+		return &manifest.LazyValue{
 			Value: v,
-			Location: &manifest2.ReferenceLocation{
+			Location: &manifest.ReferenceLocation{
 				FileName: opts.FileName,
 				Range:    rng,
 				Offset:   offset,

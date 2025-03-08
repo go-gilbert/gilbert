@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 )
 
 // Scope contains a set of globals and variables related to specific job

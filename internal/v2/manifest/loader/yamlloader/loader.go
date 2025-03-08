@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/hashicorp/go-set/v3"
@@ -22,7 +22,7 @@ const (
 const visitBufSize = 10
 
 type LoadResult struct {
-	File        manifest2.JobFile
+	File        manifest.JobFile
 	Diagnostics parsetypes.Diagnostics
 }
 
@@ -31,7 +31,7 @@ type LoaderConfig struct {
 }
 
 type Loader struct {
-	dst               manifest2.JobFile
+	dst               manifest.JobFile
 	diags             parsetypes.Diagnostics
 	builtinNamespaces *set.Set[string]
 

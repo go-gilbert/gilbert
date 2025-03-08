@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	manifest3 "github.com/go-gilbert/gilbert/internal/v2/manifest"
+	expr2 "github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
@@ -16,10 +16,10 @@ import (
 
 var listTypeSchema = Struct(
 	Field("type",
-		Transform(String(), func(_ context.Context, _ ast.Node, v string) (manifest2.ValueType, error) {
-			return manifest2.ParseValueType(v)
+		Transform(String(), func(_ context.Context, _ ast.Node, v string) (manifest3.ValueType, error) {
+			return manifest3.ParseValueType(v)
 		}),
-		func(_ context.Context, dst *manifest2.TypeSchema, val manifest2.ValueType) error {
+		func(_ context.Context, dst *manifest3.TypeSchema, val manifest3.ValueType) error {
 			if val.IsComplex() {
 				return errors.New("nested complex types are not supported")
 			}
@@ -29,23 +29,23 @@ var listTypeSchema = Struct(
 		},
 	),
 	Field("format",
-		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueFormat, error) {
-			return manifest2.ParseValueFormat(s)
+		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest3.ValueFormat, error) {
+			return manifest3.ParseValueFormat(s)
 		}),
-		func(_ context.Context, dst *manifest2.TypeSchema, val manifest2.ValueFormat) error {
+		func(_ context.Context, dst *manifest3.TypeSchema, val manifest3.ValueFormat) error {
 			dst.Format = val
 			return nil
 		},
-	).Validation(func(_ context.Context, dst *manifest2.TypeSchema) error {
-		if dst.Type != manifest2.ValueTypeString {
+	).Validation(func(_ context.Context, dst *manifest3.TypeSchema) error {
+		if dst.Type != manifest3.ValueTypeString {
 			return errors.New("format is available only when type is string")
 		}
 
 		return nil
 	}),
 	Field("dateFormat", String(),
-		func(_ context.Context, dst *manifest2.TypeSchema, s string) error {
-			if dst.Format != manifest2.ValueFormatDate {
+		func(_ context.Context, dst *manifest3.TypeSchema, s string) error {
+			if dst.Format != manifest3.ValueFormatDate {
 				return errors.New(`"dateFormat" can specified only when "format" field set to "date"`)
 			}
 
@@ -60,7 +60,7 @@ var listTypeSchema = Struct(
 )
 
 var inputsSchema = Map(Pointer(inputDefinitionSchema)).
-	CollectDoc(func(_ context.Context, fi FieldInfo, def *manifest2.InputDefinition) *manifest2.InputDefinition {
+	CollectDoc(func(_ context.Context, fi FieldInfo, def *manifest3.InputDefinition) *manifest3.InputDefinition {
 		def.Name = fi.Key
 		def.Doc = fi.Doc
 		return def
@@ -68,32 +68,32 @@ var inputsSchema = Map(Pointer(inputDefinitionSchema)).
 
 var inputDefinitionSchema = Struct(
 	Field("type",
-		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueType, error) {
-			return manifest2.ParseValueType(s)
+		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest3.ValueType, error) {
+			return manifest3.ParseValueType(s)
 		}),
-		func(_ context.Context, dst *manifest2.InputDefinition, val manifest2.ValueType) error {
+		func(_ context.Context, dst *manifest3.InputDefinition, val manifest3.ValueType) error {
 			dst.Type = val
 			return nil
 		},
 	).Required(),
 	Field("format",
-		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest2.ValueFormat, error) {
-			return manifest2.ParseValueFormat(s)
+		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest3.ValueFormat, error) {
+			return manifest3.ParseValueFormat(s)
 		}),
-		func(_ context.Context, dst *manifest2.InputDefinition, val manifest2.ValueFormat) error {
+		func(_ context.Context, dst *manifest3.InputDefinition, val manifest3.ValueFormat) error {
 			dst.Format = val
 			return nil
 		},
-	).Validation(func(_ context.Context, dst *manifest2.InputDefinition) error {
-		if dst.Type != manifest2.ValueTypeString {
+	).Validation(func(_ context.Context, dst *manifest3.InputDefinition) error {
+		if dst.Type != manifest3.ValueTypeString {
 			return errors.New("format is available only for when type is string")
 		}
 
 		return nil
 	}),
 	Field("dateFormat", String(),
-		func(_ context.Context, dst *manifest2.InputDefinition, s string) error {
-			if dst.Format != manifest2.ValueFormatDate {
+		func(_ context.Context, dst *manifest3.InputDefinition, s string) error {
+			if dst.Format != manifest3.ValueFormatDate {
 				return errors.New(`"dateFormat" can specified only when "format" field set to "date"`)
 			}
 
@@ -106,10 +106,10 @@ var inputDefinitionSchema = Struct(
 		},
 	),
 	FieldFunc("default",
-		func(_ context.Context, _ ast.Node, dst *manifest2.InputDefinition) (ValueVisitor[*manifest2.TypedLazyValue], error) {
+		func(_ context.Context, _ ast.Node, dst *manifest3.InputDefinition) (ValueVisitor[*manifest3.TypedLazyValue], error) {
 			return newDefaultValVisitor(dst), nil
 		},
-		func(ctx context.Context, dst *manifest2.InputDefinition, val *manifest2.TypedLazyValue) error {
+		func(ctx context.Context, dst *manifest3.InputDefinition, val *manifest3.TypedLazyValue) error {
 			dst.DefaultValue = val
 			return nil
 		},
@@ -118,7 +118,7 @@ var inputDefinitionSchema = Struct(
 		Pointer(
 			Struct(
 				Field("env", String(),
-					func(ctx context.Context, dst *manifest2.InputBinding, val string) error {
+					func(ctx context.Context, dst *manifest3.InputBinding, val string) error {
 						val = strings.TrimSpace(val)
 						if val == "" {
 							return errors.New("empty environment variable name")
@@ -129,15 +129,15 @@ var inputDefinitionSchema = Struct(
 				),
 			),
 		),
-		func(_ context.Context, dst *manifest2.InputDefinition, val *manifest2.InputBinding) error {
+		func(_ context.Context, dst *manifest3.InputDefinition, val *manifest3.InputBinding) error {
 			dst.Binding = val
 			return nil
 		},
 	),
 	Field("items",
 		Pointer(listTypeSchema),
-		func(_ context.Context, dst *manifest2.InputDefinition, val *manifest2.TypeSchema) error {
-			if dst.Type == manifest2.ValueTypeList {
+		func(_ context.Context, dst *manifest3.InputDefinition, val *manifest3.TypeSchema) error {
+			if dst.Type == manifest3.ValueTypeList {
 				if val == nil {
 					return errors.New("missing array element type definition")
 				}
@@ -149,14 +149,14 @@ var inputDefinitionSchema = Struct(
 			return nil
 		},
 	),
-).Validation(func(ctx context.Context, n ast.Node, dst *manifest2.InputDefinition) error {
+).Validation(func(ctx context.Context, n ast.Node, dst *manifest3.InputDefinition) error {
 	c, err := getLoaderContext(ctx)
 	if err != nil {
 		return err
 	}
 
 	rng, offset := GetNodeRange(n)
-	dst.Location = manifest2.ReferenceLocation{
+	dst.Location = manifest3.ReferenceLocation{
 		FileName: c.filePath,
 		Range:    rng,
 		Offset:   offset,
@@ -166,19 +166,19 @@ var inputDefinitionSchema = Struct(
 })
 
 type defaultValVisitor struct {
-	inputDef *manifest2.InputDefinition
+	inputDef *manifest3.InputDefinition
 }
 
-func newDefaultValVisitor(inputDef *manifest2.InputDefinition) defaultValVisitor {
+func newDefaultValVisitor(inputDef *manifest3.InputDefinition) defaultValVisitor {
 	return defaultValVisitor{inputDef: inputDef}
 }
 
-func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts, loc *manifest2.ReferenceLocation, node ast.Node) (*manifest2.TypedLazyValue, parsetypes.Diagnostics) {
+func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts, loc *manifest3.ReferenceLocation, node ast.Node) (*manifest3.TypedLazyValue, parsetypes.Diagnostics) {
 	var itemReader ValueVisitor[any]
 	switch v.inputDef.Type {
-	case manifest2.ValueTypeInt:
+	case manifest3.ValueTypeInt:
 		itemReader = IntoAny(Int[int64]())
-	case manifest2.ValueTypeBool:
+	case manifest3.ValueTypeBool:
 		itemReader = IntoAny(Bool())
 	default:
 		return nil, parsetypes.Diagnostics{
@@ -194,13 +194,13 @@ func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts
 		return nil, diags
 	}
 
-	return &manifest2.TypedLazyValue{
+	return &manifest3.TypedLazyValue{
 		Type:   v.inputDef.Type,
 		Format: v.inputDef.Format,
-		Value: manifest2.LazyValue{
+		Value: manifest3.LazyValue{
 			Location: loc,
-			Value: manifest2.AnySpec{
-				LiteralSpec: &manifest2.LiteralSpec{
+			Value: manifest3.AnySpec{
+				LiteralSpec: &manifest3.LiteralSpec{
 					Value: val,
 				},
 			},
@@ -208,23 +208,23 @@ func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts
 	}, nil
 }
 
-func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest2.ReferenceLocation) (*manifest2.TypedLazyValue, error) {
-	exp, err := expr.Parse(n.Value)
+func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest3.ReferenceLocation) (*manifest3.TypedLazyValue, error) {
+	exp, err := expr2.Parse(n.Value)
 	if err != nil {
 		return nil, err
 	}
 
-	typedVal := &manifest2.TypedLazyValue{
+	typedVal := &manifest3.TypedLazyValue{
 		Type:   v.inputDef.Type,
 		Format: v.inputDef.Format,
-		Value: manifest2.LazyValue{
+		Value: manifest3.LazyValue{
 			Location: &loc,
 		},
 	}
 
 	if exp.Evaluable() {
-		typedVal.Value.Value = manifest2.AnySpec{
-			BindingSpec: &manifest2.BindingSpec{
+		typedVal.Value.Value = manifest3.AnySpec{
+			BindingSpec: &manifest3.BindingSpec{
 				Location: loc,
 				Expr:     exp,
 			},
@@ -232,21 +232,21 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest2.Reference
 		return typedVal, nil
 	}
 
-	if ftyp := v.inputDef.Type; ftyp != manifest2.ValueTypeString {
+	if ftyp := v.inputDef.Type; ftyp != manifest3.ValueTypeString {
 		return nil, fmt.Errorf("expected value of type %s but got string", ftyp.String())
 	}
 
 	// this should never happen
-	rawVal, err := exp.String(expr.EvalContext{})
+	rawVal, err := exp.String(expr2.EvalContext{})
 	if err != nil {
 		return nil, err
 	}
 
 	var outVal any = string(rawVal)
 	switch v.inputDef.Format {
-	case manifest2.ValueFormatDate:
+	case manifest3.ValueFormatDate:
 		outVal, err = time.Parse(string(rawVal), v.inputDef.DateFormatOrDefault())
-	case manifest2.ValueFormatDuration:
+	case manifest3.ValueFormatDuration:
 		outVal, err = time.ParseDuration(string(rawVal))
 	default:
 		break
@@ -256,17 +256,17 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest2.Reference
 		return nil, err
 	}
 
-	typedVal.Value.Value = manifest2.AnySpec{
-		LiteralSpec: &manifest2.LiteralSpec{
+	typedVal.Value.Value = manifest3.AnySpec{
+		LiteralSpec: &manifest3.LiteralSpec{
 			Value: outVal,
 		},
 	}
 	return typedVal, nil
 }
 
-func (v defaultValVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (*manifest2.TypedLazyValue, parsetypes.Diagnostics) {
+func (v defaultValVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, node ast.Node) (*manifest3.TypedLazyValue, parsetypes.Diagnostics) {
 	rng, offset := GetNodeRange(node)
-	loc := manifest2.ReferenceLocation{
+	loc := manifest3.ReferenceLocation{
 		FileName: opts.FileName,
 		Range:    rng,
 		Offset:   offset,

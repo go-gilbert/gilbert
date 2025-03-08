@@ -1,4 +1,4 @@
-package manifest2
+package manifest
 
 import (
 	"time"

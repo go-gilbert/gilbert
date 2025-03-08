@@ -1,7 +1,7 @@
-package manifest2
+package manifest
 
 import (
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
+	expr2 "github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -24,7 +24,7 @@ type LazyValue struct {
 	Value    AnySpec
 }
 
-func (v *LazyValue) Expand(ctx expr.EvalContext) (any, error) {
+func (v *LazyValue) Expand(ctx expr2.EvalContext) (any, error) {
 	panic("not implemented")
 }
 
@@ -34,7 +34,7 @@ type LiteralSpec struct {
 
 type BindingSpec struct {
 	Location ReferenceLocation
-	Expr     expr.Expression
+	Expr     expr2.Expression
 }
 
 type ArraySpec struct {

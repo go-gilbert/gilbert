@@ -1,6 +1,8 @@
 package manifest
 
-import "github.com/go-gilbert/gilbert/internal/manifest/expr"
+import (
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+)
 
 const (
 	// FileName is default manifest filename

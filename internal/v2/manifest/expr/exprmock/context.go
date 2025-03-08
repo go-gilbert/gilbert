@@ -10,9 +10,9 @@
 package exprmock
 
 import (
-	reflect "reflect"
+	"reflect"
 
-	gomock "go.uber.org/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 // MockCommandProcessor is a mock of CommandProcessor interface.

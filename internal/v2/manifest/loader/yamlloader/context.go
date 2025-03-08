@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/hashicorp/go-set/v3"
 )
 
@@ -15,7 +15,7 @@ var fileInfoCtxKey = fileInfoCtxKeyType{}
 type loaderContext struct {
 	filePath          string
 	fileDir           string
-	dst               *manifest2.JobFile
+	dst               *manifest.JobFile
 	builtinNamespaces *set.Set[string]
 }
 
@@ -42,7 +42,7 @@ type jobGroupCtxKeyType struct{}
 var jobGroupCtxKey = jobGroupCtxKeyType{}
 
 type jobGroupInfo struct {
-	jobGroupType manifest2.JobGroupType
+	jobGroupType manifest.JobGroupType
 }
 
 func jobGroupContext(parentCtx context.Context, info *jobGroupInfo) context.Context {

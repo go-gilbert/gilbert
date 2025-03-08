@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/manifest2"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/hashicorp/go-set/v3"
@@ -17,7 +17,7 @@ var predefinedTestNamespaces = []string{
 }
 
 func TestRead(t *testing.T) {
-	dst := &manifest2.JobFile{}
+	dst := &manifest.JobFile{}
 	ctx := newLoaderContext(context.TODO(), loaderContext{
 		fileDir:           "testdata",
 		filePath:          "testdata/test.yml",
