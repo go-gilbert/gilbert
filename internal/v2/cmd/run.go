@@ -35,12 +35,12 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(&cobra.Command{
-		Use: "foo",
-		Run: func(_ *cobra.Command, _ []string) {
-			opts.Logger.Infof("opts: %#v", opts.GlobalDefaults)
-		},
-	})
+	//cmd.AddCommand(&cobra.Command{
+	//	Use: "foo",
+	//	Run: func(_ *cobra.Command, _ []string) {
+	//		opts.Logger.Infof("opts: %#v", opts.GlobalDefaults)
+	//	},
+	//})
 
 	return cmd
 }
