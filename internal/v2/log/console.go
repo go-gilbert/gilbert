@@ -10,9 +10,11 @@ import (
 
 var (
 	dbgColor     = color.RGB(66, 66, 66)
-	errColor     = color.New(color.FgRed)
-	warnColor    = color.New(color.FgYellow)
+	errColor     = color.New(color.FgHiRed, color.Bold)
+	warnColor    = color.New(color.FgHiYellow, color.Bold)
 	successColor = color.New(color.FgGreen)
+	whiteColor   = color.New(color.FgHiWhite, color.Bold)
+	noColor      = color.New(color.Reset)
 )
 
 var _ Writer = (*ConsoleWriter)(nil)
@@ -47,27 +49,35 @@ func (c ConsoleWriter) writeNoColor(level Level, prefix, message string, fields 
 
 func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 	var (
-		textColor *color.Color
-		prefix    string
+		prefixColor *color.Color
+		textColor   *color.Color
+		prefix      string
 	)
 	switch level {
 	case LevelFatal:
-		prefix = "Fatal error: "
-		textColor = errColor
+		prefix = "fatal error: "
+		prefixColor = errColor
+		textColor = whiteColor
 	case LevelError:
-		prefix = "Error: "
-		textColor = errColor
+		prefix = "error: "
+		prefixColor = errColor
+		textColor = whiteColor
 	case LevelWarning:
-		prefix = "Warning: "
-		textColor = warnColor
+		prefix = "warning: "
+		prefixColor = warnColor
+		textColor = whiteColor
 	case LevelSuccess:
 		textColor = successColor
 	case LevelDebug:
-		prefix = "Debug: "
+		prefix = "debug: "
 		textColor = dbgColor
 	default:
 		c.writeNoColor(level, "", message, fields)
 		return
+	}
+
+	if prefixColor == nil {
+		prefixColor = textColor
 	}
 
 	dst := writerForLevel(level)
@@ -77,21 +87,19 @@ func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 	}
 
 	if prefix != "" {
-		_, _ = textColor.Fprint(dst, prefix)
+		prefixColor.Fprint(dst, prefix)
 	}
 
+	textColor.Fprint(dst, message)
 	if len(fields) > 0 {
-		_, _ = textColor.Fprint(dst, message, "\t")
+		textColor.Fprint(dst, "\t")
 
 		for _, f := range fields {
-			_, _ = textColor.Fprintf(dst, " %s=%v", f.Key, f.Value)
+			textColor.Fprintf(dst, " %s=%v", f.Key, f.Value)
 		}
-
-		_, _ = textColor.Fprintln(dst)
-		return
 	}
 
-	_, _ = textColor.Fprintln(dst, message)
+	noColor.Fprintln(dst)
 }
 
 func writerForLevel(level Level) io.Writer {
