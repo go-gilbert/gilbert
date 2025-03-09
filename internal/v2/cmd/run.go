@@ -3,16 +3,18 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/spf13/cobra"
 )
 
 func newCmdRun(opts RunOpts) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run <task> [flags]",
-		Short: "Run a following task defined in " + cmdutil.DefaultWorkflowFilename,
+		Short: "Run a task defined in " + cmdutil.DefaultWorkflowFilename,
 
 		// TODO: fill docs someday
 		Long: heredoc.Docf(`
@@ -35,14 +37,46 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 		},
 	}
 
-	//cmd.AddCommand(&cobra.Command{
-	//	Use: "foo",
-	//	Run: func(_ *cobra.Command, _ []string) {
-	//		opts.Logger.Infof("opts: %#v", opts.GlobalDefaults)
-	//	},
-	//})
+	if opts.Workflow != nil && !opts.Workflow.HasErrors {
+		addTaskCommands(cmd, opts.Workflow.File)
+	}
 
 	return cmd
+}
+
+func addTaskCommands(dst *cobra.Command, jf manifest.JobFile) {
+	for name, task := range jf.Tasks {
+		shortDoc, longDoc := getTaskDescription(name, task)
+		cmd := &cobra.Command{
+			Use:   name + " [flags]",
+			Short: shortDoc,
+			Long:  longDoc,
+			CompletionOptions: cobra.CompletionOptions{
+				DisableDefaultCmd:   true,
+				DisableNoDescFlag:   true,
+				DisableDescriptions: true,
+				HiddenDefaultCmd:    true,
+			},
+		}
+
+		// TODO: mount flags
+		dst.AddCommand(cmd)
+	}
+}
+
+func getTaskDescription(name string, t *manifest.JobGroup) (string, string) {
+	switch len(t.Doc) {
+	case 0:
+		str := fmt.Sprintf("run %q task", name)
+		return str, str
+	case 1:
+		str := t.Doc[0]
+		return str, str
+	default:
+		shortStr := t.Doc[0]
+		longStr := strings.Join(t.Doc, "\n")
+		return shortStr, longStr
+	}
 }
 
 func handleTaskNotFound(opts RunOpts, args []string) error {
@@ -65,5 +99,5 @@ func handleTaskNotFound(opts RunOpts, args []string) error {
 		return fmt.Errorf("workflow file %q contains errors", opts.Workflow.File.Path)
 	}
 
-	return fmt.Errorf("task %q is not defined", args[0])
+	return fmt.Errorf("task %q doesn't exist", args[0])
 }

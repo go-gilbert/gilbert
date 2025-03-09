@@ -1,7 +1,7 @@
 version: 2
 
-include:
-  - include.yml
+#include:
+#  - include.yml
 
 plugins:
   githubMod: github://go-gilbert/example-plugin@v1.0.0
@@ -66,6 +66,10 @@ tasks:
           cgo: false
           tags:
             - ${if(inputs.release, "release", "debug")}
+
+  # Starts dev server.
+  #
+  # Detailed description comes here.
   start:
     inputs:
       configFile:
