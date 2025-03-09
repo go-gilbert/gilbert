@@ -72,8 +72,8 @@ func GetNodeRange(node ast.Node) (parsetypes.Range, parsetypes.OffsetRange) {
 	)
 
 	offset := parsetypes.OffsetRange{
-		Start: startPos.Offset,
-		End:   startPos.Offset,
+		Start: startPos.Offset + startPos.IndentNum,
+		End:   startPos.Offset + startPos.IndentNum,
 	}
 
 	switch n := node.(type) {
