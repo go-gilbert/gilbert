@@ -22,6 +22,7 @@ const (
 const visitBufSize = 10
 
 type LoadResult struct {
+	HasErrors   bool
 	File        manifest.JobFile
 	Diagnostics parsetypes.Diagnostics
 }
@@ -67,6 +68,7 @@ func (l *Loader) Load(ctx context.Context, filePath string) (*LoadResult, error)
 
 	result := &LoadResult{
 		File:        l.dst,
+		HasErrors:   l.diags.HasError(),
 		Diagnostics: l.diags,
 	}
 
@@ -109,6 +111,7 @@ func (l *Loader) readInclude(ctx context.Context, node *includeDecl) error {
 		builtinNamespaces: l.builtinNamespaces,
 	})
 
+	// TODO: map yaml syntax errors to diagnostics
 	result, diags, err := yamltree.ReadSource(ldCtx, jobFileSchema, yamltree.Source{
 		FilePath: node.filePath,
 	}, yamltree.WithUnknownFieldAction(yamltree.UnknownFieldActionWarn))
