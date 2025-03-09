@@ -37,6 +37,11 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 		},
 	}
 
+	cmd.AddGroup(&cobra.Group{
+		ID:    "tasks",
+		Title: "Available Tasks:",
+	})
+
 	if opts.Workflow != nil && !opts.Workflow.HasErrors {
 		addTaskCommands(cmd, opts.Workflow.File)
 	}
@@ -45,29 +50,43 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 }
 
 func addTaskCommands(dst *cobra.Command, jf manifest.JobFile) {
+	if len(jf.Tasks) == 0 {
+		return
+	}
+
+	dst.Example = fmt.Sprintf("gilbert run %s")
+	sampleTask := ""
 	for name, task := range jf.Tasks {
+		sampleTask = name
 		shortDoc, longDoc := getTaskDescription(name, task)
 		cmd := &cobra.Command{
-			Use:   name + " [flags]",
-			Short: shortDoc,
-			Long:  longDoc,
+			GroupID: "tasks",
+			Use:     name + " [flags]",
+			Short:   shortDoc,
+			Long:    longDoc,
 			CompletionOptions: cobra.CompletionOptions{
 				DisableDefaultCmd:   true,
 				DisableNoDescFlag:   true,
 				DisableDescriptions: true,
 				HiddenDefaultCmd:    true,
 			},
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				cmd.Println("test!", name)
+				return nil
+			},
 		}
 
 		// TODO: mount flags
 		dst.AddCommand(cmd)
 	}
+
+	dst.Example = fmt.Sprintf("$ gilbert run %s", sampleTask)
 }
 
 func getTaskDescription(name string, t *manifest.JobGroup) (string, string) {
 	switch len(t.Doc) {
 	case 0:
-		str := fmt.Sprintf("run %q task", name)
+		str := fmt.Sprintf("Run %q task", name)
 		return str, str
 	case 1:
 		str := t.Doc[0]
