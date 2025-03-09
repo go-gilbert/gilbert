@@ -12,7 +12,8 @@ type Inputs = map[string]*InputDefinition
 
 type InputDefinition struct {
 	DocHeader
-	TypeSchema
+	Location     ReferenceLocation
+	Type         TypeSchema
 	Binding      *InputBinding
 	DefaultValue *TypedLazyValue
 }

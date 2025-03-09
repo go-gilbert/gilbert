@@ -72,7 +72,7 @@ var inputDefinitionSchema = Struct(
 			return manifest.ParseValueType(s)
 		}),
 		func(_ context.Context, dst *manifest.InputDefinition, val manifest.ValueType) error {
-			dst.Type = val
+			dst.Type.Type = val
 			return nil
 		},
 	).Required(),
@@ -81,11 +81,11 @@ var inputDefinitionSchema = Struct(
 			return manifest.ParseValueFormat(s)
 		}),
 		func(_ context.Context, dst *manifest.InputDefinition, val manifest.ValueFormat) error {
-			dst.Format = val
+			dst.Type.Format = val
 			return nil
 		},
 	).Validation(func(_ context.Context, dst *manifest.InputDefinition) error {
-		if dst.Type != manifest.ValueTypeString {
+		if dst.Type.Type != manifest.ValueTypeString {
 			return errors.New("format is available only for when type is string")
 		}
 
@@ -93,7 +93,7 @@ var inputDefinitionSchema = Struct(
 	}),
 	Field("dateFormat", String(),
 		func(_ context.Context, dst *manifest.InputDefinition, s string) error {
-			if dst.Format != manifest.ValueFormatDate {
+			if dst.Type.Format != manifest.ValueFormatDate {
 				return errors.New(`"dateFormat" can specified only when "format" field set to "date"`)
 			}
 
@@ -101,7 +101,7 @@ var inputDefinitionSchema = Struct(
 				return errors.New("empty format")
 			}
 
-			dst.DateFormat = s
+			dst.Type.DateFormat = s
 			return nil
 		},
 	),
@@ -148,7 +148,7 @@ var inputDefinitionSchema = Struct(
 	Field("items",
 		Pointer(listTypeSchema),
 		func(_ context.Context, dst *manifest.InputDefinition, val *manifest.TypeSchema) error {
-			if dst.Type == manifest.ValueTypeList {
+			if dst.Type.Type == manifest.ValueTypeList {
 				if val == nil {
 					return errors.New("missing array element type definition")
 				}
@@ -156,7 +156,7 @@ var inputDefinitionSchema = Struct(
 				return errors.New(`"items" property should be present only when "type" is "list"`)
 			}
 
-			dst.Items = val
+			dst.Type.Items = val
 			return nil
 		},
 	),
@@ -186,7 +186,7 @@ func newDefaultValVisitor(inputDef *manifest.InputDefinition) defaultValVisitor 
 
 func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts, loc *manifest.ReferenceLocation, node ast.Node) (*manifest.TypedLazyValue, parsetypes.Diagnostics) {
 	var itemReader ValueVisitor[any]
-	switch v.inputDef.Type {
+	switch v.inputDef.Type.Type {
 	case manifest.ValueTypeInt:
 		itemReader = IntoAny(Int[int64]())
 	case manifest.ValueTypeBool:
@@ -206,8 +206,8 @@ func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts
 	}
 
 	return &manifest.TypedLazyValue{
-		Type:   v.inputDef.Type,
-		Format: v.inputDef.Format,
+		Type:   v.inputDef.Type.Type,
+		Format: v.inputDef.Type.Format,
 		Value: manifest.LazyValue{
 			Location: loc,
 			Value: manifest.AnySpec{
@@ -226,8 +226,8 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest.ReferenceL
 	}
 
 	typedVal := &manifest.TypedLazyValue{
-		Type:   v.inputDef.Type,
-		Format: v.inputDef.Format,
+		Type:   v.inputDef.Type.Type,
+		Format: v.inputDef.Type.Format,
 		Value: manifest.LazyValue{
 			Location: &loc,
 		},
@@ -243,7 +243,7 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest.ReferenceL
 		return typedVal, nil
 	}
 
-	if ftyp := v.inputDef.Type; ftyp != manifest.ValueTypeString {
+	if ftyp := v.inputDef.Type.Type; ftyp != manifest.ValueTypeString {
 		return nil, fmt.Errorf("expected value of type %s but got string", ftyp.String())
 	}
 
@@ -254,9 +254,9 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest.ReferenceL
 	}
 
 	var outVal any = string(rawVal)
-	switch v.inputDef.Format {
+	switch v.inputDef.Type.Format {
 	case manifest.ValueFormatDate:
-		outVal, err = time.Parse(string(rawVal), v.inputDef.DateFormatOrDefault())
+		outVal, err = time.Parse(string(rawVal), v.inputDef.Type.DateFormatOrDefault())
 	case manifest.ValueFormatDuration:
 		outVal, err = time.ParseDuration(string(rawVal))
 	default:
