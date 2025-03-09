@@ -1,4 +1,4 @@
-package cmd
+package cmdutil
 
 import (
 	"errors"
@@ -13,16 +13,16 @@ import (
 )
 
 const (
-	flagWorkDir   = "cwd"
-	flagLogFormat = "log-format"
-	flagLogLevel  = "log-level"
-	flagNoCache   = "no-cache"
+	FlagWorkDir   = "cwd"
+	FlagLogFormat = "log-format"
+	FlagLogLevel  = "log-level"
+	FlagNoCache   = "no-cache"
 )
 
-const defaultWorkflowFilename = "gilbert.yaml"
+const DefaultWorkflowFilename = "gilbert.yaml"
 
 var workflowFileNames = []string{
-	defaultWorkflowFilename,
+	DefaultWorkflowFilename,
 	"gilbert.yml",
 }
 
@@ -34,7 +34,7 @@ type BootstrapOpts struct {
 	JSON     bool
 }
 
-func (opts BootstrapOpts) buildLogWriter() log.Writer {
+func (opts BootstrapOpts) BuildLogWriter() log.Writer {
 	if opts.JSON {
 		return log.NewJSONWriter()
 	}
@@ -42,7 +42,7 @@ func (opts BootstrapOpts) buildLogWriter() log.Writer {
 	return log.NewConsoleWriter(opts.NoColor)
 }
 
-func (opts BootstrapOpts) setupWorkDir() (string, error) {
+func (opts BootstrapOpts) SetupWorkDir() (string, error) {
 	workDir := opts.WorkDir
 	if workDir == "" {
 		cwd, err := os.Getwd()
@@ -79,12 +79,12 @@ type coreFlagsConsumer struct {
 
 func (c coreFlagsConsumer) IsBoolFlag(flagName string) bool {
 	// atm all flags require a value.
-	return flagName == flagNoCache
+	return flagName == FlagNoCache
 }
 
 func (c coreFlagsConsumer) IsKnownFlag(flagName string) bool {
 	switch flagName {
-	case flagWorkDir, flagLogFormat, flagLogLevel, flagNoCache:
+	case FlagWorkDir, FlagLogFormat, FlagLogLevel, FlagNoCache:
 		return true
 	}
 
@@ -92,7 +92,7 @@ func (c coreFlagsConsumer) IsKnownFlag(flagName string) bool {
 }
 
 func (c coreFlagsConsumer) ConsumeFlag(flagName, value string) {
-	if flagName == flagNoCache {
+	if flagName == FlagNoCache {
 		uflag.WriteBoolFlag(&c.dst.NoCache, value)
 		return
 	}
@@ -103,11 +103,11 @@ func (c coreFlagsConsumer) ConsumeFlag(flagName, value string) {
 	}
 
 	switch flagName {
-	case flagWorkDir:
+	case FlagWorkDir:
 		c.dst.WorkDir = value
-	case flagLogFormat:
+	case FlagLogFormat:
 		c.setLogFormat(value)
-	case flagLogLevel:
+	case FlagLogLevel:
 		c.setLogLevel(value)
 	}
 }
@@ -147,7 +147,7 @@ func BootstrapArgsFromFlags(args []string) BootstrapOpts {
 	return opts.WithDefaults()
 }
 
-func locateWorkflowFile(workspaceDir string) (string, error) {
+func LocateWorkflowFile(workspaceDir string) (string, error) {
 	for _, fname := range workflowFileNames {
 		fPath := filepath.Join(workspaceDir, fname)
 		if _, err := os.Stat(fPath); err != nil {

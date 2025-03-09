@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/loader/yamlloader"
 )
@@ -15,9 +16,9 @@ func Main(args []string) int {
 	ctx, cancelFn := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancelFn()
 
-	opts := BootstrapArgsFromFlags(args)
+	opts := cmdutil.BootstrapArgsFromFlags(args)
 
-	logger := log.NewLogger("", opts.LogLevel, opts.buildLogWriter())
+	logger := log.NewLogger("", opts.LogLevel, opts.BuildLogWriter())
 	runOpts, err := buildRunOpts(ctx, logger, opts)
 	if err != nil {
 		// Log an error but still continue to build cli app.
@@ -25,7 +26,9 @@ func Main(args []string) int {
 	}
 
 	cmd := newCmdRoot(runOpts)
-	cmd.SetArgs(args)
+
+	// Remove command name to avoid error when binary name doesn't match command.
+	cmd.SetArgs(args[1:])
 	err = cmd.ExecuteContext(ctx)
 	exitCode := handleCmdError(logger, err)
 	return exitCode
@@ -40,13 +43,13 @@ func handleCmdError(logger *log.Logger, err error) int {
 	return 1
 }
 
-func buildRunOpts(ctx context.Context, logger *log.Logger, opts BootstrapOpts) (RunOpts, error) {
+func buildRunOpts(ctx context.Context, logger *log.Logger, opts cmdutil.BootstrapOpts) (RunOpts, error) {
 	runOpts := RunOpts{
 		GlobalDefaults: opts,
 		Logger:         logger,
 	}
 
-	workDir, err := opts.setupWorkDir()
+	workDir, err := opts.SetupWorkDir()
 	if err != nil {
 		return runOpts, err
 	}
@@ -54,7 +57,7 @@ func buildRunOpts(ctx context.Context, logger *log.Logger, opts BootstrapOpts) (
 	// TODO: load workflow from cache if possible and opts.NoCache is false.
 	runOpts.WorkDir = workDir
 	runOpts.GlobalDefaults.WorkDir = workDir
-	workflowFile, err := locateWorkflowFile(workDir)
+	workflowFile, err := cmdutil.LocateWorkflowFile(workDir)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			// bootstrap app w/o jobfile
@@ -70,5 +73,9 @@ func buildRunOpts(ctx context.Context, logger *log.Logger, opts BootstrapOpts) (
 	})
 
 	runOpts.Workflow, err = fileLoader.Load(ctx, workflowFile)
+	if err != nil {
+		runOpts.WorkflowLoadError = err
+	}
+
 	return runOpts, err
 }
