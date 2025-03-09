@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	dbgColor     = color.RGB(66, 66, 66)
+	dbgColor     = color.RGB(66, 66, 66).Add(color.ResetBold)
 	errColor     = color.New(color.FgHiRed, color.Bold)
 	warnColor    = color.New(color.FgHiYellow, color.Bold)
 	successColor = color.New(color.FgGreen)
@@ -92,10 +92,10 @@ func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 
 	textColor.Fprint(dst, message)
 	if len(fields) > 0 {
-		textColor.Fprint(dst, "\t")
+		dbgColor.Fprint(dst, "\t")
 
 		for _, f := range fields {
-			textColor.Fprintf(dst, " %s=%v", f.Key, f.Value)
+			dbgColor.Fprintf(dst, " %s=%v", f.Key, f.Value)
 		}
 	}
 
