@@ -6,8 +6,8 @@ import (
 )
 
 type Field struct {
-	Key   string
-	Value any
+	Key   string `json:"key"`
+	Value any    `json:"value"`
 }
 
 // NewField constructs a new log context field.
