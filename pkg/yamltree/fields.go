@@ -3,6 +3,7 @@ package yamltree
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -186,6 +187,10 @@ func collectFieldDoc(n *ast.MappingValueNode) []string {
 		doc = append(doc, strings.TrimSpace(prevTok.Value))
 		prevLine = curLine
 		prevTok = prevTok.Prev
+	}
+
+	if len(doc) > 1 {
+		slices.Reverse(doc)
 	}
 
 	return doc
