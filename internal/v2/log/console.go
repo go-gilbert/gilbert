@@ -9,10 +9,13 @@ import (
 )
 
 var (
+	dbgColor     = color.RGB(66, 66, 66)
 	errColor     = color.New(color.FgRed)
 	warnColor    = color.New(color.FgYellow)
 	successColor = color.New(color.FgGreen)
 )
+
+var _ Writer = (*ConsoleWriter)(nil)
 
 type ConsoleWriter struct {
 	// NoColor disables ansi colors output.
@@ -26,17 +29,23 @@ func NewConsoleWriter(noColor bool) ConsoleWriter {
 	}
 }
 
-func (c ConsoleWriter) writeNoColor(level Level, message string) {
+func (c ConsoleWriter) writeNoColor(level Level, prefix, message string, fields []Field) {
 	dst := writerForLevel(level)
-	_, _ = fmt.Fprintln(dst, message)
-}
-
-func (c ConsoleWriter) Write(level Level, _, message string) {
-	if c.NoColor {
-		c.writeNoColor(level, message)
-		return
+	if prefix != "" {
+		_, _ = dst.Write([]byte(prefix))
 	}
 
+	_, _ = dst.Write([]byte(message))
+	if len(fields) > 0 {
+		_, _ = dst.Write([]byte("\t"))
+		for _, f := range fields {
+			_, _ = fmt.Fprintf(dst, " %s=%v", f.Key, f.Value)
+		}
+	}
+	_, _ = dst.Write([]byte("\n"))
+}
+
+func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 	var (
 		textColor *color.Color
 		prefix    string
@@ -53,14 +62,33 @@ func (c ConsoleWriter) Write(level Level, _, message string) {
 		textColor = warnColor
 	case LevelSuccess:
 		textColor = successColor
+	case LevelDebug:
+		prefix = "Debug: "
+		textColor = dbgColor
 	default:
-		c.writeNoColor(level, message)
+		c.writeNoColor(level, "", message, fields)
 		return
 	}
 
 	dst := writerForLevel(level)
+	if c.NoColor {
+		c.writeNoColor(level, prefix, message, fields)
+		return
+	}
+
 	if prefix != "" {
 		_, _ = textColor.Fprint(dst, prefix)
+	}
+
+	if len(fields) > 0 {
+		_, _ = textColor.Fprint(dst, message, "\t")
+
+		for _, f := range fields {
+			_, _ = textColor.Fprintf(dst, " %s=%v", f.Key, f.Value)
+		}
+
+		_, _ = textColor.Fprintln(dst)
+		return
 	}
 
 	_, _ = textColor.Fprintln(dst, message)

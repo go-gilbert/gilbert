@@ -8,11 +8,14 @@ import (
 
 const newLine = "\n"
 
+var _ Writer = (*JSONWriter)(nil)
+
 type jsonLine struct {
 	At      time.Time `json:"at"`
 	Level   Level     `json:"level"`
 	Tag     string    `json:"tag,omitempty"`
 	Message string    `json:"msg,omitempty"`
+	Fields  []Field   `json:"fields,omitempty"`
 }
 
 type JSONWriter struct {
@@ -24,7 +27,7 @@ func NewJSONWriter() *JSONWriter {
 	return &JSONWriter{}
 }
 
-func (w *JSONWriter) Write(level Level, tag, message string) {
+func (w *JSONWriter) Write(level Level, tag, message string, fields []Field) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
@@ -34,8 +37,8 @@ func (w *JSONWriter) Write(level Level, tag, message string) {
 		Level:   level,
 		Tag:     tag,
 		Message: message,
+		Fields:  fields,
 	}
 
 	_ = json.NewEncoder(dst).Encode(line)
-	_, _ = dst.Write([]byte(newLine))
 }

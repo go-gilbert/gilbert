@@ -19,9 +19,11 @@ const (
 	flagNoCache   = "no-cache"
 )
 
+const defaultWorkflowFilename = "gilbert.yaml"
+
 var workflowFileNames = []string{
+	defaultWorkflowFilename,
 	"gilbert.yml",
-	"gilbert.yaml",
 }
 
 type BootstrapOpts struct {
@@ -51,11 +53,16 @@ func (opts BootstrapOpts) setupWorkDir() (string, error) {
 		return cwd, err
 	}
 
-	if err := os.Chdir(workDir); err != nil {
+	absWorkDir, err := filepath.Abs(workDir)
+	if err != nil {
+		return "", fmt.Errorf("unable to resolve absolute path for a working directory: %w", err)
+	}
+
+	if err := os.Chdir(absWorkDir); err != nil {
 		return "", fmt.Errorf("cannot change working directory: %w", err)
 	}
 
-	return workDir, nil
+	return absWorkDir, nil
 }
 
 func (opts BootstrapOpts) WithDefaults() BootstrapOpts {
@@ -100,6 +107,8 @@ func (c coreFlagsConsumer) ConsumeFlag(flagName, value string) {
 		c.dst.WorkDir = value
 	case flagLogFormat:
 		c.setLogFormat(value)
+	case flagLogLevel:
+		c.setLogLevel(value)
 	}
 }
 

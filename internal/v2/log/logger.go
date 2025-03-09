@@ -5,10 +5,23 @@ import (
 	"os"
 )
 
+type Field struct {
+	Key   string
+	Value any
+}
+
+// NewField constructs a new log context field.
+func NewField(key string, value any) Field {
+	return Field{
+		Key:   key,
+		Value: value,
+	}
+}
+
 // Writer defines an interface for writing log messages.
 type Writer interface {
 	// Write logs a message with the given level and tag.
-	Write(level Level, tag, message string)
+	Write(level Level, tag, message string, fields []Field)
 }
 
 // Logger represents a logging instance with a name, log level, and a writer.
@@ -44,7 +57,7 @@ func (l Logger) print(level Level, args ...any) {
 	}
 
 	msg := fmt.Sprint(args...)
-	l.writer.Write(level, l.name, msg)
+	l.writer.Write(level, l.name, msg, nil)
 }
 
 func (l Logger) printf(level Level, format string, args ...any) {
@@ -53,7 +66,15 @@ func (l Logger) printf(level Level, format string, args ...any) {
 	}
 
 	msg := fmt.Sprintf(format, args...)
-	l.writer.Write(level, l.name, msg)
+	l.writer.Write(level, l.name, msg, nil)
+}
+
+func (l Logger) printw(level Level, msg string, fields []Field) {
+	if l.level < level {
+		return
+	}
+
+	l.writer.Write(level, l.name, msg, fields)
 }
 
 // Fatal logs a critical error message and may cause the program to terminate.
@@ -68,6 +89,12 @@ func (l Logger) Fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
+// Fatalw logs a critical error message with additional context.
+func (l Logger) Fatalw(msg string, fields ...Field) {
+	l.printw(LevelFatal, msg, fields)
+	os.Exit(1)
+}
+
 // Error logs an error message indicating a failure.
 func (l Logger) Error(args ...any) {
 	l.print(LevelError, args...)
@@ -76,6 +103,11 @@ func (l Logger) Error(args ...any) {
 // Errorf logs an error message using a formatted string.
 func (l Logger) Errorf(format string, args ...any) {
 	l.printf(LevelError, format, args...)
+}
+
+// Errorw logs an error message with additional context.
+func (l Logger) Errorw(msg string, fields ...Field) {
+	l.printw(LevelError, msg, fields)
 }
 
 // Warn logs a warning message indicating a potential issue.
@@ -88,6 +120,11 @@ func (l Logger) Warnf(format string, args ...any) {
 	l.printf(LevelWarning, format, args...)
 }
 
+// Warnw logs a warning message with additional context.
+func (l Logger) Warnw(msg string, fields ...Field) {
+	l.printw(LevelWarning, msg, fields)
+}
+
 // Success logs a success message indicating a positive outcome.
 func (l Logger) Success(args ...any) {
 	l.print(LevelSuccess, args...)
@@ -96,6 +133,11 @@ func (l Logger) Success(args ...any) {
 // Successf logs a success message using a formatted string.
 func (l Logger) Successf(format string, args ...any) {
 	l.printf(LevelSuccess, format, args...)
+}
+
+// Successw logs a success message with additional context.
+func (l Logger) Successw(msg string, fields ...Field) {
+	l.printw(LevelSuccess, msg, fields)
 }
 
 // Info logs an informational message about the application's state.
@@ -108,6 +150,11 @@ func (l Logger) Infof(format string, args ...any) {
 	l.printf(LevelInfo, format, args...)
 }
 
+// Infow logs an informational message with additional context.
+func (l Logger) Infow(msg string, fields ...Field) {
+	l.printw(LevelInfo, msg, fields)
+}
+
 // Debug logs a message for debugging purposes.
 func (l Logger) Debug(args ...any) {
 	l.print(LevelDebug, args...)
@@ -116,4 +163,9 @@ func (l Logger) Debug(args ...any) {
 // Debugf logs a debug message using a formatted string.
 func (l Logger) Debugf(format string, args ...any) {
 	l.printf(LevelDebug, format, args...)
+}
+
+// Debugw logs a debug message with additional context.
+func (l Logger) Debugw(msg string, fields ...Field) {
+	l.printw(LevelDebug, msg, fields)
 }

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -24,6 +25,25 @@ func (l Level) String() string {
 		return ""
 	}
 
+}
+
+func (l Level) GoString() string {
+	switch l {
+	case LevelFatal:
+		return "LevelFatal"
+	case LevelError:
+		return "LevelError"
+	case LevelWarning:
+		return "LevelWarning"
+	case LevelInfo:
+		return "LevelInfo"
+	case LevelSuccess:
+		return "LevelSuccess"
+	case LevelDebug:
+		return "LevelDebug"
+	default:
+		return fmt.Sprintf("Level(%x)", l)
+	}
 }
 
 func (l Level) MarshalText() ([]byte, error) {
