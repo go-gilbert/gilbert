@@ -4,6 +4,21 @@ import "fmt"
 
 type DiagnosticSeverity uint8
 
+func (s DiagnosticSeverity) String() string {
+	switch s {
+	case DiagnosticSeverityWarning:
+		return "warning"
+	case DiagnosticSeverityError:
+		return "error"
+	default:
+		return ""
+	}
+}
+
+func (s DiagnosticSeverity) MarshalText() ([]byte, error) {
+	return []byte(s.String()), nil
+}
+
 const (
 	DiagnosticSeverityUnknown DiagnosticSeverity = iota
 	DiagnosticSeverityError
