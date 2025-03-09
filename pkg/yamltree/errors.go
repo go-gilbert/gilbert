@@ -9,6 +9,7 @@ import (
 
 func NewErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
 	rng, offset := GetNodeRange(node)
+
 	return &parsetypes.Diagnostic{
 		Err:      err,
 		Severity: parsetypes.DiagnosticSeverityError,
