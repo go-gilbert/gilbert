@@ -28,6 +28,7 @@ type LoadResult struct {
 
 type LoaderConfig struct {
 	BuiltinNamespaces []string
+	BuiltinFlags      []string
 }
 
 type Loader struct {
@@ -41,6 +42,7 @@ type Loader struct {
 }
 
 func NewLoader(cfg LoaderConfig) *Loader {
+	// TODO: use BuiltinFlags in loader
 	return &Loader{
 		visitState:        make(map[string]visitState, visitBufSize),
 		builtinNamespaces: set.From(cfg.BuiltinNamespaces),
@@ -55,6 +57,7 @@ func (l *Loader) Load(ctx context.Context, filePath string) (*LoadResult, error)
 		return nil, err
 	}
 
+	l.dst.Path = absPath
 	l.rootDir = filepath.Dir(absPath)
 
 	// Use DFS to be able to detect cycles.

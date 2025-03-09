@@ -77,6 +77,7 @@ type JobGroup struct {
 }
 
 type JobFile struct {
+	Path    string
 	Plugins PluginImports
 	Consts  map[string]any
 	Inputs  Inputs
