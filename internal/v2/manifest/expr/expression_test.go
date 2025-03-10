@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/expr-lang/expr/file"
-	"github.com/go-gilbert/gilbert/internal/manifest/expr/exprmock"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr/exprmock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -15,11 +15,11 @@ func TestEmptyExpression(t *testing.T) {
 	require.False(t, exp.Evaluable())
 	require.Equal(t, exp.Range(), Range{})
 
-	b, err := exp.Eval(EvalContext{})
+	b, err := exp.Eval(t.Context(), EvalContext{})
 	require.NoError(t, err)
 	require.Empty(t, b)
 
-	v, err := exp.String(EvalContext{})
+	v, err := exp.ByteString(t.Context(), EvalContext{})
 	require.NoError(t, err)
 	require.Empty(t, v)
 }
@@ -32,11 +32,11 @@ func TestLiteralExpression(t *testing.T) {
 	require.False(t, exp.Evaluable())
 	require.Equal(t, exp.Range(), rng)
 
-	b, err := exp.Eval(EvalContext{})
+	b, err := exp.Eval(t.Context(), EvalContext{})
 	require.NoError(t, err)
 	require.Equal(t, val, b)
 
-	v, err := exp.String(EvalContext{})
+	v, err := exp.ByteString(t.Context(), EvalContext{})
 	require.NoError(t, err)
 	require.Equal(t, []byte(val), v)
 }
@@ -126,9 +126,9 @@ func TestEvalExpression_Eval(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			input := c.inputFn(t)
-			ctx := c.contextFn(ctrl)
+			opts := c.contextFn(ctrl)
 
-			got, err := input.Eval(ctx)
+			got, err := input.Eval(t.Context(), opts)
 			if c.wantErr != nil {
 				require.Error(t, err)
 				require.Equal(t, c.want, got)
@@ -234,9 +234,9 @@ func TestEvalExpression_String(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			input := c.inputFn(t)
-			ctx := c.contextFn(ctrl)
+			opts := c.contextFn(ctrl)
 
-			got, err := input.String(ctx)
+			got, err := input.ByteString(t.Context(), opts)
 			if c.wantErr != nil {
 				require.Error(t, err)
 				require.Equal(t, c.wantErr, err)
@@ -275,7 +275,7 @@ func TestShellExpression_Eval(t *testing.T) {
 			},
 			ctxFn: func(ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().EvalCommand("uname -m").Return([]byte("arm64"), nil)
+				cmdProc.EXPECT().EvalCommand(gomock.Any(), "uname -m").Return([]byte("arm64"), nil)
 				return EvalContext{
 					CommandProcessor: cmdProc,
 				}
@@ -294,7 +294,7 @@ func TestShellExpression_Eval(t *testing.T) {
 			},
 			ctxFn: func(ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().EvalCommand("foobar").Return(nil, errors.New("foobar"))
+				cmdProc.EXPECT().EvalCommand(gomock.Any(), "foobar").Return(nil, errors.New("foobar"))
 				return EvalContext{
 					CommandProcessor: cmdProc,
 				}
@@ -341,8 +341,8 @@ func TestShellExpression_Eval(t *testing.T) {
 		t.Run(c.label, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			expr := c.exprFn(t)
-			ctx := c.ctxFn(ctrl)
-			got, err := expr.Eval(ctx)
+			opts := c.ctxFn(ctrl)
+			got, err := expr.Eval(t.Context(), opts)
 			if c.wantErr != nil {
 				require.Error(t, err)
 				require.Equal(t, c.wantErr, err)
@@ -397,7 +397,7 @@ func TestCompositeExpression_Eval(t *testing.T) {
 			},
 			ctxFn: func(ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().EvalCommand("cmd").Return(nil, errors.New("foobar"))
+				cmdProc.EXPECT().EvalCommand(gomock.Any(), "cmd").Return(nil, errors.New("foobar"))
 				return EvalContext{
 					CommandProcessor: cmdProc,
 				}
@@ -409,8 +409,8 @@ func TestCompositeExpression_Eval(t *testing.T) {
 		t.Run(c.label, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			expr := c.exprFn(t)
-			ctx := c.ctxFn(ctrl)
-			got, err := expr.Eval(ctx)
+			opts := c.ctxFn(ctrl)
+			got, err := expr.Eval(t.Context(), opts)
 			if c.wantErr != nil {
 				require.Error(t, err)
 				require.Equal(t, c.wantErr, err)

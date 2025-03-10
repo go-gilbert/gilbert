@@ -3,12 +3,12 @@ package expr
 import (
 	"testing"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr/exprmock"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr/exprmock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-//go:generate mockgen -package=exprmock -destination=exprmock/context.go github.com/go-gilbert/gilbert/internal/manifest/expr CommandProcessor,ValueResolver
+//go:generate mockgen -package=exprmock -destination=exprmock/context.go github.com/go-gilbert/gilbert/internal/v2/manifest/expr CommandProcessor,ValueResolver
 func TestParser_ReadString(t *testing.T) {
 	cases := map[string]struct {
 		input      string
@@ -46,7 +46,7 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "foo.go",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().EvalCommand("ls -la").Return([]byte("foo.go"), nil)
+				cmdProc.EXPECT().EvalCommand(gomock.Any(), "ls -la").Return([]byte("foo.go"), nil)
 				return EvalContext{
 					CommandProcessor: cmdProc,
 				}
@@ -57,7 +57,7 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "result of command uname -sm is Linux aarch64",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().EvalCommand("custom command").Return([]byte("Linux aarch64"), nil)
+				cmdProc.EXPECT().EvalCommand(gomock.Any(), "custom command").Return([]byte("Linux aarch64"), nil)
 
 				varRes := exprmock.NewMockValueResolver(ctrl)
 				varRes.EXPECT().ValueByName("cmdname").Return("uname -sm", true)
@@ -93,7 +93,7 @@ func TestParser_ReadString(t *testing.T) {
 			expect: "result of command uname -sm is Linux aarch64",
 			getContext: func(t *testing.T, ctrl *gomock.Controller) EvalContext {
 				cmdProc := exprmock.NewMockCommandProcessor(ctrl)
-				cmdProc.EXPECT().EvalCommand("uname -sm").Return([]byte("Linux aarch64"), nil)
+				cmdProc.EXPECT().EvalCommand(gomock.Any(), "uname -sm").Return([]byte("Linux aarch64"), nil)
 
 				varRes := exprmock.NewMockValueResolver(ctrl)
 				varRes.EXPECT().ValueByName("cmdname").Return("uname -sm", true)

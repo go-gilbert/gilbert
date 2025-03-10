@@ -2,6 +2,7 @@ package expr
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"strings"
 
@@ -38,10 +39,10 @@ type Expression interface {
 	Range() Range
 
 	// Eval evaluates an expression and returns a value.
-	Eval(ctx EvalContext) (any, error)
+	Eval(ctx context.Context, eCtx EvalContext) (any, error)
 
-	// String returns string representation of evaluated value.
-	String(ctx EvalContext) ([]byte, error)
+	// ByteString returns bytes representation of evaluated value.
+	ByteString(ctx context.Context, eCtx EvalContext) ([]byte, error)
 }
 
 type expressionHeader struct {
@@ -69,11 +70,11 @@ func (e EmptyExpression) Range() Range {
 	return Range{}
 }
 
-func (e EmptyExpression) String(_ EvalContext) ([]byte, error) {
+func (e EmptyExpression) ByteString(_ context.Context, _ EvalContext) ([]byte, error) {
 	return nil, nil
 }
 
-func (e EmptyExpression) Eval(_ EvalContext) (any, error) {
+func (e EmptyExpression) Eval(_ context.Context, _ EvalContext) (any, error) {
 	return nil, nil
 }
 
@@ -98,11 +99,11 @@ func (l LiteralExpression) Evaluable() bool {
 	return false
 }
 
-func (l LiteralExpression) Eval(_ EvalContext) (any, error) {
+func (l LiteralExpression) Eval(_ context.Context, _ EvalContext) (any, error) {
 	return l.Value, nil
 }
 
-func (l LiteralExpression) String(_ EvalContext) ([]byte, error) {
+func (l LiteralExpression) ByteString(_ context.Context, _ EvalContext) ([]byte, error) {
 	return []byte(l.Value), nil
 }
 
@@ -138,14 +139,14 @@ func (ee EvalExpression) Evaluable() bool {
 	return true
 }
 
-func (ee EvalExpression) Eval(ctx EvalContext) (any, error) {
+func (ee EvalExpression) Eval(_ context.Context, eCtx EvalContext) (any, error) {
 	program, err := compiler.Compile(ee.AST, ee.EvalConfig)
 	if err != nil {
 		// TODO: unwrap syntax errors
 		return nil, newExprError(err, ee.Range())
 	}
 
-	vals := ctx.Env.Values()
+	vals := eCtx.Env.Values()
 	output, err := expr.Run(program, vals)
 	if err != nil {
 		return nil, newExprError(err, ee.Range())
@@ -154,8 +155,8 @@ func (ee EvalExpression) Eval(ctx EvalContext) (any, error) {
 	return output, nil
 }
 
-func (ee EvalExpression) String(ctx EvalContext) ([]byte, error) {
-	result, err := ee.Eval(ctx)
+func (ee EvalExpression) ByteString(ctx context.Context, eCtx EvalContext) ([]byte, error) {
+	result, err := ee.Eval(ctx, eCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -189,14 +190,14 @@ func (ce CompositeExpression) Evaluable() bool {
 	return true
 }
 
-func (ce CompositeExpression) Eval(ctx EvalContext) (any, error) {
-	return ce.String(ctx)
+func (ce CompositeExpression) Eval(ctx context.Context, eCtx EvalContext) (any, error) {
+	return ce.ByteString(ctx, eCtx)
 }
 
-func (ce CompositeExpression) String(ctx EvalContext) ([]byte, error) {
+func (ce CompositeExpression) ByteString(ctx context.Context, eCtx EvalContext) ([]byte, error) {
 	sb := &bytes.Buffer{}
 	for _, e := range ce.Parts {
-		val, err := e.String(ctx)
+		val, err := e.ByteString(ctx, eCtx)
 		if err != nil {
 			return nil, decorateExprError(err, ce.Range())
 		}
@@ -230,8 +231,8 @@ func (se ShellExpression) Evaluable() bool {
 	return true
 }
 
-func (se ShellExpression) Eval(ctx EvalContext) (any, error) {
-	r, err := se.String(ctx)
+func (se ShellExpression) Eval(ctx context.Context, eCtx EvalContext) (any, error) {
+	r, err := se.ByteString(ctx, eCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -239,11 +240,11 @@ func (se ShellExpression) Eval(ctx EvalContext) (any, error) {
 	return string(r), nil
 }
 
-func (se ShellExpression) String(ctx EvalContext) ([]byte, error) {
+func (se ShellExpression) ByteString(ctx context.Context, eCtx EvalContext) ([]byte, error) {
 	sb := &strings.Builder{}
 
 	for _, e := range se.Parts {
-		val, err := e.String(ctx)
+		val, err := e.ByteString(ctx, eCtx)
 		if err != nil {
 			return nil, decorateExprError(err, se.Range())
 		}
@@ -252,7 +253,7 @@ func (se ShellExpression) String(ctx EvalContext) ([]byte, error) {
 	}
 
 	cmd := strings.TrimSpace(sb.String())
-	result, err := ctx.CommandProcessor.EvalCommand(cmd)
+	result, err := eCtx.CommandProcessor.EvalCommand(ctx, cmd)
 	if err != nil {
 		return nil, newExprError(err, se.Range())
 	}

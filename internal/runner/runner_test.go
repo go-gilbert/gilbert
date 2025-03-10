@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/runner/job"
 	"github.com/go-gilbert/gilbert/internal/scope"
 	"github.com/go-gilbert/gilbert/internal/support/test"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

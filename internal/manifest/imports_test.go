@@ -3,7 +3,7 @@ package manifest
 import (
 	"testing"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/stretchr/testify/assert"
 )
 

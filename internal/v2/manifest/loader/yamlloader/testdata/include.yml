@@ -1,0 +1,9 @@
+version: 2
+
+plugins:
+  localMod: ./my-plugin
+
+tasks:
+  foo:
+    steps:
+      - action: localMod/foo

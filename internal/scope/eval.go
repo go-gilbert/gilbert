@@ -1,11 +1,12 @@
 package scope
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 
-	"github.com/go-gilbert/gilbert/internal/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/support/shell"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 )
 
 var (
@@ -33,7 +34,7 @@ func (e scopeExprAdapter) prepareProcess(cmd string) (proc *exec.Cmd) {
 	return proc
 }
 
-func (e scopeExprAdapter) EvalCommand(cmd string) (result []byte, err error) {
+func (e scopeExprAdapter) EvalCommand(_ context.Context, cmd string) (result []byte, err error) {
 	proc := e.prepareProcess(cmd)
 
 	data, err := proc.CombinedOutput()
@@ -49,9 +50,14 @@ func (e scopeExprAdapter) ValueByName(varName string) (string, bool) {
 	return val, ok
 }
 
-func (e scopeExprAdapter) Values() any {
-	// TODO: Will be replaced.
-	return e.ctx.Variables
+func (e scopeExprAdapter) Values() map[string]any {
+	// FIXME: keep this to get v1 building. remove when v1 is decommissioned.
+	dst := make(map[string]any, len(e.ctx.Variables))
+	for k, v := range e.ctx.Variables {
+		dst[k] = v
+	}
+
+	return dst
 }
 
 func (e scopeExprAdapter) evalContext() expr.EvalContext {

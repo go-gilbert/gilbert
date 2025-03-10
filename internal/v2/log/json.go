@@ -1,0 +1,44 @@
+package log
+
+import (
+	"encoding/json"
+	"sync"
+	"time"
+)
+
+const newLine = "\n"
+
+var _ Writer = (*JSONWriter)(nil)
+
+type jsonLine struct {
+	At      time.Time `json:"at"`
+	Level   Level     `json:"level"`
+	Tag     string    `json:"tag,omitempty"`
+	Message string    `json:"msg,omitempty"`
+	Fields  []Field   `json:"fields,omitempty"`
+}
+
+type JSONWriter struct {
+	lock sync.Mutex
+}
+
+// NewJSONWriter returns a writer that writes log messages in JSON format.
+func NewJSONWriter() *JSONWriter {
+	return &JSONWriter{}
+}
+
+func (w *JSONWriter) Write(level Level, tag, message string, fields []Field) {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+
+	dst := writerForLevel(level)
+	line := jsonLine{
+		At:      time.Now(),
+		Level:   level,
+		Tag:     tag,
+		Message: message,
+		Fields:  fields,
+	}
+
+	_ = json.NewEncoder(dst).Encode(line)
+}
