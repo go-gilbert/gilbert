@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package shell
@@ -22,7 +23,15 @@ func KillProcessGroup(cmd *exec.Cmd) error {
 }
 
 // PrepareCommand prepares a command to execute
+//
+// Deprecated: use PrepareContextCommand instead.
 func PrepareCommand(cmdName string) *exec.Cmd {
 	cmd := exec.Command(shellPath, shellCmdPrefix, wrapCommand(cmdName))
+	return cmd
+}
+
+// PrepareContextCommand prepares a command to execute
+func PrepareContextCommand(ctx context.Context, cmdName string) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, shellPath, shellCmdPrefix, wrapCommand(cmdName))
 	return cmd
 }

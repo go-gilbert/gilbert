@@ -25,7 +25,7 @@ func Main(args []string) int {
 		logger.Error(err)
 	}
 
-	cmd := newCmdRoot(runOpts)
+	cmd := newCmdRoot(ctx, runOpts)
 
 	// Remove command name to avoid error when binary name doesn't match command.
 	cmd.SetArgs(args[1:])

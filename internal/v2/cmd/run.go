@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCmdRun(opts RunOpts) *cobra.Command {
+func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run <task> [flags]",
 		Short: "Run a task defined in " + cmdutil.DefaultWorkflowFilename,
@@ -48,8 +49,9 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 	}
 
 	rootScope := &scope.Scope{
-		Context: scope.ContextRoot,
-		Consts:  opts.Workflow.File.Consts,
+		Role:   scope.RoleRoot,
+		Consts: opts.Workflow.File.Consts,
+		Inputs: make(map[string]any),
 		Globals: scope.Globals{
 			Env: scope.Env(),
 			Project: scope.NewProjectInfo(scope.ProjectInfoOpts{
@@ -59,8 +61,30 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 			}),
 		},
 	}
+
+	if err := addRootInputs(ctx, rootScope, cmd, opts.Workflow.File); err != nil {
+		opts.Logger.Error(err)
+		return cmd
+	}
+
 	addTaskCommands(cmd, opts.Workflow.File)
 	return cmd
+}
+
+func addRootInputs(ctx context.Context, s *scope.Scope, cmd *cobra.Command, jf manifest.JobFile) error {
+	binder := cmdutil.NewInputFlagsBinder(ctx, cmdutil.InputBindingOpts{
+		EvalContext: scope.NewEvalContext(s),
+		EnvVars:     s.Globals.Env,
+		Scope:       s,
+	})
+
+	for _, input := range jf.Inputs {
+		if err := binder.BindGlobalInput(input, cmd); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func addTaskCommands(dst *cobra.Command, jf manifest.JobFile) {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"runtime"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -20,7 +21,7 @@ type RunOpts struct {
 	WorkflowLoadError error
 }
 
-func newCmdRoot(opts RunOpts) *cobra.Command {
+func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 	printDebugRunOpts(opts)
 	cmd := &cobra.Command{
 		Use:           "gilbert <command> <subcommand> [flags]",
@@ -53,7 +54,7 @@ func newCmdRoot(opts RunOpts) *cobra.Command {
 		mountWorkflowInputsFlags(opts.Workflow.File.Inputs, cmd.PersistentFlags())
 	}
 
-	cmd.AddCommand(newCmdRun(opts))
+	cmd.AddCommand(newCmdRun(ctx, opts))
 	return cmd
 }
 

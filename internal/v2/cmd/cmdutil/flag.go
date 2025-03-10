@@ -1,10 +1,12 @@
 package cmdutil
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
@@ -61,6 +63,18 @@ func newInputFlagBinding(def *manifest.InputDefinition, flagCtx inputFlagContext
 	}
 }
 
+func (i *inputFlagBinding) getDoc(isGlobal bool) string {
+	if len(i.inputDef.Doc) != 0 {
+		return strings.Join(i.inputDef.Doc, "\n")
+	}
+
+	if isGlobal {
+		return fmt.Sprintf("Set global workflow input %q", i.inputDef.Name)
+	}
+
+	return fmt.Sprintf("Set task input %q", i.inputDef.Name)
+}
+
 func (i *inputFlagBinding) flagName() string {
 	binding := i.inputDef.Binding
 	if i.inputDef.Binding != nil && binding.FlagName != "" {
@@ -79,8 +93,8 @@ func (i *inputFlagBinding) isRequired() bool {
 	return i.inputDef.Binding == nil || i.inputDef.Binding.EnvVarName == ""
 }
 
-func (i *inputFlagBinding) initDefaultValue() {
-	if err := i.initDefaultFromDef(); err != nil {
+func (i *inputFlagBinding) initDefaultValue(ctx context.Context) {
+	if err := i.initDefaultFromDef(ctx); err != nil {
 		i.err = err
 		return
 	}
@@ -156,7 +170,7 @@ func (i *inputFlagBinding) setValueFromInput(val string) error {
 	return nil
 }
 
-func (i *inputFlagBinding) initDefaultFromDef() error {
+func (i *inputFlagBinding) initDefaultFromDef(ctx context.Context) error {
 	if i.inputDef.DefaultValue == nil {
 		i.initZeroValue()
 		return nil
@@ -171,7 +185,7 @@ func (i *inputFlagBinding) initDefaultFromDef() error {
 		return i.addInputError(errors.New("input of type list cannot be bound to flags"))
 	}
 
-	val, err := i.inputDef.DefaultValue.Value.Expand(i.flagCtx.evalContext)
+	val, err := i.inputDef.DefaultValue.Value.Expand(ctx, i.flagCtx.evalContext)
 	if err != nil {
 		var diags parsetypes.Diagnostics
 		if errors.Is(err, &diags) {
@@ -233,11 +247,34 @@ func (i *inputFlagBinding) initStringValue(rawVal any) error {
 
 func (i *inputFlagBinding) String() string {
 	val, ok := i.flagCtx.dstScope.Inputs[i.inputDef.Name]
-	if !ok {
+	if !ok || val == nil {
 		return ""
 	}
 
-	return fmt.Sprint(val)
+	// TODO: make this in a proper way
+	var strVal string
+	switch i.inputDef.Type.Format {
+	case manifest.ValueFormatInvalid:
+		break
+	case manifest.ValueFormatDate:
+		if dt, ok := val.(time.Time); ok {
+			strVal = dt.Format(i.inputDef.Type.DateFormatOrDefault())
+		}
+	case manifest.ValueFormatDuration:
+		if dur, ok := val.(time.Duration); ok {
+			strVal = dur.String()
+		}
+	case manifest.ValueFormatURL:
+		if uri, ok := val.(*url.URL); ok {
+			strVal = uri.String()
+		}
+	}
+
+	if strVal == "" {
+		return fmt.Sprint(val)
+	}
+
+	return strconv.Quote(strVal)
 }
 
 func (i *inputFlagBinding) Set(s string) error {
