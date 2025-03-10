@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	expr2 "github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -17,6 +17,11 @@ type TypedLazyValue struct {
 	Value  LazyValue
 }
 
+// IsType checks if lazy value type matches to a schema
+func (tlz TypedLazyValue) IsType(t TypeSchema) bool {
+	return tlz.Type == t.Type && tlz.Format == t.Format
+}
+
 // LazyValue represents a computed value that contains template expression
 // that needs to be evaluated in runtime.
 type LazyValue struct {
@@ -24,7 +29,8 @@ type LazyValue struct {
 	Value    AnySpec
 }
 
-func (v *LazyValue) Expand(ctx expr2.EvalContext) (any, error) {
+func (v *LazyValue) Expand(ctx expr.EvalContext) (any, error) {
+	// TODO: figure out this shit.
 	panic("not implemented")
 }
 
@@ -34,7 +40,7 @@ type LiteralSpec struct {
 
 type BindingSpec struct {
 	Location ReferenceLocation
-	Expr     expr2.Expression
+	Expr     expr.Expression
 }
 
 type ArraySpec struct {

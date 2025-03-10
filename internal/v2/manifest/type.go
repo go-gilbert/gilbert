@@ -3,6 +3,7 @@ package manifest
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -132,6 +133,23 @@ type TypeSchema struct {
 	Items      *TypeSchema
 }
 
+// ParseString parses input string using format specified in a type schema.
+func (s TypeSchema) ParseString(val string) (any, error) {
+	switch s.Format {
+	case ValueFormatDate:
+		dateFmt := s.DateFormatOrDefault()
+		return time.Parse(dateFmt, val)
+	case ValueFormatDuration:
+		return time.ParseDuration(val)
+	case ValueFormatURL:
+		return url.Parse(val)
+	case ValueFormatInvalid:
+		return val, nil
+	default:
+		return nil, fmt.Errorf("unsupported value format: %q", s.Format)
+	}
+}
+
 func (s TypeSchema) String() string {
 	switch s.Type {
 	case ValueTypeBool:
@@ -158,6 +176,8 @@ func (s TypeSchema) String() string {
 		return "date"
 	case ValueFormatDuration:
 		return "duration"
+	case ValueFormatURL:
+		return "url"
 	case ValueFormatInvalid:
 		return "string"
 	default:
