@@ -72,6 +72,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 }
 
 func addRootInputs(ctx context.Context, s *scope.Scope, cmd *cobra.Command, jf manifest.JobFile) error {
+	// TODO: add global inputs into a group
 	binder := cmdutil.NewInputFlagsBinder(ctx, cmdutil.InputBindingOpts{
 		EvalContext: scope.NewEvalContext(s),
 		EnvVars:     s.Globals.Env,
