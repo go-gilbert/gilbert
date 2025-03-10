@@ -11,7 +11,10 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
+	"github.com/spf13/pflag"
 )
+
+var _ pflag.Value = (*inputFlagBinding)(nil)
 
 type inputDiagnostics struct {
 	hasErrors bool
@@ -37,14 +40,43 @@ func (i *inputDiagnostics) addInputError(def *manifest.InputDefinition, err erro
 	})
 }
 
+type inputFlagContext struct {
+	evalContext      expr.EvalContext
+	envVars          map[string]string
+	dstScope         *scope.Scope
+	inputDiagnostics *inputDiagnostics
+}
+
 type inputFlagBinding struct {
-	inputDef    *manifest.InputDefinition
-	evalContext expr.EvalContext
-	envVars     map[string]string
-	writeScope  *scope.Scope
-	diags       *inputDiagnostics
-	dirty       bool
-	err         error
+	inputDef *manifest.InputDefinition
+	flagCtx  inputFlagContext
+	dirty    bool
+	err      error
+}
+
+func newInputFlagBinding(def *manifest.InputDefinition, flagCtx inputFlagContext) *inputFlagBinding {
+	return &inputFlagBinding{
+		inputDef: def,
+		flagCtx:  flagCtx,
+	}
+}
+
+func (i *inputFlagBinding) flagName() string {
+	binding := i.inputDef.Binding
+	if i.inputDef.Binding != nil && binding.FlagName != "" {
+		return binding.FlagName
+	}
+
+	// TODO: convert input name from pascal|snake case into kebab case
+	return i.inputDef.Name
+}
+
+func (i *inputFlagBinding) isRequired() bool {
+	if i.inputDef.DefaultValue != nil {
+		return false
+	}
+
+	return i.inputDef.Binding == nil || i.inputDef.Binding.EnvVarName == ""
 }
 
 func (i *inputFlagBinding) initDefaultValue() {
@@ -54,7 +86,7 @@ func (i *inputFlagBinding) initDefaultValue() {
 	}
 
 	if binding := i.inputDef.Binding; binding != nil && binding.EnvVarName != "" {
-		if err := i.setValueFromInput(i.envVars[binding.EnvVarName]); err != nil {
+		if err := i.setValueFromInput(i.flagCtx.envVars[binding.EnvVarName]); err != nil {
 			i.err = err
 			return
 		}
@@ -85,7 +117,7 @@ func (i *inputFlagBinding) initZeroValue() {
 		zeroValue = nil
 	}
 
-	i.writeScope.Inputs[i.inputDef.Name] = zeroValue
+	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = zeroValue
 }
 
 func (i *inputFlagBinding) setValueFromInput(val string) error {
@@ -120,7 +152,7 @@ func (i *inputFlagBinding) setValueFromInput(val string) error {
 		return err
 	}
 
-	i.writeScope.Inputs[i.inputDef.Name] = parsedValue
+	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = parsedValue
 	return nil
 }
 
@@ -139,11 +171,11 @@ func (i *inputFlagBinding) initDefaultFromDef() error {
 		return i.addInputError(errors.New("input of type list cannot be bound to flags"))
 	}
 
-	val, err := i.inputDef.DefaultValue.Value.Expand(i.evalContext)
+	val, err := i.inputDef.DefaultValue.Value.Expand(i.flagCtx.evalContext)
 	if err != nil {
 		var diags parsetypes.Diagnostics
 		if errors.Is(err, &diags) {
-			i.diags.add(diags...)
+			i.flagCtx.inputDiagnostics.add(diags...)
 			return fmt.Errorf("failed to expand default value inside parameter %q", i.inputDef.Name)
 		}
 
@@ -171,7 +203,7 @@ func (i *inputFlagBinding) initDefaultFromDef() error {
 	}
 
 	key := i.inputDef.Name
-	i.writeScope.Inputs[key] = castedVal
+	i.flagCtx.dstScope.Inputs[key] = castedVal
 	return nil
 }
 
@@ -180,7 +212,7 @@ func (i *inputFlagBinding) addInputError(err error) error {
 		return nil
 	}
 
-	i.diags.addInputError(i.inputDef, err)
+	i.flagCtx.inputDiagnostics.addInputError(i.inputDef, err)
 	return err
 }
 
@@ -195,12 +227,12 @@ func (i *inputFlagBinding) initStringValue(rawVal any) error {
 		return fmt.Errorf("cannot parse %q as %s: %w", strVal, i.inputDef.Type.Format, err)
 	}
 
-	i.writeScope.Inputs[i.inputDef.Name] = val
+	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = val
 	return nil
 }
 
 func (i *inputFlagBinding) String() string {
-	val, ok := i.writeScope.Inputs[i.inputDef.Name]
+	val, ok := i.flagCtx.dstScope.Inputs[i.inputDef.Name]
 	if !ok {
 		return ""
 	}
@@ -224,8 +256,10 @@ func (i *inputFlagBinding) validate() error {
 	}
 
 	if !i.dirty {
-		return fmt.Errorf("missing ")
+		return fmt.Errorf("missing required input %q", i.inputDef.Name)
 	}
+
+	return nil
 }
 
 func (i *inputFlagBinding) Type() string {

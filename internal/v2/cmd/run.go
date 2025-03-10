@@ -8,6 +8,7 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
+	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/spf13/cobra"
 )
 
@@ -42,10 +43,23 @@ func newCmdRun(opts RunOpts) *cobra.Command {
 		Title: "Available Tasks:",
 	})
 
-	if opts.Workflow != nil && !opts.Workflow.HasErrors {
-		addTaskCommands(cmd, opts.Workflow.File)
+	if opts.Workflow == nil || opts.Workflow.HasErrors {
+		return cmd
 	}
 
+	rootScope := &scope.Scope{
+		Context: scope.ContextRoot,
+		Consts:  opts.Workflow.File.Consts,
+		Globals: scope.Globals{
+			Env: scope.Env(),
+			Project: scope.NewProjectInfo(scope.ProjectInfoOpts{
+				WorkDir:      opts.WorkDir,
+				WorkspaceDir: opts.WorkDir,
+				WorkflowFile: opts.Workflow.File.Path,
+			}),
+		},
+	}
+	addTaskCommands(cmd, opts.Workflow.File)
 	return cmd
 }
 
