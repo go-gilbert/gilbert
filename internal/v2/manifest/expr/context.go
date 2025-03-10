@@ -1,9 +1,11 @@
 package expr
 
+import "context"
+
 // CommandProcessor handles processing of shell command expressions in manifest file.
 type CommandProcessor interface {
 	// EvalCommand runs a shell command and returns output result as bytes.
-	EvalCommand(command string) ([]byte, error)
+	EvalCommand(ctx context.Context, command string) ([]byte, error)
 }
 
 // ValueResolver resolves variables mentioned in expressions.

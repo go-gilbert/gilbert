@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -143,7 +144,7 @@ func (p SpecV2Parser) evalExpression(c CommandProcessor, cmd string) ([]byte, er
 		return nil, nil
 	}
 
-	result, err := c.EvalCommand(cmd)
+	result, err := c.EvalCommand(context.TODO(), cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to eval inline script: %s", err)
 	}
