@@ -11,10 +11,12 @@ type CommandProcessor interface {
 // ValueResolver resolves variables mentioned in expressions.
 type ValueResolver interface {
 	// ValueByName returns a value by variable name.
+	//
+	// DEPRECATED: getting individial values won't be supported, use Values instead.
 	ValueByName(varName string) (string, bool)
 
 	// Values returns a raw value of a container holding all values.
-	Values() any
+	Values() map[string]any
 }
 
 type EvalContext struct {

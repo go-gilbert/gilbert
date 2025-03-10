@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"context"
+
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
@@ -17,6 +19,11 @@ type TypedLazyValue struct {
 	Value  LazyValue
 }
 
+func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+	// TODO: typecheck?
+	return tlz.Value.Expand(ctx, opts)
+}
+
 // IsType checks if lazy value type matches to a schema
 func (tlz TypedLazyValue) IsType(t TypeSchema) bool {
 	return tlz.Type == t.Type && tlz.Format == t.Format
@@ -29,9 +36,9 @@ type LazyValue struct {
 	Value    AnySpec
 }
 
-func (v *LazyValue) Expand(ctx expr.EvalContext) (any, error) {
-	// TODO: figure out this shit.
-	panic("not implemented")
+func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+	// TODO: convert into diagnostics
+	return v.Value.Expand(ctx, opts)
 }
 
 type LiteralSpec struct {
@@ -50,6 +57,24 @@ type ArraySpec struct {
 
 func (s ArraySpec) Literal() bool {
 	return len(s.LiteralItems) > 0
+}
+
+func (s ArraySpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+	if len(s.LiteralItems) != 0 {
+		return s.LiteralItems, nil
+	}
+
+	dst := make([]any, len(s.DynamicItems))
+	for i, spec := range s.DynamicItems {
+		val, err := spec.Expand(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		dst[i] = val
+	}
+
+	return dst, nil
 }
 
 func (s ArraySpec) Optimize() AnySpec {
@@ -116,8 +141,48 @@ func (s AnySpec) Optimize() AnySpec {
 	return s
 }
 
+func (s AnySpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+	if s.LiteralSpec != nil {
+		return s.LiteralSpec.Value, nil
+	}
+
+	if s.BindingSpec != nil {
+		// TODO: convert into diagnostics
+		return s.BindingSpec.Expr.Eval(ctx, opts)
+	}
+
+	if s.ObjectSpec != nil {
+		return s.ObjectSpec.Expand(ctx, opts)
+	}
+
+	if s.ObjectSpec != nil {
+		return s.ObjectSpec.Expand(ctx, opts)
+	}
+
+	if s.ObjectSpec != nil {
+		return s.ObjectSpec.Expand(ctx, opts)
+	}
+
+	return nil, nil
+}
+
 type ObjectSpec struct {
 	Values map[string]AnySpec
+}
+
+func (s ObjectSpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+	dst := make(map[string]any, len(s.Values))
+
+	for k, spec := range s.Values {
+		val, err := spec.Expand(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		dst[k] = val
+	}
+
+	return dst, nil
 }
 
 func (s ObjectSpec) Optimize() AnySpec {

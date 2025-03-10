@@ -219,7 +219,7 @@ func (v defaultValVisitor) readOtherNode(ctx context.Context, opts *TraverseOpts
 	}, nil
 }
 
-func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest.ReferenceLocation) (*manifest.TypedLazyValue, error) {
+func (v defaultValVisitor) readString(ctx context.Context, n *ast.StringNode, loc manifest.ReferenceLocation) (*manifest.TypedLazyValue, error) {
 	exp, err := expr.Parse(n.Value)
 	if err != nil {
 		return nil, err
@@ -248,7 +248,7 @@ func (v defaultValVisitor) readString(n *ast.StringNode, loc manifest.ReferenceL
 	}
 
 	// this should never happen
-	rawVal, err := exp.String(expr.EvalContext{})
+	rawVal, err := exp.ByteString(ctx, expr.EvalContext{})
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func (v defaultValVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, no
 
 	// If string - check for template expression inside
 	if n, ok := IntoStringNode(node); ok {
-		strVal, err := v.readString(n, loc)
+		strVal, err := v.readString(ctx, n, loc)
 		if err != nil {
 			return nil, parsetypes.Diagnostics{
 				newErrDiagnosticFromNode(opts.FileName, n, err),
