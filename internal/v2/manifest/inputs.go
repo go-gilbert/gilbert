@@ -23,10 +23,11 @@ func (b *InputBinding) DelimiterOrDefault() string {
 
 type Inputs = map[string]*InputDefinition
 
+// InputDefinition is workflow or job input parameter definition.
 type InputDefinition struct {
 	DocHeader
 	Location     ReferenceLocation
-	Type         TypeSchema
+	Schema       TypeSchema
 	Binding      *InputBinding
 	DefaultValue *TypedLazyValue
 }

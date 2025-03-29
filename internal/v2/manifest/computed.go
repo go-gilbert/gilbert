@@ -14,9 +14,8 @@ type ReferenceLocation struct {
 }
 
 type TypedLazyValue struct {
-	Type   ValueType
-	Format ValueFormat
-	Value  LazyValue
+	Type  ValueType
+	Value LazyValue
 }
 
 func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
@@ -26,7 +25,7 @@ func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalContext) (an
 
 // IsType checks if lazy value type matches to a schema
 func (tlz TypedLazyValue) IsType(t TypeSchema) bool {
-	return tlz.Type == t.Type && tlz.Format == t.Format
+	return tlz.Type == t.Type
 }
 
 // LazyValue represents a computed value that contains template expression

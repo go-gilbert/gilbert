@@ -3,7 +3,6 @@ package inputflag
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -24,7 +23,7 @@ func newScalarInputFlagBinding(def *manifest.InputDefinition, flagCtx inputFlagC
 }
 
 func (i *scalarInputFlagBinding) checkType() error {
-	typeDef := i.inputDef.Type
+	typeDef := i.inputDef.Schema
 	if !typeDef.Type.IsComplex() {
 		return nil
 	}
@@ -46,7 +45,7 @@ func (i *scalarInputFlagBinding) checkType() error {
 
 	return fmt.Errorf(
 		"input of type %s cannot be mounted as a command flag (declared at %s:%s)",
-		i.inputDef.Type, i.inputDef.Location.FileName, i.inputDef.Location.Range,
+		i.inputDef.Schema, i.inputDef.Location.FileName, i.inputDef.Location.Range,
 	)
 }
 
@@ -80,7 +79,7 @@ func (i *scalarInputFlagBinding) setValueFromInput(val string, isDefault bool) e
 		i.dirtyStatus = valueDirty
 	}
 
-	parsedValue, err := decodeValueWithSchema(val, i.inputDef.Type)
+	parsedValue, err := i.inputDef.Schema.ParseValue(val)
 	if err != nil {
 		return err
 	}
@@ -97,20 +96,14 @@ func (i *scalarInputFlagBinding) String() string {
 
 	// TODO: make this in a proper way
 	var strVal string
-	switch i.inputDef.Type.Format {
-	case manifest.ValueFormatInvalid:
-		break
-	case manifest.ValueFormatDate:
+	switch i.inputDef.Schema.Type {
+	case manifest.ValueTypeDate:
 		if dt, ok := val.(time.Time); ok {
-			strVal = dt.Format(i.inputDef.Type.DateFormatOrDefault())
+			strVal = dt.Format(i.inputDef.Schema.DateFormatOrDefault())
 		}
-	case manifest.ValueFormatDuration:
+	case manifest.ValueTypeDuration:
 		if dur, ok := val.(time.Duration); ok {
 			strVal = dur.String()
-		}
-	case manifest.ValueFormatURL:
-		if uri, ok := val.(*url.URL); ok {
-			strVal = uri.String()
 		}
 	}
 

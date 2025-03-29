@@ -110,11 +110,11 @@ func (b *InputFlagsBinder) BindTaskInput(input *manifest.InputDefinition, cmd *c
 }
 
 func flagBindingFromInput(logger *log.Logger, inputDef *manifest.InputDefinition, inputCtx inputFlagContext) (inputFlagBinding, error) {
-	if inputDef.Type.Type.IsList() {
+	if inputDef.Schema.Type.IsList() {
 		return newListInputFlagBinding(logger, inputDef, inputCtx), nil
 	}
 
-	if inputDef.Type.Type.IsComplex() {
+	if inputDef.Schema.Type.IsComplex() {
 		// objects aren't supported (yet)
 		return nil, fmt.Errorf("cannot bind input %q to a flag: complex types are not supported", inputDef.Name)
 	}

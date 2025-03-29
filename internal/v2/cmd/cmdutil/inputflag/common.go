@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -66,7 +65,7 @@ func newInputBindingBase(inputDef *manifest.InputDefinition, flagCtx inputFlagCo
 }
 
 func (i *inputBindingBase) Type() string {
-	return i.inputDef.Type.String()
+	return i.inputDef.Schema.String()
 }
 
 func (i *inputBindingBase) getDoc(isGlobal bool) string {
@@ -119,30 +118,7 @@ func (i *inputBindingBase) error() error {
 }
 
 func (i *inputBindingBase) initZeroValue() {
-	var zeroValue any
-	switch t := i.inputDef.Type.Type; t {
-	case manifest.ValueTypeString:
-		switch i.inputDef.Type.Format {
-		case manifest.ValueFormatDate:
-			zeroValue = time.Now()
-		case manifest.ValueFormatDuration:
-			zeroValue = time.Duration(0)
-		case manifest.ValueFormatURL:
-			zeroValue = &url.URL{}
-		default:
-			zeroValue = ""
-		}
-	case manifest.ValueTypeFloat:
-		zeroValue = float64(0)
-	case manifest.ValueTypeInt:
-		zeroValue = int64(0)
-	case manifest.ValueTypeBool:
-		zeroValue = false
-	default:
-		zeroValue = nil
-	}
-
-	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = zeroValue
+	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = manifest.NewZeroValue(i.inputDef.Schema.Type)
 }
 
 func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
@@ -151,7 +127,7 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 		return nil
 	}
 
-	if !i.inputDef.DefaultValue.IsType(i.inputDef.Type) {
+	if !i.inputDef.DefaultValue.IsType(i.inputDef.Schema) {
 		return i.addInputError(errors.New("default value type doesn't match input type"))
 	}
 
@@ -168,9 +144,23 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 
 	i.dirtyStatus = valueDefault
 	var castedVal any
-	switch t := i.inputDef.Type.Type; t {
+	switch t := i.inputDef.Schema.Type; t {
+	// Value for parseable types can be a Go value (e.g. time.Duration) or a raw string.
+	//
+	// Scenarios:
+	// 	- Value is explicitly declared in a workflow and parsed by yamllloader into a Go value.
+	//	- Value is dynamic but returns a Go value.
+	//  - Value is dynamic but returns a string (e.g "$(date -Ihours)")
+	//
+	// If value is string - parse it. Otherwise - type check.
+	case manifest.ValueTypeDate:
+		castedVal, err = valueToDate(val, i.inputDef.Schema.DateFormatOrDefault())
+	case manifest.ValueTypeDuration:
+		castedVal, err = valueToDuration(val)
+
+	// Other types
 	case manifest.ValueTypeString:
-		castedVal, err = formatValueWithSchema(i.inputDef.Type, val)
+		castedVal, err = parsetypes.AnyToString(val)
 	case manifest.ValueTypeFloat:
 		castedVal, err = parsetypes.AnyToFloat(val)
 	case manifest.ValueTypeInt:
@@ -192,37 +182,34 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 	return nil
 }
 
-// formatValueWithSchema consumes a string value and formats using type schema.
-//
-// If passed value was already formatted - return original value.
-func formatValueWithSchema(typeDef manifest.TypeSchema, rawVal any) (any, error) {
-	if typeDef.Format == manifest.ValueFormatInvalid {
-		// If value was already expanded before
-		return parsetypes.AnyToString(rawVal)
-	}
-
-	// parse value from formatted string
-	switch t := rawVal.(type) {
+func valueToDate(v any, dateFormat string) (any, error) {
+	var strVal string
+	switch t := v.(type) {
 	case string:
-		return typeDef.ParseString(t)
+		strVal = t
 	case []byte:
-		return typeDef.ParseString(string(t))
-	}
-
-	// otherwise - value is already parsed or came from an expression. just do type check.
-	switch typeDef.Format {
-	case manifest.ValueFormatDate:
-		if _, ok := rawVal.(time.Time); !ok {
-			return nil, fmt.Errorf("value of type %T is not a %s", rawVal, typeDef.Format)
-		}
-
-	case manifest.ValueFormatDuration:
-		if _, ok := rawVal.(time.Duration); !ok {
-			return nil, fmt.Errorf("value of type %T is not a %s", rawVal, typeDef.Format)
-		}
+		strVal = string(t)
+	case time.Time:
+		return t, nil
 	default:
-		return nil, fmt.Errorf("unknown value format %s", typeDef.Format)
+		return nil, fmt.Errorf("expected value of type date but got %T", t)
 	}
 
-	return rawVal, nil
+	return time.Parse(dateFormat, strVal)
+}
+
+func valueToDuration(v any) (any, error) {
+	var strVal string
+	switch t := v.(type) {
+	case string:
+		strVal = t
+	case []byte:
+		strVal = string(t)
+	case time.Time:
+		return t, nil
+	default:
+		return nil, fmt.Errorf("expected value of type date but got %T", t)
+	}
+
+	return time.ParseDuration(strVal)
 }

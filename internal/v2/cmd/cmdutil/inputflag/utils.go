@@ -8,44 +8,10 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 )
 
-func decodeValueWithSchema(val string, typ manifest.TypeSchema) (any, error) {
-	if val == "" {
-		return nil, nil
-	}
-
-	var (
-		parsedValue any
-		err         error
-	)
-	switch t := typ.Type; t {
-	case manifest.ValueTypeInt:
-		parsedValue, err = strconv.ParseInt(val, 10, 64)
-	case manifest.ValueTypeFloat:
-		parsedValue, err = strconv.ParseFloat(val, 64)
-	case manifest.ValueTypeBool:
-		parsedValue, err = strconv.ParseBool(val)
-	case manifest.ValueTypeString:
-		parsedValue, err = typ.ParseString(val)
-		if err != nil {
-			return nil, fmt.Errorf("cannot parse %q as %s: %w", val, typ.Format, err)
-		}
-
-	default:
-		// TODO: support list of scalars
-		return nil, fmt.Errorf("cannot parse string %q as %s", val, t)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	//i.flagCtx.dstScope.Inputs[i.inputDef.Name] = parsedValue
-	return parsedValue, nil
-}
-
 type ValueDecoderFunc = func(val string) (any, error)
 
 func getValueDecoder(typ manifest.TypeSchema) (ValueDecoderFunc, error) {
+	// TODO: move this into "manifest"?
 	var parseFn ValueDecoderFunc
 	switch t := typ.Type; t {
 	case manifest.ValueTypeInt:
@@ -72,13 +38,25 @@ func getValueDecoder(typ manifest.TypeSchema) (ValueDecoderFunc, error) {
 
 			return strconv.ParseBool(val)
 		}
-	case manifest.ValueTypeString:
+	case manifest.ValueTypeDate:
 		parseFn = func(val string) (any, error) {
 			if val == "" {
 				return nil, nil
 			}
 
-			return typ.ParseString(val)
+			return time.Parse(typ.DateFormatOrDefault(), val)
+		}
+	case manifest.ValueTypeDuration:
+		parseFn = func(val string) (any, error) {
+			if val == "" {
+				return nil, nil
+			}
+
+			return time.ParseDuration(val)
+		}
+	case manifest.ValueTypeString:
+		parseFn = func(val string) (any, error) {
+			return val, nil
 		}
 	default:
 		return nil, fmt.Errorf("unsupported input list item type: %s", typ)
@@ -98,11 +76,11 @@ func mapToString(v any) string {
 	}
 }
 
-func getStringFormatter(typ manifest.TypeSchema, format manifest.ValueFormat) func(any) string {
-	if format == manifest.ValueFormatDate {
+func getStringFormatter(typ manifest.ValueType, dateFormat string) func(any) string {
+	if typ == manifest.ValueTypeDate {
 		return func(v any) string {
 			if dt, ok := v.(time.Time); ok {
-				return strconv.Quote(dt.Format(typ.DateFormatOrDefault()))
+				return strconv.Quote(dt.Format(dateFormat))
 			}
 
 			return fmt.Sprint(v)
