@@ -2,6 +2,9 @@ package parsetypes
 
 import (
 	"fmt"
+	"iter"
+	"reflect"
+	"slices"
 	"strconv"
 )
 
@@ -134,4 +137,48 @@ func AnyToFloat(v any) (float64, error) {
 	default:
 		return 0, fmt.Errorf("value of type %T cannot be converted to float", t)
 	}
+}
+
+func AnyToList(v any) ([]any, error) {
+	if l, ok := v.([]any); ok {
+		return l, nil
+	}
+
+	r := reflect.ValueOf(v)
+	switch r.Kind() {
+	case reflect.Slice, reflect.Array:
+		break
+	default:
+		return nil, fmt.Errorf("value of %T is not a list", v)
+	}
+
+	count := r.Len()
+	dst := make([]any, count)
+	for i := 0; i < count; i++ {
+		dst[i] = r.Index(i).Interface()
+	}
+
+	return dst, nil
+}
+
+func IterAny(v any) (iter.Seq2[int, any], int, error) {
+	if l, ok := v.([]any); ok {
+		return slices.All(l), len(l), nil
+	}
+
+	r := reflect.ValueOf(v)
+	switch r.Kind() {
+	case reflect.Slice, reflect.Array:
+		break
+	default:
+		return nil, 0, fmt.Errorf("value of %T is not a list", v)
+	}
+
+	count := r.Len()
+	return func(yield func(int, any) bool) {
+		for i := 0; i < count; i++ {
+			v := r.Index(i).Interface()
+			yield(i, v)
+		}
+	}, count, nil
 }

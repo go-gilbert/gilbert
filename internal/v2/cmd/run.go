@@ -8,6 +8,8 @@ import (
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
+	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil/inputflag"
+	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/spf13/cobra"
@@ -62,7 +64,14 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		},
 	}
 
-	if err := addRootInputs(ctx, rootScope, cmd, opts.Workflow.File); err != nil {
+	err := addRootInputs(ctx, flagBindingOpts{
+		logger: opts.Logger,
+		cmd:    cmd,
+		scope:  rootScope,
+		inputs: opts.Workflow.File.Inputs,
+	})
+
+	if err != nil {
 		opts.Logger.Error(err)
 		return cmd
 	}
@@ -71,16 +80,27 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 	return cmd
 }
 
-func addRootInputs(ctx context.Context, s *scope.Scope, cmd *cobra.Command, jf manifest.JobFile) error {
-	// TODO: add global inputs into a group
-	binder := cmdutil.NewInputFlagsBinder(ctx, cmdutil.InputBindingOpts{
-		EvalContext: scope.NewEvalContext(s),
-		EnvVars:     s.Globals.Env,
-		Scope:       s,
-	})
+type flagBindingOpts struct {
+	logger *log.Logger
+	scope  *scope.Scope
+	cmd    *cobra.Command
+	inputs manifest.Inputs
+}
 
-	for _, input := range jf.Inputs {
-		if err := binder.BindGlobalInput(input, cmd); err != nil {
+func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
+	return inputflag.InputBindingOpts{
+		EvalContext: scope.NewEvalContext(opts.scope),
+		EnvVars:     opts.scope.Globals.Env,
+		Scope:       opts.scope,
+	}
+}
+
+func addRootInputs(ctx context.Context, opts flagBindingOpts) error {
+	// TODO: add global inputs into a group
+	binder := inputflag.NewInputFlagsBinder(ctx, opts.logger, opts.inputBindingOpts())
+
+	for _, input := range opts.inputs {
+		if err := binder.BindGlobalInput(input, opts.cmd); err != nil {
 			return err
 		}
 	}

@@ -21,6 +21,7 @@ const (
 	ValueTypeInt
 	ValueTypeFloat
 	ValueTypeList
+	ValueTypeDict
 )
 
 func (v ValueType) String() string {
@@ -35,6 +36,8 @@ func (v ValueType) String() string {
 		return "float"
 	case ValueTypeList:
 		return "list"
+	case ValueTypeDict:
+		return "dict"
 	}
 
 	return "<invalid>"
@@ -52,13 +55,24 @@ func (v ValueType) GoString() string {
 		return "ValueTypeFloat"
 	case ValueTypeList:
 		return "ValueTypeList"
+	case ValueTypeDict:
+		return "ValueTypeDict"
 	}
 
 	return fmt.Sprint(v)
 }
 
-func (v ValueType) IsComplex() bool {
+func (v ValueType) IsList() bool {
 	return v == ValueTypeList
+}
+
+func (v ValueType) IsComplex() bool {
+	switch v {
+	case ValueTypeDict, ValueTypeList:
+		return true
+	default:
+		return false
+	}
 }
 
 type ValueFormat uint8
