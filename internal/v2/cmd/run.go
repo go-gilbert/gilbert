@@ -30,16 +30,42 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 			// This handler will be executed when task doesn't exist or workflow file has errors.
 			return handleTaskNotFound(opts, args)
 		},
-		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			if opts.Workflow == nil {
-				return
+				return nil
 			}
 
 			if len(opts.Workflow.Diagnostics) > 0 {
 				cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
 			}
+
+			if opts.Workflow.HasErrors {
+				return errors.New("workflow file contains errors")
+			}
+
+			return nil
 		},
 	}
+
+	// Cobra flags won't be mounted if workflow file has errors.
+	// If user calls "run" command with broken workflow - Cobra just throws "unknown flag" error.
+	// To avoid user confusion - render file diagnostics before exit.
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		if opts.Workflow == nil {
+			return err
+		}
+
+		if len(opts.Workflow.Diagnostics) > 0 {
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
+		}
+
+		// swallow error to avoid user's confusion.
+		if opts.Workflow.HasErrors {
+			return errors.New("workflow file contains errors")
+		}
+
+		return err
+	})
 
 	cmd.AddGroup(&cobra.Group{
 		ID:    "tasks",
