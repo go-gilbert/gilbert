@@ -117,7 +117,7 @@ func ParseValueType(value string) (ValueType, error) {
 		return ValueTypeInt, nil
 	case "bool":
 		return ValueTypeBool, nil
-	case "time":
+	case "date":
 		return ValueTypeDate, nil
 	case "duration":
 		return ValueTypeDuration, nil
