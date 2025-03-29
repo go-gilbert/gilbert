@@ -170,7 +170,7 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 	var castedVal any
 	switch t := i.inputDef.Type.Type; t {
 	case manifest.ValueTypeString:
-		castedVal, err = parseFormattedValue(i.inputDef.Type, val)
+		castedVal, err = formatValueWithSchema(i.inputDef.Type, val)
 	case manifest.ValueTypeFloat:
 		castedVal, err = parsetypes.AnyToFloat(val)
 	case manifest.ValueTypeInt:
@@ -192,17 +192,37 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 	return nil
 }
 
-// parseFormattedValue checks if raw value is a string and decodes it into a date or duration if there is a format in schema.
-func parseFormattedValue(typeDef manifest.TypeSchema, rawVal any) (any, error) {
-	strVal, err := parsetypes.AnyToString(rawVal)
-	if err != nil {
-		return "", err
+// formatValueWithSchema consumes a string value and formats using type schema.
+//
+// If passed value was already formatted - return original value.
+func formatValueWithSchema(typeDef manifest.TypeSchema, rawVal any) (any, error) {
+	if typeDef.Format == manifest.ValueFormatInvalid {
+		// If value was already expanded before
+		return parsetypes.AnyToString(rawVal)
 	}
 
-	val, err := typeDef.ParseString(strVal)
-	if err != nil {
-		return "", fmt.Errorf("cannot parse %q as %s: %w", strVal, typeDef.Format, err)
+	// parse value from formatted string
+	switch t := rawVal.(type) {
+	case string:
+		return typeDef.ParseString(t)
+	case []byte:
+		return typeDef.ParseString(string(t))
 	}
 
-	return val, nil
+	// otherwise - value is already parsed or came from an expression. just do type check.
+	switch typeDef.Format {
+	case manifest.ValueFormatDate:
+		if _, ok := rawVal.(time.Time); !ok {
+			return nil, fmt.Errorf("value of type %T is not a %s", rawVal, typeDef.Format)
+		}
+
+	case manifest.ValueFormatDuration:
+		if _, ok := rawVal.(time.Duration); !ok {
+			return nil, fmt.Errorf("value of type %T is not a %s", rawVal, typeDef.Format)
+		}
+	default:
+		return nil, fmt.Errorf("unknown value format %s", typeDef.Format)
+	}
+
+	return rawVal, nil
 }
