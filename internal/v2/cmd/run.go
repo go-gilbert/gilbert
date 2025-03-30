@@ -16,22 +16,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type mountContext struct {
+type flagMountParams struct {
 	logger     *log.Logger
 	defaults   cmdutil.BootstrapOpts
 	inputDiags *inputflag.DiagnosticsCollector
 	fileDiags  parsetypes.Diagnostics
 }
 
+type runContext struct {
+	jobFile   manifest.JobFile
+	rootScope *scope.Scope
+}
+
 func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
-	mountCtx := mountContext{
+	var runCtx runContext
+	mp := flagMountParams{
 		logger:     opts.Logger,
 		defaults:   opts.GlobalDefaults,
 		inputDiags: inputflag.NewDiagnosticsCollector(),
 	}
 
 	if opts.Workflow != nil {
-		mountCtx.fileDiags = opts.Workflow.Diagnostics
+		mp.fileDiags = opts.Workflow.Diagnostics
+		runCtx.jobFile = opts.Workflow.File
 	}
 
 	cmd := &cobra.Command{
@@ -54,13 +61,13 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 			}
 
 			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
-			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mountCtx.inputDiags.Diagnostics)
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mp.inputDiags.Diagnostics)
 
 			if opts.Workflow.HasErrors {
 				return errors.New("workflow file contains errors")
 			}
 
-			if mountCtx.inputDiags.HasErrors {
+			if mp.inputDiags.HasErrors {
 				return errors.New("error occurred when reading workflow inputs")
 			}
 
@@ -70,7 +77,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 
 	// Render inputs diagnostics in help to indicate why some flags or defaults are missing.
 	cmdutil.DecorateHelpFunc(cmd, func() {
-		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mountCtx.inputDiags.Diagnostics)
+		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mp.inputDiags.Diagnostics)
 	})
 
 	// Cobra flags won't be mounted if workflow file has errors.
@@ -102,7 +109,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		return cmd
 	}
 
-	rootScope := &scope.Scope{
+	runCtx.rootScope = &scope.Scope{
 		Role:   scope.RoleRoot,
 		Consts: opts.Workflow.File.Consts,
 		Inputs: make(map[string]any),
@@ -116,12 +123,11 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		},
 	}
 
-	err := addRootInputs(ctx, flagBindingOpts{
+	err := addRootInputs(ctx, cmd, flagBindingOpts{
 		logger: opts.Logger,
-		cmd:    cmd,
-		scope:  rootScope,
+		scope:  runCtx.rootScope,
 		inputs: opts.Workflow.File.Inputs,
-		diags:  mountCtx.inputDiags,
+		diags:  mp.inputDiags,
 	})
 
 	if err != nil {
@@ -129,14 +135,13 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		return cmd
 	}
 
-	addTaskCommands(cmd, opts.Workflow.File, mountCtx)
+	addTaskCommands(cmd, mp, runCtx)
 	return cmd
 }
 
 type flagBindingOpts struct {
 	logger *log.Logger
 	scope  *scope.Scope
-	cmd    *cobra.Command
 	inputs manifest.Inputs
 	diags  *inputflag.DiagnosticsCollector
 }
@@ -150,12 +155,12 @@ func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
 	}
 }
 
-func addRootInputs(ctx context.Context, opts flagBindingOpts) error {
+func addRootInputs(ctx context.Context, cmd *cobra.Command, opts flagBindingOpts) error {
 	// TODO: add global inputs into a group
 	binder := inputflag.NewInputFlagsBinder(ctx, opts.logger, opts.inputBindingOpts())
 
 	for _, input := range opts.inputs {
-		if err := binder.BindGlobalInput(input, opts.cmd); err != nil {
+		if err := binder.BindGlobalInput(input, cmd); err != nil {
 			return err
 		}
 	}
@@ -163,13 +168,13 @@ func addRootInputs(ctx context.Context, opts flagBindingOpts) error {
 	return nil
 }
 
-func addTaskCommands(dst *cobra.Command, jf manifest.JobFile, mctx mountContext) {
-	if len(jf.Tasks) == 0 {
+func addTaskCommands(dst *cobra.Command, params flagMountParams, runCtx runContext) {
+	if len(runCtx.jobFile.Tasks) == 0 {
 		return
 	}
 
 	sampleTask := ""
-	for name, task := range jf.Tasks {
+	for name, task := range runCtx.jobFile.Tasks {
 		sampleTask = name
 		shortDoc, longDoc := getTaskDescription(name, task)
 		cmd := &cobra.Command{
@@ -185,6 +190,10 @@ func addTaskCommands(dst *cobra.Command, jf manifest.JobFile, mctx mountContext)
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				cmd.Println("test!", name)
+				for k, v := range runCtx.rootScope.Inputs {
+					fmt.Println(k, "=", v)
+				}
+
 				return nil
 			},
 		}
