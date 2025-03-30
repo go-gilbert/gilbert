@@ -4,6 +4,10 @@ import "fmt"
 
 type DiagnosticSeverity uint8
 
+func (s DiagnosticSeverity) IsError() bool {
+	return s == DiagnosticSeverityError
+}
+
 func (s DiagnosticSeverity) String() string {
 	switch s {
 	case DiagnosticSeverityWarning:

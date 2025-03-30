@@ -8,12 +8,13 @@ import (
 )
 
 var (
-	colorDiagError = color.New(color.FgHiRed, color.Bold)
-	colorDiagWarn  = color.New(color.FgYellow, color.Bold)
-	colorDiagMsg   = color.New(color.FgHiWhite, color.Bold)
-	colorErrMarker = color.New(color.FgRed)
-	colorGutter    = color.New(color.ResetBold, color.FgHiBlue)
-	colorReset     = color.New(color.Reset)
+	colorDiagError  = color.New(color.FgHiRed, color.Bold)
+	colorDiagWarn   = color.New(color.FgYellow, color.Bold)
+	colorDiagMsg    = color.New(color.FgHiWhite, color.Bold)
+	colorErrMarker  = color.New(color.FgRed)
+	colorNoteMarker = color.New(color.FgHiBlue)
+	colorGutter     = color.New(color.ResetBold, color.FgHiBlue)
+	colorReset      = color.New(color.Reset)
 )
 
 type colorPrinter interface {
@@ -37,32 +38,35 @@ func (_ nopColor) Fprintln(w io.Writer, a ...interface{}) (int, error) {
 }
 
 type diagColorPalette struct {
-	diagError colorPrinter
-	diagWarn  colorPrinter
-	diagMsg   colorPrinter
-	gutter    colorPrinter
-	errMarker colorPrinter
-	reset     colorPrinter
+	diagError  colorPrinter
+	diagWarn   colorPrinter
+	diagMsg    colorPrinter
+	gutter     colorPrinter
+	errMarker  colorPrinter
+	noteMarker colorPrinter
+	reset      colorPrinter
 }
 
 func newDiagColorPalette(noColor bool) diagColorPalette {
 	if noColor {
 		return diagColorPalette{
-			diagError: nopColor{},
-			diagWarn:  nopColor{},
-			diagMsg:   nopColor{},
-			gutter:    nopColor{},
-			errMarker: nopColor{},
-			reset:     nopColor{},
+			diagError:  nopColor{},
+			diagWarn:   nopColor{},
+			diagMsg:    nopColor{},
+			gutter:     nopColor{},
+			errMarker:  nopColor{},
+			noteMarker: nopColor{},
+			reset:      nopColor{},
 		}
 	}
 
 	return diagColorPalette{
-		diagError: colorDiagError,
-		diagWarn:  colorDiagWarn,
-		diagMsg:   colorDiagMsg,
-		gutter:    colorGutter,
-		errMarker: colorErrMarker,
-		reset:     colorReset,
+		diagError:  colorDiagError,
+		diagWarn:   colorDiagWarn,
+		diagMsg:    colorDiagMsg,
+		gutter:     colorGutter,
+		noteMarker: colorNoteMarker,
+		errMarker:  colorErrMarker,
+		reset:      colorReset,
 	}
 }

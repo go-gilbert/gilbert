@@ -65,7 +65,8 @@ func (v *ObjectVisitor[T]) handleUnknownField(opts *TraverseOpts, key string, no
 		return nil
 	}
 
-	diag := newErrDiagnosticFromMapping(opts, node, fmt.Errorf("unknown field %q", key))
+	err := parsetypes.NewAnnotatedError(fmt.Errorf("unknown field %q", key), "remove unknown property")
+	diag := newErrDiagnosticFromMapping(opts, node, err)
 	if opts.UnknownFieldAction == UnknownFieldActionWarn {
 		diag.Severity = parsetypes.DiagnosticSeverityWarning
 	}

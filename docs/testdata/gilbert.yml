@@ -19,6 +19,7 @@ inputs:
   release:
     default: false
     type: bool
+    optional: true
   # Some timeout value
   timeout:
     type: duration
@@ -28,10 +29,10 @@ inputs:
   timestamp:
     type: date
     dateFormat: "2006-01-02 15:04:05"
-  items:
-    type: list
-    items:
-      type: duration
+#  items:
+#    type: list
+#    items:
+#      type: duration
 
 tasks:
   test:

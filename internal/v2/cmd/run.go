@@ -12,11 +12,27 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/spf13/cobra"
 )
 
+type mountContext struct {
+	logger     *log.Logger
+	defaults   cmdutil.BootstrapOpts
+	inputDiags *inputflag.DiagnosticsCollector
+	fileDiags  parsetypes.Diagnostics
+}
+
 func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
-	diagsCollector := inputflag.NewDiagnosticsCollector()
+	mountCtx := mountContext{
+		logger:     opts.Logger,
+		defaults:   opts.GlobalDefaults,
+		inputDiags: inputflag.NewDiagnosticsCollector(),
+	}
+
+	if opts.Workflow != nil {
+		mountCtx.fileDiags = opts.Workflow.Diagnostics
+	}
 
 	cmd := &cobra.Command{
 		Use:   "run <task> [flags]",
@@ -38,13 +54,13 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 			}
 
 			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
-			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, diagsCollector.Diagnostics)
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mountCtx.inputDiags.Diagnostics)
 
 			if opts.Workflow.HasErrors {
 				return errors.New("workflow file contains errors")
 			}
 
-			if diagsCollector.HasErrors {
+			if mountCtx.inputDiags.HasErrors {
 				return errors.New("error occurred when reading workflow inputs")
 			}
 
@@ -54,7 +70,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 
 	// Render inputs diagnostics in help to indicate why some flags or defaults are missing.
 	cmdutil.DecorateHelpFunc(cmd, func() {
-		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, diagsCollector.Diagnostics)
+		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mountCtx.inputDiags.Diagnostics)
 	})
 
 	// Cobra flags won't be mounted if workflow file has errors.
@@ -105,7 +121,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		cmd:    cmd,
 		scope:  rootScope,
 		inputs: opts.Workflow.File.Inputs,
-		diags:  diagsCollector,
+		diags:  mountCtx.inputDiags,
 	})
 
 	if err != nil {
@@ -113,7 +129,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		return cmd
 	}
 
-	addTaskCommands(cmd, opts.Workflow.File)
+	addTaskCommands(cmd, opts.Workflow.File, mountCtx)
 	return cmd
 }
 
@@ -147,7 +163,7 @@ func addRootInputs(ctx context.Context, opts flagBindingOpts) error {
 	return nil
 }
 
-func addTaskCommands(dst *cobra.Command, jf manifest.JobFile) {
+func addTaskCommands(dst *cobra.Command, jf manifest.JobFile, mctx mountContext) {
 	if len(jf.Tasks) == 0 {
 		return
 	}

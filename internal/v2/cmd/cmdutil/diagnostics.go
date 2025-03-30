@@ -124,10 +124,15 @@ func renderDiagnostic(fp filePool, palette diagColorPalette, diag *parsetypes.Di
 	// Draw highlight & annotation
 	msg := tryGetErrorReason(diag.Err)
 
+	noteColor := palette.errMarker
+	if !diag.Severity.IsError() {
+		noteColor = palette.noteMarker
+	}
+
 	//palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")
 	palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " | ")
 	palette.reset.Fprint(os.Stderr, getPad(startChar))
-	palette.errMarker.Fprint(os.Stderr, strings.Repeat("^", highlightLen), " ", msg)
+	noteColor.Fprint(os.Stderr, strings.Repeat("^", highlightLen), " ", msg)
 	palette.reset.Fprintln(os.Stderr)
 }
 
