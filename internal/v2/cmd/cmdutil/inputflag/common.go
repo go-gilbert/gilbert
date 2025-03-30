@@ -112,11 +112,16 @@ func (i *inputBindingBase) flagName() string {
 }
 
 func (i *inputBindingBase) isRequired() bool {
-	if i.inputDef.DefaultValue != nil {
-		return false
+	binding := i.inputDef.Binding
+	if binding != nil && binding.EnvVarName != "" {
+		// not required if there is env default value.
+		v, ok := i.flagCtx.envVars[binding.EnvVarName]
+		if ok && v != "" {
+			return false
+		}
 	}
 
-	return i.inputDef.Binding == nil || i.inputDef.Binding.EnvVarName == ""
+	return i.inputDef.IsRequired()
 }
 
 func (i *inputBindingBase) addInputError(err error) error {

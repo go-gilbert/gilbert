@@ -19,7 +19,6 @@ inputs:
   release:
     default: false
     type: bool
-    optional: true
   # Some timeout value
   timeout:
     type: duration
@@ -28,6 +27,7 @@ inputs:
       env: JOB_TIMEOUT
   timestamp:
     type: date
+    optional: true
     dateFormat: "2006-01-02 15:04:05"
 #  items:
 #    type: list
