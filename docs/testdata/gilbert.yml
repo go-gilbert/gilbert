@@ -52,7 +52,7 @@ tasks:
       - action: go/build
         if: ${!(matrix.os == "darwin" && matrix.arch == "386")}
         delay: 5s
-        deadline: 30s
+        timeout: 30s
         strategy:
           matrix:
             os: [windows, linux, darwin]
