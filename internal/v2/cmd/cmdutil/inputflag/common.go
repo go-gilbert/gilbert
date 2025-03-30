@@ -21,22 +21,26 @@ const (
 	valueDirty
 )
 
-type inputDiagnostics struct {
-	hasErrors bool
-	diags     parsetypes.Diagnostics
+type DiagnosticsCollector struct {
+	HasErrors   bool
+	Diagnostics parsetypes.Diagnostics
 }
 
-func (i *inputDiagnostics) add(newDiags ...*parsetypes.Diagnostic) {
-	if !i.hasErrors {
-		i.hasErrors = parsetypes.HasErrorDiagnostics(newDiags)
+func NewDiagnosticsCollector() *DiagnosticsCollector {
+	return &DiagnosticsCollector{}
+}
+
+func (i *DiagnosticsCollector) Append(newDiags ...*parsetypes.Diagnostic) {
+	if !i.HasErrors {
+		i.HasErrors = parsetypes.HasErrorDiagnostics(newDiags)
 	}
 
-	i.diags = append(i.diags, newDiags...)
+	i.Diagnostics = append(i.Diagnostics, newDiags...)
 }
 
-func (i *inputDiagnostics) addInputError(def *manifest.InputDefinition, err error) {
-	i.hasErrors = true
-	i.diags = append(i.diags, &parsetypes.Diagnostic{
+func (i *DiagnosticsCollector) AddInputError(def *manifest.InputDefinition, err error) {
+	i.HasErrors = true
+	i.Diagnostics = append(i.Diagnostics, &parsetypes.Diagnostic{
 		Severity: parsetypes.DiagnosticSeverityError,
 		FileName: def.Location.FileName,
 		Range:    def.Location.Range,
@@ -49,7 +53,7 @@ type inputFlagContext struct {
 	evalContext      expr.EvalContext
 	envVars          map[string]string
 	dstScope         *scope.Scope
-	inputDiagnostics *inputDiagnostics
+	inputDiagnostics *DiagnosticsCollector
 }
 
 // inputBindingBase contains mutual components and boilerplate code for all input binding implementations.
@@ -103,7 +107,7 @@ func (i *inputBindingBase) addInputError(err error) error {
 		return nil
 	}
 
-	i.flagCtx.inputDiagnostics.addInputError(i.inputDef, err)
+	i.flagCtx.inputDiagnostics.AddInputError(i.inputDef, err)
 	return err
 }
 
@@ -135,7 +139,7 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 	if err != nil {
 		var diags parsetypes.Diagnostics
 		if errors.Is(err, &diags) {
-			i.flagCtx.inputDiagnostics.add(diags...)
+			i.flagCtx.inputDiagnostics.Append(diags...)
 			return fmt.Errorf("failed to expand default value inside parameter %q", i.inputDef.Name)
 		}
 
@@ -195,7 +199,12 @@ func valueToDate(v any, dateFormat string) (any, error) {
 		return nil, fmt.Errorf("expected value of type date but got %T", t)
 	}
 
-	return time.Parse(dateFormat, strVal)
+	dt, err := time.Parse(dateFormat, strVal)
+	if err != nil {
+		err = fmt.Errorf("failed to parse %q as date: %w", strVal, err)
+	}
+
+	return dt, err
 }
 
 func valueToDuration(v any) (any, error) {
@@ -205,11 +214,16 @@ func valueToDuration(v any) (any, error) {
 		strVal = t
 	case []byte:
 		strVal = string(t)
-	case time.Time:
+	case time.Duration:
 		return t, nil
 	default:
 		return nil, fmt.Errorf("expected value of type date but got %T", t)
 	}
 
-	return time.ParseDuration(strVal)
+	dur, err := time.ParseDuration(strVal)
+	if err != nil {
+		err = fmt.Errorf("failed to parse %q as duration: %w", strVal, err)
+	}
+
+	return dur, err
 }
