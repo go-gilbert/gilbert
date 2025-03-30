@@ -147,7 +147,7 @@ func (v ptrVisitor[T]) VisitItem(ctx context.Context, opts *TraverseOpts, node a
 		return nil, diags
 	}
 
-	return &r, nil
+	return &r, diags
 }
 
 type unmarshalVisitor[T any] struct{}

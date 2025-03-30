@@ -84,7 +84,6 @@ func GetNodeRange(node ast.Node) (parsetypes.Range, parsetypes.OffsetRange) {
 		strlen := len(startTok.Value)
 		rng.End.Column += strlen - 1
 		offset.End += strlen
-		break
 	case *ast.LiteralNode:
 		rng, offset = getLiteralRange(n)
 	}
