@@ -12,7 +12,7 @@ func NewErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parset
 
 	return &parsetypes.Diagnostic{
 		Err:      err,
-		Severity: parsetypes.DiagnosticSeverityError,
+		Severity: parsetypes.SeverityFromError(err),
 		FileName: fileName,
 		Range:    rng,
 		Offset:   offset,
@@ -59,8 +59,8 @@ func getLiteralRange(n *ast.LiteralNode) (parsetypes.Range, parsetypes.OffsetRan
 }
 
 func newErrDiagnosticFromMapping(opts *TraverseOpts, node *ast.MappingValueNode, err error) *parsetypes.Diagnostic {
-	startPos := node.Start.Position
-	endPos := node.Key.GetToken().Position
+	startPos := node.Key.GetToken().Position
+	endPos := node.Start.Position
 
 	return &parsetypes.Diagnostic{
 		Err:      err,
