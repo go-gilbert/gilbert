@@ -13,6 +13,7 @@ const (
 	RoleTask
 	RoleMixin
 	RoleJob
+	RoleClosure
 )
 
 const (
