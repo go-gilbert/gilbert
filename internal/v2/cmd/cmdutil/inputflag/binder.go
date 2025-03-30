@@ -8,7 +8,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
-	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -110,11 +109,6 @@ func (b *InputFlagsBinder) BindGlobalInput(input *manifest.InputDefinition, cmd 
 // BindTaskInput binds given task input parameter as a cobra command flag.
 func (b *InputFlagsBinder) BindTaskInput(input *manifest.InputDefinition, cmd *cobra.Command) error {
 	return b.bindFlag(input, cmd, false)
-}
-
-// Diagnostics returns diagnostics occurred when mounting flags.
-func (b *InputFlagsBinder) Diagnostics() parsetypes.Diagnostics {
-	return b.diags.Diagnostics
 }
 
 func flagBindingFromInput(logger *log.Logger, inputDef *manifest.InputDefinition, inputCtx inputFlagContext) (inputFlagBinding, error) {
