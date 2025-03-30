@@ -8,6 +8,7 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -38,6 +39,7 @@ type InputBindingOpts struct {
 	EvalContext expr.EvalContext
 	EnvVars     map[string]string
 	Scope       *scope.Scope
+	Diagnostics *DiagnosticsCollector
 }
 
 // InputFlagsBinder mounts workflow inputs as cobra command flags.
@@ -48,7 +50,7 @@ type InputFlagsBinder struct {
 	ctx      context.Context
 	logger   *log.Logger
 	opts     InputBindingOpts
-	diags    inputDiagnostics
+	diags    *DiagnosticsCollector
 	bindings []inputFlagBinding
 }
 
@@ -57,6 +59,7 @@ func NewInputFlagsBinder(ctx context.Context, logger *log.Logger, opts InputBind
 		logger: logger,
 		opts:   opts,
 		ctx:    ctx,
+		diags:  opts.Diagnostics,
 	}
 }
 
@@ -65,7 +68,7 @@ func (b *InputFlagsBinder) bindFlag(input *manifest.InputDefinition, cmd *cobra.
 		evalContext:      b.opts.EvalContext,
 		envVars:          b.opts.EnvVars,
 		dstScope:         b.opts.Scope,
-		inputDiagnostics: &b.diags,
+		inputDiagnostics: b.diags,
 	}
 
 	binding, err := flagBindingFromInput(b.logger, input, inputCtx)
@@ -107,6 +110,11 @@ func (b *InputFlagsBinder) BindGlobalInput(input *manifest.InputDefinition, cmd 
 // BindTaskInput binds given task input parameter as a cobra command flag.
 func (b *InputFlagsBinder) BindTaskInput(input *manifest.InputDefinition, cmd *cobra.Command) error {
 	return b.bindFlag(input, cmd, false)
+}
+
+// Diagnostics returns diagnostics occurred when mounting flags.
+func (b *InputFlagsBinder) Diagnostics() parsetypes.Diagnostics {
+	return b.diags.Diagnostics
 }
 
 func flagBindingFromInput(logger *log.Logger, inputDef *manifest.InputDefinition, inputCtx inputFlagContext) (inputFlagBinding, error) {

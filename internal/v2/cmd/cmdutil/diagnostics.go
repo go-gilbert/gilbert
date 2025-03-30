@@ -60,6 +60,10 @@ func (p filePool) getDiagLine(diag *parsetypes.Diagnostic) ([]byte, error) {
 }
 
 func RenderDiagnostics(logger *log.Logger, opts BootstrapOpts, diags parsetypes.Diagnostics) {
+	if len(diags) == 0 {
+		return
+	}
+
 	if opts.JSON {
 		renderDiagnosticsJSON(*logger, diags)
 		return

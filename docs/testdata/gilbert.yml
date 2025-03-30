@@ -19,7 +19,7 @@ inputs:
   release:
     default: false
     type: bool
-  # Job build timeout
+  # Some timeout value
   timeout:
     type: duration
     default: 10s

@@ -12,10 +12,13 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/spf13/cobra"
 )
 
 func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
+	diagsCollector := inputflag.NewDiagnosticsCollector()
+
 	cmd := &cobra.Command{
 		Use:   "run <task> [flags]",
 		Short: "Run a task defined in " + cmdutil.DefaultWorkflowFilename,
@@ -35,17 +38,25 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 				return nil
 			}
 
-			if len(opts.Workflow.Diagnostics) > 0 {
-				cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
-			}
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, diagsCollector.Diagnostics)
 
 			if opts.Workflow.HasErrors {
 				return errors.New("workflow file contains errors")
 			}
 
+			if diagsCollector.HasErrors {
+				return errors.New("error occurred when reading workflow inputs")
+			}
+
 			return nil
 		},
 	}
+
+	// Render inputs diagnostics in help to indicate why some flags or defaults are missing.
+	cmdutil.DecorateHelpFunc(cmd, func() {
+		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, diagsCollector.Diagnostics)
+	})
 
 	// Cobra flags won't be mounted if workflow file has errors.
 	// If user calls "run" command with broken workflow - Cobra just throws "unknown flag" error.
@@ -90,12 +101,14 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		},
 	}
 
-	err := addRootInputs(ctx, flagBindingOpts{
+	rootDiags, err := addRootInputs(ctx, flagBindingOpts{
 		logger: opts.Logger,
 		cmd:    cmd,
 		scope:  rootScope,
 		inputs: opts.Workflow.File.Inputs,
+		diags:  diagsCollector,
 	})
+	diagsCollector.Append(rootDiags...)
 
 	if err != nil {
 		opts.Logger.Error(err)
@@ -111,6 +124,7 @@ type flagBindingOpts struct {
 	scope  *scope.Scope
 	cmd    *cobra.Command
 	inputs manifest.Inputs
+	diags  *inputflag.DiagnosticsCollector
 }
 
 func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
@@ -118,20 +132,22 @@ func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
 		EvalContext: scope.NewEvalContext(opts.scope),
 		EnvVars:     opts.scope.Globals.Env,
 		Scope:       opts.scope,
+		Diagnostics: opts.diags,
 	}
 }
 
-func addRootInputs(ctx context.Context, opts flagBindingOpts) error {
+func addRootInputs(ctx context.Context, opts flagBindingOpts) (parsetypes.Diagnostics, error) {
 	// TODO: add global inputs into a group
 	binder := inputflag.NewInputFlagsBinder(ctx, opts.logger, opts.inputBindingOpts())
 
 	for _, input := range opts.inputs {
 		if err := binder.BindGlobalInput(input, opts.cmd); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	diags := binder.Diagnostics()
+	return diags, nil
 }
 
 func addTaskCommands(dst *cobra.Command, jf manifest.JobFile) {
