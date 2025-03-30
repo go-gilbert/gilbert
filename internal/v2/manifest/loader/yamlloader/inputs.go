@@ -84,6 +84,33 @@ var inputDefinitionSchema = Struct(
 			return nil
 		},
 	),
+	Field("optional",
+		Bool(),
+		func(ctx context.Context, dst *manifest.InputDefinition, val bool) error {
+			dst.Optional = val
+			return nil
+		},
+	).Validation(func(_ context.Context, dst *manifest.InputDefinition) error {
+		if !dst.Optional {
+			return nil
+		}
+
+		if dst.Schema.Type == manifest.ValueTypeBool {
+			return parsetypes.NewAnnotatedError(
+				errors.New(`"optional" has no effect here as boolean inputs are always optional`),
+				"remove redundant property",
+			).AsWarning()
+		}
+
+		if dst.DefaultValue != nil {
+			return parsetypes.NewAnnotatedError(
+				errors.New(`"optional" has no effect here as input default value is specified`),
+				"remove redundant property",
+			).AsWarning()
+		}
+
+		return nil
+	}),
 	Field("binding",
 		Pointer(
 			Struct(

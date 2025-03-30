@@ -40,4 +40,17 @@ type InputDefinition struct {
 	Schema       TypeSchema
 	Binding      *InputBinding
 	DefaultValue *TypedLazyValue
+	Optional     bool
+}
+
+// IsRequired returns whether input parameter is required.
+//
+// Input is considered as required when there is no default value, not marked as optional and it's not boolean.
+func (def *InputDefinition) IsRequired() bool {
+	if def.DefaultValue != nil {
+		return false
+	}
+
+	isOptional := def.Schema.Type == ValueTypeBool || def.Optional
+	return !isOptional
 }
