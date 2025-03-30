@@ -140,10 +140,6 @@ var jobSchema = Struct(
 			),
 		),
 		func(_ context.Context, dst *manifest.Job, v map[string][]manifest.Job) error {
-			if !dst.Async {
-				return errors.New(`"on" block can be used only when "async" is true`)
-			}
-
 			dst.Hooks = v
 			return nil
 		},
