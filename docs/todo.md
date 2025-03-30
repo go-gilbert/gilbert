@@ -17,6 +17,10 @@
 
 - Fix showing tasks list "Available Tasks" for "gilbert --help"
 
+**expr**
+
+- Consider cel-go as it might support dynamic envs: https://github.com/google/cel-go
+
 **uflag**
 
 - Bug when boolean flag w/o value is near other:

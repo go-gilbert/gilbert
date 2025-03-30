@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -135,7 +136,10 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		return cmd
 	}
 
-	addTaskCommands(cmd, mp, runCtx)
+	if err := addTaskCommands(ctx, cmd, mp, runCtx); err != nil {
+		opts.Logger.Error(err)
+	}
+
 	return cmd
 }
 
@@ -168,15 +172,16 @@ func addRootInputs(ctx context.Context, cmd *cobra.Command, opts flagBindingOpts
 	return nil
 }
 
-func addTaskCommands(dst *cobra.Command, params flagMountParams, runCtx runContext) {
+func addTaskCommands(ctx context.Context, dst *cobra.Command, fp flagMountParams, runCtx runContext) error {
 	if len(runCtx.jobFile.Tasks) == 0 {
-		return
+		return nil
 	}
 
 	sampleTask := ""
 	for name, task := range runCtx.jobFile.Tasks {
 		sampleTask = name
 		shortDoc, longDoc := getTaskDescription(name, task)
+		taskScope := runCtx.rootScope.Fork(scope.RoleTask)
 		cmd := &cobra.Command{
 			GroupID: "tasks",
 			Use:     name + " [flags]",
@@ -190,12 +195,32 @@ func addTaskCommands(dst *cobra.Command, params flagMountParams, runCtx runConte
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				cmd.Println("test!", name)
-				for k, v := range runCtx.rootScope.Inputs {
-					fmt.Println(k, "=", v)
-				}
+				fmt.Println("\n\nLocal Scope:")
+				fmt.Println("-----------")
+				r, _ := json.MarshalIndent(taskScope.Values(), "", "  ")
+				fmt.Println(string(r))
 
+				fmt.Println("\n\nRoot Scope:")
+				fmt.Println("-----------")
+				r, _ = json.MarshalIndent(runCtx.rootScope.Values(), "", "  ")
+				fmt.Println(string(r))
 				return nil
 			},
+		}
+
+		if len(task.Inputs) > 0 {
+			bindOpts := flagBindingOpts{
+				logger: fp.logger,
+				scope:  taskScope,
+				inputs: task.Inputs,
+				diags:  &inputflag.DiagnosticsCollector{},
+			}
+			binder := inputflag.NewInputFlagsBinder(ctx, bindOpts.logger, bindOpts.inputBindingOpts())
+			for _, input := range bindOpts.inputs {
+				if err := binder.BindTaskInput(input, cmd); err != nil {
+					return err
+				}
+			}
 		}
 
 		// TODO: mount flags
@@ -203,6 +228,7 @@ func addTaskCommands(dst *cobra.Command, params flagMountParams, runCtx runConte
 	}
 
 	dst.Example = fmt.Sprintf("$ gilbert run %s", sampleTask)
+	return nil
 }
 
 func getTaskDescription(name string, t *manifest.JobGroup) (string, string) {

@@ -46,11 +46,10 @@ type InputBindingOpts struct {
 // Flag values are parsed and validated against input definition schema.
 // Parsed input values are mounted into a scope passed in InputBindingOpts.
 type InputFlagsBinder struct {
-	ctx      context.Context
-	logger   *log.Logger
-	opts     InputBindingOpts
-	diags    *DiagnosticsCollector
-	bindings []inputFlagBinding
+	ctx    context.Context
+	logger *log.Logger
+	opts   InputBindingOpts
+	diags  *DiagnosticsCollector
 }
 
 func NewInputFlagsBinder(ctx context.Context, logger *log.Logger, opts InputBindingOpts) *InputFlagsBinder {
@@ -76,8 +75,6 @@ func (b *InputFlagsBinder) bindFlag(input *manifest.InputDefinition, cmd *cobra.
 	}
 
 	binding.initDefaultValue(b.ctx)
-	b.bindings = append(b.bindings, binding)
-
 	flagName := binding.flagName()
 	flagDoc := binding.getDoc(isGlobal)
 	if isGlobal {
