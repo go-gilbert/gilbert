@@ -144,7 +144,21 @@ func (i *inputBindingBase) error() error {
 }
 
 func (i *inputBindingBase) initZeroValue() {
-	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = manifest.NewZeroValue(i.inputDef.Schema.Type)
+	vars := i.flagCtx.dstScope.Inputs
+	key := i.inputDef.Name
+	if i.inputDef.Schema.Type == manifest.ValueTypeBool {
+		// booleans always optional
+		vars[key] = false
+		return
+	}
+
+	if i.inputDef.IsRequired() {
+		// mark as nil but don't init
+		vars[key] = nil
+		return
+	}
+
+	vars[key] = manifest.NewZeroValue(i.inputDef.Schema.Type)
 }
 
 func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
