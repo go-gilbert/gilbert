@@ -12,6 +12,10 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
+type ErrorNote interface {
+	Note() string
+}
+
 var padBuff = []byte("            ")
 
 //var padBuff = []byte("______________")
@@ -144,6 +148,10 @@ func renderDiagnosticsJSON(logger log.Logger, diags parsetypes.Diagnostics) {
 }
 
 func tryGetErrorReason(err error) string {
+	if errNote, ok := err.(ErrorNote); ok {
+		return errNote.Note()
+	}
+
 	unwrapped := errors.Unwrap(err)
 	if unwrapped == nil {
 		return ""

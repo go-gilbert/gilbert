@@ -96,7 +96,19 @@ var inputDefinitionSchema = Struct(
 						dst.EnvVarName = val
 						return nil
 					},
-				),
+				).CheckNode(func(ctx context.Context, n *ast.MappingValueNode, dst *manifest.InputBinding) {
+					ldCtx, err := getLoaderContext(ctx)
+					if err != nil {
+						return
+					}
+
+					rng, offset := GetNodeRange(n.Value)
+					dst.Location.EnvVarName = &manifest.ReferenceLocation{
+						FileName: ldCtx.filePath,
+						Range:    rng,
+						Offset:   offset,
+					}
+				}),
 				Field("flag", String(),
 					func(_ context.Context, dst *manifest.InputBinding, val string) error {
 						val = strings.TrimSpace(val)
@@ -107,7 +119,19 @@ var inputDefinitionSchema = Struct(
 						dst.FlagName = val
 						return nil
 					},
-				),
+				).CheckNode(func(ctx context.Context, n *ast.MappingValueNode, dst *manifest.InputBinding) {
+					ldCtx, err := getLoaderContext(ctx)
+					if err != nil {
+						return
+					}
+
+					rng, offset := GetNodeRange(n.Value)
+					dst.Location.FlagName = &manifest.ReferenceLocation{
+						FileName: ldCtx.filePath,
+						Range:    rng,
+						Offset:   offset,
+					}
+				}),
 			),
 		),
 		func(_ context.Context, dst *manifest.InputDefinition, val *manifest.InputBinding) error {

@@ -2,7 +2,17 @@ package manifest
 
 const DefaultDelimiter = ","
 
+type InputBindingLocations struct {
+	EnvVarName *ReferenceLocation
+	FlagName   *ReferenceLocation
+}
+
 type InputBinding struct {
+	// Location holds reference location for input binding values.
+	//
+	// Used for error reporting.
+	Location InputBindingLocations
+
 	// EnvVarName is environment variable to use by default if value is not defined.
 	EnvVarName string
 

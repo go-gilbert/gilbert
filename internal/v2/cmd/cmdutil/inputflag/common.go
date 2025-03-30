@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
@@ -49,6 +50,17 @@ func (i *DiagnosticsCollector) AddInputError(def *manifest.InputDefinition, err 
 	})
 }
 
+func (i *DiagnosticsCollector) AddErrorAtLocation(loc *manifest.ReferenceLocation, err error) {
+	i.HasErrors = true
+	i.Diagnostics = append(i.Diagnostics, &parsetypes.Diagnostic{
+		Severity: parsetypes.DiagnosticSeverityError,
+		FileName: loc.FileName,
+		Range:    loc.Range,
+		Offset:   loc.Offset,
+		Err:      err,
+	})
+}
+
 type inputFlagContext struct {
 	evalContext      expr.EvalContext
 	envVars          map[string]string
@@ -58,14 +70,19 @@ type inputFlagContext struct {
 
 // inputBindingBase contains mutual components and boilerplate code for all input binding implementations.
 type inputBindingBase struct {
+	logger      *log.Logger
 	inputDef    *manifest.InputDefinition
 	flagCtx     inputFlagContext
 	dirtyStatus dirtyFlag
 	err         error
 }
 
-func newInputBindingBase(inputDef *manifest.InputDefinition, flagCtx inputFlagContext) inputBindingBase {
-	return inputBindingBase{inputDef: inputDef, flagCtx: flagCtx}
+func newInputBindingBase(logger *log.Logger, inputDef *manifest.InputDefinition, flagCtx inputFlagContext) inputBindingBase {
+	return inputBindingBase{
+		logger:   logger,
+		inputDef: inputDef,
+		flagCtx:  flagCtx,
+	}
 }
 
 func (i *inputBindingBase) Type() string {

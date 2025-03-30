@@ -21,15 +21,12 @@ var (
 // listInputFlagBinding binds inputs with array values to command-line flags.
 type listInputFlagBinding struct {
 	inputBindingBase
-
-	logger          *log.Logger
 	listItemDecoder func(val string) (any, error)
 }
 
 func newListInputFlagBinding(logger *log.Logger, def *manifest.InputDefinition, flagCtx inputFlagContext) *listInputFlagBinding {
 	return &listInputFlagBinding{
-		logger:           logger,
-		inputBindingBase: newInputBindingBase(def, flagCtx),
+		inputBindingBase: newInputBindingBase(logger, def, flagCtx),
 	}
 }
 

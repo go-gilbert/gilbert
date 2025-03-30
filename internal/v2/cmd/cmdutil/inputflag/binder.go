@@ -127,5 +127,5 @@ func flagBindingFromInput(logger *log.Logger, inputDef *manifest.InputDefinition
 		return nil, fmt.Errorf("cannot bind input %q to a flag: complex types are not supported", inputDef.Name)
 	}
 
-	return newScalarInputFlagBinding(inputDef, inputCtx), nil
+	return newScalarInputFlagBinding(logger, inputDef, inputCtx), nil
 }
