@@ -4,6 +4,11 @@
 - expr: handle multiline strings in errors
 - yamlloader: yaml parse errors into diagnostics
 
+**loader**
+
+- yamlloader: check if global input flag is reserved for builtin
+- yamlloader: check if task input flag is reserved for builtin or global
+
 **fields**
 
 - input binding delimiter
