@@ -21,15 +21,12 @@ var (
 // listInputFlagBinding binds inputs with array values to command-line flags.
 type listInputFlagBinding struct {
 	inputBindingBase
-
-	logger          *log.Logger
 	listItemDecoder func(val string) (any, error)
 }
 
 func newListInputFlagBinding(logger *log.Logger, def *manifest.InputDefinition, flagCtx inputFlagContext) *listInputFlagBinding {
 	return &listInputFlagBinding{
-		logger:           logger,
-		inputBindingBase: newInputBindingBase(def, flagCtx),
+		inputBindingBase: newInputBindingBase(logger, def, flagCtx),
 	}
 }
 
@@ -47,7 +44,7 @@ func (b *listInputFlagBinding) checkItemDecoder() error {
 }
 
 func (b *listInputFlagBinding) initDecoder() error {
-	t := b.inputDef.Type
+	t := b.inputDef.Schema
 	if t.Type != manifest.ValueTypeList {
 		// this should never happen
 		return errors.New("listInputFlagBinding should be used only for arrays")
@@ -190,12 +187,12 @@ func (b *listInputFlagBinding) Replace(newItems []string) error {
 }
 
 func (b *listInputFlagBinding) GetSlice() []string {
-	if !b.inputDef.Type.Type.IsList() {
+	if !b.inputDef.Schema.Type.IsList() {
 		// shouldn't happen
 		panic("listInputFlagBinding used on a non-list flag")
 	}
 
-	listItemTyp := b.inputDef.Type.Items
+	listItemTyp := b.inputDef.Schema.Items
 	if listItemTyp.Type.IsComplex() {
 		// we can't display this properly
 		b.logger.Errorf("list of complex types cannot be used for flags (input %q)", b.inputDef.Name)
@@ -213,7 +210,7 @@ func (b *listInputFlagBinding) GetSlice() []string {
 		return nil
 	}
 
-	mapperFn := getStringFormatter(b.inputDef.Type, listItemTyp.Format)
+	mapperFn := getStringFormatter(listItemTyp.Type, listItemTyp.DateFormatOrDefault())
 	out := make([]string, 0, count)
 	for _, v := range iterator {
 		out = append(out, mapperFn(v))
@@ -223,7 +220,7 @@ func (b *listInputFlagBinding) GetSlice() []string {
 }
 
 func (b *listInputFlagBinding) String() string {
-	if !b.inputDef.Type.Type.IsList() {
+	if !b.inputDef.Schema.Type.IsList() {
 		// shouldn't happen
 		panic("listInputFlagBinding used on a non-list flag")
 	}
@@ -238,13 +235,13 @@ func (b *listInputFlagBinding) String() string {
 		return jsonEncode(val)
 	}
 
-	listItemTyp := b.inputDef.Type.Items
+	listItemTyp := b.inputDef.Schema.Items
 	if listItemTyp.Type.IsComplex() {
 		// we can't display this properly
 		return jsonEncode(val)
 	}
 
-	mapperFn := getStringFormatter(b.inputDef.Type, listItemTyp.Format)
+	mapperFn := getStringFormatter(listItemTyp.Type, listItemTyp.DateFormatOrDefault())
 	sb := &strings.Builder{}
 	sb.WriteString("[")
 	for i, v := range arrVal {

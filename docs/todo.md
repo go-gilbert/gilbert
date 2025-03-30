@@ -1,10 +1,8 @@
-yamlloader:
----
-
 **errors**
 
-- expr errors into diagnostics
-- yaml parse errors into diagnostics
+- expr: errors into diagnostics
+- expr: handle multiline strings in errors
+- yamlloader: yaml parse errors into diagnostics
 
 **fields**
 

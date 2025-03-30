@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
+	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
@@ -22,22 +22,26 @@ const (
 	valueDirty
 )
 
-type inputDiagnostics struct {
-	hasErrors bool
-	diags     parsetypes.Diagnostics
+type DiagnosticsCollector struct {
+	HasErrors   bool
+	Diagnostics parsetypes.Diagnostics
 }
 
-func (i *inputDiagnostics) add(newDiags ...*parsetypes.Diagnostic) {
-	if !i.hasErrors {
-		i.hasErrors = parsetypes.HasErrorDiagnostics(newDiags)
+func NewDiagnosticsCollector() *DiagnosticsCollector {
+	return &DiagnosticsCollector{}
+}
+
+func (i *DiagnosticsCollector) Append(newDiags ...*parsetypes.Diagnostic) {
+	if !i.HasErrors {
+		i.HasErrors = parsetypes.HasErrorDiagnostics(newDiags)
 	}
 
-	i.diags = append(i.diags, newDiags...)
+	i.Diagnostics = append(i.Diagnostics, newDiags...)
 }
 
-func (i *inputDiagnostics) addInputError(def *manifest.InputDefinition, err error) {
-	i.hasErrors = true
-	i.diags = append(i.diags, &parsetypes.Diagnostic{
+func (i *DiagnosticsCollector) AddInputError(def *manifest.InputDefinition, err error) {
+	i.HasErrors = true
+	i.Diagnostics = append(i.Diagnostics, &parsetypes.Diagnostic{
 		Severity: parsetypes.DiagnosticSeverityError,
 		FileName: def.Location.FileName,
 		Range:    def.Location.Range,
@@ -46,27 +50,43 @@ func (i *inputDiagnostics) addInputError(def *manifest.InputDefinition, err erro
 	})
 }
 
+func (i *DiagnosticsCollector) AddErrorAtLocation(loc *manifest.ReferenceLocation, err error) {
+	i.HasErrors = true
+	i.Diagnostics = append(i.Diagnostics, &parsetypes.Diagnostic{
+		Severity: parsetypes.DiagnosticSeverityError,
+		FileName: loc.FileName,
+		Range:    loc.Range,
+		Offset:   loc.Offset,
+		Err:      err,
+	})
+}
+
 type inputFlagContext struct {
 	evalContext      expr.EvalContext
 	envVars          map[string]string
 	dstScope         *scope.Scope
-	inputDiagnostics *inputDiagnostics
+	inputDiagnostics *DiagnosticsCollector
 }
 
 // inputBindingBase contains mutual components and boilerplate code for all input binding implementations.
 type inputBindingBase struct {
+	logger      *log.Logger
 	inputDef    *manifest.InputDefinition
 	flagCtx     inputFlagContext
 	dirtyStatus dirtyFlag
 	err         error
 }
 
-func newInputBindingBase(inputDef *manifest.InputDefinition, flagCtx inputFlagContext) inputBindingBase {
-	return inputBindingBase{inputDef: inputDef, flagCtx: flagCtx}
+func newInputBindingBase(logger *log.Logger, inputDef *manifest.InputDefinition, flagCtx inputFlagContext) inputBindingBase {
+	return inputBindingBase{
+		logger:   logger,
+		inputDef: inputDef,
+		flagCtx:  flagCtx,
+	}
 }
 
 func (i *inputBindingBase) Type() string {
-	return i.inputDef.Type.String()
+	return i.inputDef.Schema.String()
 }
 
 func (i *inputBindingBase) getDoc(isGlobal bool) string {
@@ -104,7 +124,7 @@ func (i *inputBindingBase) addInputError(err error) error {
 		return nil
 	}
 
-	i.flagCtx.inputDiagnostics.addInputError(i.inputDef, err)
+	i.flagCtx.inputDiagnostics.AddInputError(i.inputDef, err)
 	return err
 }
 
@@ -119,30 +139,7 @@ func (i *inputBindingBase) error() error {
 }
 
 func (i *inputBindingBase) initZeroValue() {
-	var zeroValue any
-	switch t := i.inputDef.Type.Type; t {
-	case manifest.ValueTypeString:
-		switch i.inputDef.Type.Format {
-		case manifest.ValueFormatDate:
-			zeroValue = time.Now()
-		case manifest.ValueFormatDuration:
-			zeroValue = time.Duration(0)
-		case manifest.ValueFormatURL:
-			zeroValue = &url.URL{}
-		default:
-			zeroValue = ""
-		}
-	case manifest.ValueTypeFloat:
-		zeroValue = float64(0)
-	case manifest.ValueTypeInt:
-		zeroValue = int64(0)
-	case manifest.ValueTypeBool:
-		zeroValue = false
-	default:
-		zeroValue = nil
-	}
-
-	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = zeroValue
+	i.flagCtx.dstScope.Inputs[i.inputDef.Name] = manifest.NewZeroValue(i.inputDef.Schema.Type)
 }
 
 func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
@@ -151,7 +148,7 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 		return nil
 	}
 
-	if !i.inputDef.DefaultValue.IsType(i.inputDef.Type) {
+	if !i.inputDef.DefaultValue.IsType(i.inputDef.Schema) {
 		return i.addInputError(errors.New("default value type doesn't match input type"))
 	}
 
@@ -159,7 +156,7 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 	if err != nil {
 		var diags parsetypes.Diagnostics
 		if errors.Is(err, &diags) {
-			i.flagCtx.inputDiagnostics.add(diags...)
+			i.flagCtx.inputDiagnostics.Append(diags...)
 			return fmt.Errorf("failed to expand default value inside parameter %q", i.inputDef.Name)
 		}
 
@@ -168,9 +165,23 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 
 	i.dirtyStatus = valueDefault
 	var castedVal any
-	switch t := i.inputDef.Type.Type; t {
+	switch t := i.inputDef.Schema.Type; t {
+	// Value for parseable types can be a Go value (e.g. time.Duration) or a raw string.
+	//
+	// Scenarios:
+	// 	- Value is explicitly declared in a workflow and parsed by yamllloader into a Go value.
+	//	- Value is dynamic but returns a Go value.
+	//  - Value is dynamic but returns a string (e.g "$(date -Ihours)")
+	//
+	// If value is string - parse it. Otherwise - type check.
+	case manifest.ValueTypeDate:
+		castedVal, err = valueToDate(val, i.inputDef.Schema.DateFormatOrDefault())
+	case manifest.ValueTypeDuration:
+		castedVal, err = valueToDuration(val)
+
+	// Other types
 	case manifest.ValueTypeString:
-		castedVal, err = formatValueWithSchema(i.inputDef.Type, val)
+		castedVal, err = parsetypes.AnyToString(val)
 	case manifest.ValueTypeFloat:
 		castedVal, err = parsetypes.AnyToFloat(val)
 	case manifest.ValueTypeInt:
@@ -192,37 +203,44 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 	return nil
 }
 
-// formatValueWithSchema consumes a string value and formats using type schema.
-//
-// If passed value was already formatted - return original value.
-func formatValueWithSchema(typeDef manifest.TypeSchema, rawVal any) (any, error) {
-	if typeDef.Format == manifest.ValueFormatInvalid {
-		// If value was already expanded before
-		return parsetypes.AnyToString(rawVal)
-	}
-
-	// parse value from formatted string
-	switch t := rawVal.(type) {
+func valueToDate(v any, dateFormat string) (any, error) {
+	var strVal string
+	switch t := v.(type) {
 	case string:
-		return typeDef.ParseString(t)
+		strVal = t
 	case []byte:
-		return typeDef.ParseString(string(t))
-	}
-
-	// otherwise - value is already parsed or came from an expression. just do type check.
-	switch typeDef.Format {
-	case manifest.ValueFormatDate:
-		if _, ok := rawVal.(time.Time); !ok {
-			return nil, fmt.Errorf("value of type %T is not a %s", rawVal, typeDef.Format)
-		}
-
-	case manifest.ValueFormatDuration:
-		if _, ok := rawVal.(time.Duration); !ok {
-			return nil, fmt.Errorf("value of type %T is not a %s", rawVal, typeDef.Format)
-		}
+		strVal = string(t)
+	case time.Time:
+		return t, nil
 	default:
-		return nil, fmt.Errorf("unknown value format %s", typeDef.Format)
+		return nil, fmt.Errorf("expected value of type date but got %T", t)
 	}
 
-	return rawVal, nil
+	dt, err := time.Parse(dateFormat, strVal)
+	if err != nil {
+		err = fmt.Errorf("failed to parse %q as date: %w", strVal, err)
+	}
+
+	return dt, err
+}
+
+func valueToDuration(v any) (any, error) {
+	var strVal string
+	switch t := v.(type) {
+	case string:
+		strVal = t
+	case []byte:
+		strVal = string(t)
+	case time.Duration:
+		return t, nil
+	default:
+		return nil, fmt.Errorf("expected value of type date but got %T", t)
+	}
+
+	dur, err := time.ParseDuration(strVal)
+	if err != nil {
+		err = fmt.Errorf("failed to parse %q as duration: %w", strVal, err)
+	}
+
+	return dur, err
 }

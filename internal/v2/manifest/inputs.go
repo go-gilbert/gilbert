@@ -2,7 +2,17 @@ package manifest
 
 const DefaultDelimiter = ","
 
+type InputBindingLocations struct {
+	EnvVarName *ReferenceLocation
+	FlagName   *ReferenceLocation
+}
+
 type InputBinding struct {
+	// Location holds reference location for input binding values.
+	//
+	// Used for error reporting.
+	Location InputBindingLocations
+
 	// EnvVarName is environment variable to use by default if value is not defined.
 	EnvVarName string
 
@@ -23,10 +33,11 @@ func (b *InputBinding) DelimiterOrDefault() string {
 
 type Inputs = map[string]*InputDefinition
 
+// InputDefinition is workflow or job input parameter definition.
 type InputDefinition struct {
 	DocHeader
 	Location     ReferenceLocation
-	Type         TypeSchema
+	Schema       TypeSchema
 	Binding      *InputBinding
 	DefaultValue *TypedLazyValue
 }

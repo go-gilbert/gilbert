@@ -16,6 +16,8 @@ import (
 )
 
 func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
+	diagsCollector := inputflag.NewDiagnosticsCollector()
+
 	cmd := &cobra.Command{
 		Use:   "run <task> [flags]",
 		Short: "Run a task defined in " + cmdutil.DefaultWorkflowFilename,
@@ -30,16 +32,50 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 			// This handler will be executed when task doesn't exist or workflow file has errors.
 			return handleTaskNotFound(opts, args)
 		},
-		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			if opts.Workflow == nil {
-				return
+				return nil
 			}
 
-			if len(opts.Workflow.Diagnostics) > 0 {
-				cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, diagsCollector.Diagnostics)
+
+			if opts.Workflow.HasErrors {
+				return errors.New("workflow file contains errors")
 			}
+
+			if diagsCollector.HasErrors {
+				return errors.New("error occurred when reading workflow inputs")
+			}
+
+			return nil
 		},
 	}
+
+	// Render inputs diagnostics in help to indicate why some flags or defaults are missing.
+	cmdutil.DecorateHelpFunc(cmd, func() {
+		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, diagsCollector.Diagnostics)
+	})
+
+	// Cobra flags won't be mounted if workflow file has errors.
+	// If user calls "run" command with broken workflow - Cobra just throws "unknown flag" error.
+	// To avoid user confusion - render file diagnostics before exit.
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		if opts.Workflow == nil {
+			return err
+		}
+
+		if len(opts.Workflow.Diagnostics) > 0 {
+			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
+		}
+
+		// swallow error to avoid user's confusion.
+		if opts.Workflow.HasErrors {
+			return errors.New("workflow file contains errors")
+		}
+
+		return err
+	})
 
 	cmd.AddGroup(&cobra.Group{
 		ID:    "tasks",
@@ -69,6 +105,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		cmd:    cmd,
 		scope:  rootScope,
 		inputs: opts.Workflow.File.Inputs,
+		diags:  diagsCollector,
 	})
 
 	if err != nil {
@@ -85,6 +122,7 @@ type flagBindingOpts struct {
 	scope  *scope.Scope
 	cmd    *cobra.Command
 	inputs manifest.Inputs
+	diags  *inputflag.DiagnosticsCollector
 }
 
 func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
@@ -92,6 +130,7 @@ func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
 		EvalContext: scope.NewEvalContext(opts.scope),
 		EnvVars:     opts.scope.Globals.Env,
 		Scope:       opts.scope,
+		Diagnostics: opts.diags,
 	}
 }
 
@@ -113,7 +152,6 @@ func addTaskCommands(dst *cobra.Command, jf manifest.JobFile) {
 		return
 	}
 
-	dst.Example = fmt.Sprintf("gilbert run %s")
 	sampleTask := ""
 	for name, task := range jf.Tasks {
 		sampleTask = name

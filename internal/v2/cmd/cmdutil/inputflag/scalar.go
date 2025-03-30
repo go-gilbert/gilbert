@@ -3,11 +3,12 @@ package inputflag
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"time"
 
+	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var _ inputFlagBinding = (*scalarInputFlagBinding)(nil)
@@ -17,14 +18,14 @@ type scalarInputFlagBinding struct {
 	inputBindingBase
 }
 
-func newScalarInputFlagBinding(def *manifest.InputDefinition, flagCtx inputFlagContext) *scalarInputFlagBinding {
+func newScalarInputFlagBinding(logger *log.Logger, def *manifest.InputDefinition, flagCtx inputFlagContext) *scalarInputFlagBinding {
 	return &scalarInputFlagBinding{
-		inputBindingBase: newInputBindingBase(def, flagCtx),
+		inputBindingBase: newInputBindingBase(logger, def, flagCtx),
 	}
 }
 
 func (i *scalarInputFlagBinding) checkType() error {
-	typeDef := i.inputDef.Type
+	typeDef := i.inputDef.Schema
 	if !typeDef.Type.IsComplex() {
 		return nil
 	}
@@ -46,7 +47,7 @@ func (i *scalarInputFlagBinding) checkType() error {
 
 	return fmt.Errorf(
 		"input of type %s cannot be mounted as a command flag (declared at %s:%s)",
-		i.inputDef.Type, i.inputDef.Location.FileName, i.inputDef.Location.Range,
+		i.inputDef.Schema, i.inputDef.Location.FileName, i.inputDef.Location.Range,
 	)
 }
 
@@ -61,12 +62,42 @@ func (i *scalarInputFlagBinding) initDefaultValue(ctx context.Context) {
 		return
 	}
 
-	if binding := i.inputDef.Binding; binding != nil && binding.EnvVarName != "" {
-		if err := i.setValueFromInput(i.flagCtx.envVars[binding.EnvVarName], true); err != nil {
-			i.err = err
-			return
-		}
+	if err := i.initFromEnvVar(); err != nil {
+		i.flagCtx.inputDiagnostics.AddErrorAtLocation(i.inputDef.Binding.Location.EnvVarName, err)
+		i.err = err
 	}
+}
+
+func (i *scalarInputFlagBinding) initFromEnvVar() error {
+	binding := i.inputDef.Binding
+	if binding == nil || binding.EnvVarName == "" {
+		return nil
+	}
+
+	envVal, ok := i.flagCtx.envVars[binding.EnvVarName]
+	if !ok {
+		return nil
+	}
+
+	i.logger.Debugw(
+		"reading default value for input from environment",
+		log.NewField("env", binding.EnvVarName),
+		log.NewField("value", envVal),
+		log.NewField("input", i.inputDef.Name),
+	)
+
+	err := i.setValueFromInput(envVal, true)
+	if err != nil {
+		return parsetypes.NewAnnotatedError(
+			fmt.Errorf(
+				"cannot set default value from environment variable %q: %w",
+				binding.EnvVarName, err,
+			),
+			"expands as %q", envVal,
+		)
+	}
+
+	return nil
 }
 
 func (i *scalarInputFlagBinding) setValueFromInput(val string, isDefault bool) error {
@@ -80,7 +111,7 @@ func (i *scalarInputFlagBinding) setValueFromInput(val string, isDefault bool) e
 		i.dirtyStatus = valueDirty
 	}
 
-	parsedValue, err := decodeValueWithSchema(val, i.inputDef.Type)
+	parsedValue, err := i.inputDef.Schema.ParseValue(val)
 	if err != nil {
 		return err
 	}
@@ -97,20 +128,14 @@ func (i *scalarInputFlagBinding) String() string {
 
 	// TODO: make this in a proper way
 	var strVal string
-	switch i.inputDef.Type.Format {
-	case manifest.ValueFormatInvalid:
-		break
-	case manifest.ValueFormatDate:
+	switch i.inputDef.Schema.Type {
+	case manifest.ValueTypeDate:
 		if dt, ok := val.(time.Time); ok {
-			strVal = dt.Format(i.inputDef.Type.DateFormatOrDefault())
+			strVal = dt.Format(i.inputDef.Schema.DateFormatOrDefault())
 		}
-	case manifest.ValueFormatDuration:
+	case manifest.ValueTypeDuration:
 		if dur, ok := val.(time.Duration); ok {
 			strVal = dur.String()
-		}
-	case manifest.ValueFormatURL:
-		if uri, ok := val.(*url.URL); ok {
-			strVal = uri.String()
 		}
 	}
 

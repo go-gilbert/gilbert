@@ -83,6 +83,7 @@ type StructFieldVisitor[TObject, TProp any] struct {
 	validator     func(ctx context.Context, dst *TObject) error
 	setValue      func(ctx context.Context, dst *TObject, val TProp) error
 	docReaderFunc func(ctx context.Context, fi FieldInfo, dst *TObject)
+	nodeFunc      func(ctx context.Context, n *ast.MappingValueNode, dst *TObject)
 	ctxFunc       func(ctx context.Context) context.Context
 }
 
@@ -100,6 +101,12 @@ func (fv *StructFieldVisitor[TObject, TProp]) CollectDoc(fn func(ctx context.Con
 // Validation adds validation func to be called to validate field value.
 func (fv *StructFieldVisitor[TObject, TProp]) Validation(fn func(context.Context, *TObject) error) *StructFieldVisitor[TObject, TProp] {
 	fv.validator = fn
+	return fv
+}
+
+// CheckNode adds a hook to processs raw value mapping AST node.
+func (fv *StructFieldVisitor[TObject, TProp]) CheckNode(fn func(context.Context, *ast.MappingValueNode, *TObject)) *StructFieldVisitor[TObject, TProp] {
+	fv.nodeFunc = fn
 	return fv
 }
 
@@ -154,6 +161,10 @@ func (fv *StructFieldVisitor[TObject, TProp]) VisitField(ctx context.Context, op
 		}
 
 		fv.docReaderFunc(ctx, fi, dst)
+	}
+
+	if fv.nodeFunc != nil {
+		fv.nodeFunc(ctx, node, dst)
 	}
 
 	if err := fv.setValue(ctx, dst, v); err != nil {

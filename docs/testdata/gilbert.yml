@@ -19,22 +19,19 @@ inputs:
   release:
     default: false
     type: bool
-  # Job build timeout
+  # Some timeout value
   timeout:
-    type: string
-    format: duration
+    type: duration
     default: 10s
     binding:
       env: JOB_TIMEOUT
   timestamp:
-    type: string
-    format: date
+    type: date
     dateFormat: "2006-01-02 15:04:05"
   items:
     type: list
     items:
-      type: string
-      format: duration
+      type: duration
 
 tasks:
   test:

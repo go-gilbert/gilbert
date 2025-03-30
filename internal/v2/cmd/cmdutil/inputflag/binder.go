@@ -38,6 +38,7 @@ type InputBindingOpts struct {
 	EvalContext expr.EvalContext
 	EnvVars     map[string]string
 	Scope       *scope.Scope
+	Diagnostics *DiagnosticsCollector
 }
 
 // InputFlagsBinder mounts workflow inputs as cobra command flags.
@@ -48,7 +49,7 @@ type InputFlagsBinder struct {
 	ctx      context.Context
 	logger   *log.Logger
 	opts     InputBindingOpts
-	diags    inputDiagnostics
+	diags    *DiagnosticsCollector
 	bindings []inputFlagBinding
 }
 
@@ -57,6 +58,7 @@ func NewInputFlagsBinder(ctx context.Context, logger *log.Logger, opts InputBind
 		logger: logger,
 		opts:   opts,
 		ctx:    ctx,
+		diags:  opts.Diagnostics,
 	}
 }
 
@@ -65,7 +67,7 @@ func (b *InputFlagsBinder) bindFlag(input *manifest.InputDefinition, cmd *cobra.
 		evalContext:      b.opts.EvalContext,
 		envVars:          b.opts.EnvVars,
 		dstScope:         b.opts.Scope,
-		inputDiagnostics: &b.diags,
+		inputDiagnostics: b.diags,
 	}
 
 	binding, err := flagBindingFromInput(b.logger, input, inputCtx)
@@ -110,14 +112,14 @@ func (b *InputFlagsBinder) BindTaskInput(input *manifest.InputDefinition, cmd *c
 }
 
 func flagBindingFromInput(logger *log.Logger, inputDef *manifest.InputDefinition, inputCtx inputFlagContext) (inputFlagBinding, error) {
-	if inputDef.Type.Type.IsList() {
+	if inputDef.Schema.Type.IsList() {
 		return newListInputFlagBinding(logger, inputDef, inputCtx), nil
 	}
 
-	if inputDef.Type.Type.IsComplex() {
+	if inputDef.Schema.Type.IsComplex() {
 		// objects aren't supported (yet)
 		return nil, fmt.Errorf("cannot bind input %q to a flag: complex types are not supported", inputDef.Name)
 	}
 
-	return newScalarInputFlagBinding(inputDef, inputCtx), nil
+	return newScalarInputFlagBinding(logger, inputDef, inputCtx), nil
 }
