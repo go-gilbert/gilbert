@@ -29,10 +29,10 @@ inputs:
     type: date
     optional: true
     dateFormat: "2006-01-02 15:04:05"
-#  items:
-#    type: list
-#    items:
-#      type: duration
+  items:
+    type: list
+    items:
+      type: int
 
 tasks:
   test:
