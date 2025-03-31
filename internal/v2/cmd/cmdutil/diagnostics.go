@@ -30,7 +30,6 @@ func getPad(size int) string {
 		padBuff = bytes.Repeat([]byte(" "), size)
 	}
 
-	// Cast bytes to string w/o copy, copied from strings.Builder.String()
 	chunk := padBuff[:size]
 	return bytesToString(chunk)
 }
@@ -151,7 +150,7 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 	// TODO: multiline support
 	buff := bytebufferpool.Get()
 	defer func() {
-		colorReset.Fprintln(buff)
+		palette.reset.Fprintln(buff)
 		_, _ = r.dst.Write(buff.Bytes())
 		bytebufferpool.Put(buff)
 	}()
@@ -172,6 +171,10 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 	lineNumber := strconv.Itoa(max(diag.Range.Start.Line, diag.Range.End.Line))
 	palette.gutter.Fprint(buff, getPad(len(lineNumber)), "--> ")
 	palette.reset.Fprintf(buff, "%s:%s\n", diag.FileName, diag.Range.Start)
+
+	if diag.Range.IsEmpty() {
+		return
+	}
 
 	// Source text
 	lines, err := r.fp.iterDiagLines(diag, sourceLinesCount)
@@ -253,6 +256,7 @@ func tryGetErrorReason(err error) string {
 	return unwrapped.Error()
 }
 
+// bytesToString casts bytes to string w/o copy, copied from strings.Builder.String()
 func bytesToString(b []byte) string {
 	return unsafe.String(unsafe.SliceData(b), len(b))
 }

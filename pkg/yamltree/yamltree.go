@@ -1,0 +1,71 @@
+package yamltree
+
+import (
+	"context"
+	"io"
+	"os"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
+	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/ast"
+)
+
+type Source struct {
+	// FilePath is file name passed to decoders and provide correct diagnostic messages.
+	//
+	// If Reader is nil - used to open a source file for read.
+	FilePath string
+
+	// Reader is source stream to read.
+	//
+	// When nil - reader attempts to read a file using provided FilePath.
+	Reader io.Reader
+}
+
+func (src Source) getReader() (io.Reader, error) {
+	if src.Reader != nil {
+		return src.Reader, nil
+	}
+
+	f, err := os.Open(src.FilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+type ReadOption = func(*TraverseOpts)
+
+// WithUnknownFieldAction option configures unknown struct fields handling strategy.
+func WithUnknownFieldAction(action UnknownFieldAction) ReadOption {
+	return func(opts *TraverseOpts) {
+		opts.UnknownFieldAction = action
+	}
+}
+
+// ReadSource unmarshal and decodes YAML from stream.
+func ReadSource[T any](ctx context.Context, v ValueVisitor[T], src Source, opts ...ReadOption) (val T, diags parsetypes.Diagnostics, err error) {
+	r, err := src.getReader()
+	if err != nil {
+		return val, diags, err
+	}
+
+	if closer, ok := r.(io.Closer); ok {
+		defer closer.Close()
+	}
+
+	var node ast.Node
+	if err := yaml.NewDecoder(r).DecodeContext(ctx, &node); err != nil {
+		return val, errorToDiagnostics(src.FilePath, err), nil
+	}
+
+	cfg := &TraverseOpts{FileName: src.FilePath}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	val, diags = v.VisitItem(ctx, cfg, node)
+
+	return val, diags, nil
+}
