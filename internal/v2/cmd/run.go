@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -30,6 +29,8 @@ type runContext struct {
 }
 
 func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
+	diagRenderer := cmdutil.NewDiagnosticsRenderer(opts.Logger, opts.GlobalDefaults)
+
 	var runCtx runContext
 	mp := flagMountParams{
 		logger:     opts.Logger,
@@ -61,8 +62,9 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 				return nil
 			}
 
-			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
-			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mp.inputDiags.Diagnostics)
+			diagRenderer.RenderDiagnostics(opts.Workflow.Diagnostics)
+			diagRenderer.RenderDiagnostics(mp.inputDiags.Diagnostics)
+			diagRenderer.Reset()
 
 			if opts.Workflow.HasErrors {
 				return errors.New("workflow file contains errors")
@@ -78,7 +80,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 
 	// Render inputs diagnostics in help to indicate why some flags or defaults are missing.
 	cmdutil.DecorateHelpFunc(cmd, func() {
-		cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, mp.inputDiags.Diagnostics)
+		diagRenderer.RenderDiagnostics(mp.inputDiags.Diagnostics)
 	})
 
 	// Cobra flags won't be mounted if workflow file has errors.
@@ -90,7 +92,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		}
 
 		if len(opts.Workflow.Diagnostics) > 0 {
-			cmdutil.RenderDiagnostics(opts.Logger, opts.GlobalDefaults, opts.Workflow.Diagnostics)
+			diagRenderer.RenderDiagnostics(opts.Workflow.Diagnostics)
 		}
 
 		// swallow error to avoid user's confusion.
@@ -195,15 +197,6 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp flagMountParams
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				cmd.Println("test!", name)
-				fmt.Println("\n\nLocal Scope:")
-				fmt.Println("-----------")
-				r, _ := json.MarshalIndent(taskScope.Values(), "", "  ")
-				fmt.Println(string(r))
-
-				fmt.Println("\n\nRoot Scope:")
-				fmt.Println("-----------")
-				r, _ = json.MarshalIndent(runCtx.rootScope.Values(), "", "  ")
-				fmt.Println(string(r))
 				return nil
 			},
 		}

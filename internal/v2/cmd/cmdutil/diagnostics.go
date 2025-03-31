@@ -3,6 +3,8 @@ package cmdutil
 import (
 	"bytes"
 	"errors"
+	"io"
+	"iter"
 	"os"
 	"strconv"
 	"strings"
@@ -10,7 +12,10 @@ import (
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
+	"github.com/valyala/bytebufferpool"
 )
+
+const sourceLinesCount = 6
 
 type ErrorNote interface {
 	Note() string
@@ -27,7 +32,7 @@ func getPad(size int) string {
 
 	// Cast bytes to string w/o copy, copied from strings.Builder.String()
 	chunk := padBuff[:size]
-	return unsafe.String(unsafe.SliceData(chunk), len(chunk))
+	return bytesToString(chunk)
 }
 
 type filePool map[string][][]byte
@@ -63,47 +68,114 @@ func (p filePool) getDiagLine(diag *parsetypes.Diagnostic) ([]byte, error) {
 	return lines[i], nil
 }
 
-func RenderDiagnostics(logger *log.Logger, opts BootstrapOpts, diags parsetypes.Diagnostics) {
+func (p filePool) iterDiagLines(diag *parsetypes.Diagnostic, lineCount int) (iter.Seq2[int, []byte], error) {
+	lines, err := p.getFileLines(diag.FileName)
+	if err != nil {
+		return nil, err
+	}
+
+	i := diag.Range.Start.Line - 1
+	if i >= len(lines) || i < 0 {
+		return nil, nil
+	}
+
+	lineCount = max(1, lineCount)
+	half := (lineCount - 1) / 2
+	if lineCount%2 == 0 {
+		half++
+	}
+
+	start := i
+	end := i + 1
+	if half > 0 {
+		start = i - half + 1
+		end += half
+	} else if lineCount == 2 {
+		start = i - 1
+	}
+
+	start = max(0, start)
+	end = min(len(lines)-1, end)
+
+	return func(yield func(int, []byte) bool) {
+		for i := start; i < end; i++ {
+			yield(i+1, lines[i])
+		}
+	}, nil
+}
+
+type DiagnosticsRenderer struct {
+	logger *log.Logger
+	dst    io.Writer
+	opts   BootstrapOpts
+	fp     filePool
+}
+
+func NewDiagnosticsRenderer(logger *log.Logger, opts BootstrapOpts) *DiagnosticsRenderer {
+	return &DiagnosticsRenderer{
+		logger: logger,
+		opts:   opts,
+		fp:     make(filePool, 3),
+		dst:    os.Stderr,
+	}
+}
+
+// SetWriter sets custom output destination for diagnostics.
+func (r *DiagnosticsRenderer) SetWriter(w io.Writer) {
+	r.dst = w
+}
+
+// Reset clears any buffered data
+func (r *DiagnosticsRenderer) Reset() {
+	r.fp = make(filePool, 3)
+}
+
+// RenderDiagnostics renders diagnostics in human-friendly way.
+func (r *DiagnosticsRenderer) RenderDiagnostics(diags parsetypes.Diagnostics) {
 	if len(diags) == 0 {
 		return
 	}
 
-	if opts.JSON {
-		renderDiagnosticsJSON(*logger, diags)
+	if r.opts.JSON {
+		renderDiagnosticsJSON(r.logger, diags)
 		return
 	}
 
-	fp := make(filePool, 3)
-
-	palette := newDiagColorPalette(opts.NoColor)
+	palette := newDiagColorPalette(r.opts.NoColor)
 	for _, diag := range diags {
-		renderDiagnostic(fp, palette, diag)
+		r.renderDiagnostic(palette, diag)
 	}
 }
 
-func renderDiagnostic(fp filePool, palette diagColorPalette, diag *parsetypes.Diagnostic) {
+func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *parsetypes.Diagnostic) {
 	// TODO: multiline support
-	defer colorReset.Fprintln(os.Stderr)
+	buff := bytebufferpool.Get()
+	defer func() {
+		colorReset.Fprintln(buff)
+		_, _ = r.dst.Write(buff.Bytes())
+		bytebufferpool.Put(buff)
+	}()
 
 	switch diag.Severity {
 	case parsetypes.DiagnosticSeverityError:
-		palette.diagError.Fprint(os.Stderr, "error: ")
+		palette.diagError.Fprint(buff, "error: ")
 	case parsetypes.DiagnosticSeverityWarning:
-		palette.diagWarn.Fprint(os.Stderr, "warning: ")
+		palette.diagWarn.Fprint(buff, "warning: ")
 	default:
-		palette.diagWarn.Fprint(os.Stderr, "note: ")
+		palette.diagWarn.Fprint(buff, "note: ")
 	}
 
 	// Severity
-	palette.diagMsg.Fprintln(os.Stderr, diag.Err.Error())
+	palette.diagMsg.Fprintln(buff, diag.Err.Error())
 
 	// Error message & filename
 	lineNumber := strconv.Itoa(max(diag.Range.Start.Line, diag.Range.End.Line))
-	palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), "--> ")
-	palette.reset.Fprintf(os.Stderr, "%s:%s\n", diag.FileName, diag.Range.Start)
+	palette.gutter.Fprint(buff, getPad(len(lineNumber)), "--> ")
+	palette.reset.Fprintf(buff, "%s:%s\n", diag.FileName, diag.Range.Start)
 
 	// Source text
-	line, err := fp.getDiagLine(diag)
+	lines, err := r.fp.iterDiagLines(diag, sourceLinesCount)
+	//line, err := fp.getDiagLine(diag)
 	if err != nil {
 		return
 	}
@@ -117,27 +189,33 @@ func renderDiagnostic(fp filePool, palette diagColorPalette, diag *parsetypes.Di
 	//	diag.Range.End.Column-diag.Range.Start.Column+1,
 	//)
 
-	palette.gutter.Fprintf(os.Stderr, "%s | ", lineNumber)
 	//palette.gutter.Fprintf(os.Stderr, "%s |#", lineNumber)
-	palette.reset.Fprintln(os.Stderr, string(line))
+	//palette.reset.Fprintln(os.Stderr, string(line))
+	errLine := diag.Range.Start.Line
+	for lineNo, line := range lines {
+		if lineNo != errLine {
+			palette.gutter.Fprintf(buff, "%d | ", lineNo)
+			palette.reset.Fprintln(buff, bytesToString(line))
+			continue
+		}
 
-	// Draw highlight & annotation
-	msg := tryGetErrorReason(diag.Err)
+		palette.gutter.Fprintf(buff, "%s | ", lineNumber)
+		palette.reset.Fprintln(buff, bytesToString(line))
 
-	noteColor := palette.errMarker
-	if !diag.Severity.IsError() {
-		noteColor = palette.noteMarker
+		// Draw highlight & annotation
+		msg := tryGetErrorReason(diag.Err)
+		noteColor := palette.getHighlightColor(diag.Severity)
+
+		//palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")
+		palette.gutter.Fprint(buff, getPad(len(lineNumber)), " | ")
+		palette.reset.Fprint(buff, getPad(startChar))
+		noteColor.Fprint(buff, strings.Repeat("^", highlightLen), " ", msg)
+		palette.reset.Fprintln(buff)
 	}
-
-	//palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")
-	palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " | ")
-	palette.reset.Fprint(os.Stderr, getPad(startChar))
-	noteColor.Fprint(os.Stderr, strings.Repeat("^", highlightLen), " ", msg)
-	palette.reset.Fprintln(os.Stderr)
 }
 
-func renderDiagnosticsJSON(logger log.Logger, diags parsetypes.Diagnostics) {
-	logger = logger.Named("diagnostics")
+func renderDiagnosticsJSON(logger *log.Logger, diags parsetypes.Diagnostics) {
+	l := logger.Named("diagnostics")
 	for _, diag := range diags {
 		fields := []log.Field{
 			log.NewField("file", diag.FileName),
@@ -145,10 +223,10 @@ func renderDiagnosticsJSON(logger log.Logger, diags parsetypes.Diagnostics) {
 			log.NewField("offset", diag.Offset),
 		}
 		if diag.Severity == parsetypes.DiagnosticSeverityWarning {
-			logger.Warnw(diag.Err.Error(), fields...)
+			l.Warnw(diag.Err.Error(), fields...)
 			continue
 		}
-		logger.Errorw(diag.Err.Error(), fields...)
+		l.Errorw(diag.Err.Error(), fields...)
 	}
 }
 
@@ -173,4 +251,8 @@ func tryGetErrorReason(err error) string {
 	}
 
 	return unwrapped.Error()
+}
+
+func bytesToString(b []byte) string {
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }
