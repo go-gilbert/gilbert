@@ -50,7 +50,9 @@ tasks:
         default: $(git describe --tags --abbrev=0)
     steps:
       - action: go/build
-        if: ${!(matrix.os == "darwin" && matrix.arch == "386")}
+        if: ${!!(}
+#        if: ${!(matrix.os == "darwin" && matrix.arch == "386")
+#        if: ${!(matrix.os == "darwin" && matrix.arch == "386")}
         delay: 5s
         timeout: 30s
         strategy:
@@ -63,7 +65,7 @@ tasks:
           arch: ${matrix.arch}
           cgo: false
           tags:
-            - ${if(inputs.release, "release", "debug")}
+            - ${{if(inputs.release, "release", "debug")}}
 
   # Starts dev server.
   #
