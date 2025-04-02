@@ -1,0 +1,12 @@
+simple-string:
+  tokens:
+    - type: String
+      content: foobar
+      offset: 0
+      range:
+        start:
+          line: 1
+          column: 1
+        end:
+          line: 1
+          column: 7
