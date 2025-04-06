@@ -30,10 +30,11 @@ const (
 )
 
 type Diagnostic struct {
-	Severity DiagnosticSeverity
 	FileName string
+	Severity DiagnosticSeverity
 	Range    Range
 	Offset   OffsetRange
+	Note     string
 	Err      error
 }
 

@@ -1,4 +1,4 @@
-package expr2
+package expr
 
 import (
 	"errors"
@@ -6,22 +6,23 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/go-gilbert/gilbert/pkg/iterutil"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type DocumentInfo struct {
 	// FileName is document filename to which expression belongs.
-	FileName string
+	FileName string `json:"fileName"`
 
 	// ByteOffset is Offset in bytes where expression starts.
 	//
 	// This value affects all Offset numbers returned by Tokenizer and errors.
-	ByteOffset int
+	ByteOffset int `json:"byteOffset"`
 
 	// StartPosition is line and column number of where expression starts.
 	//
 	// Added to expression nodes location information.
-	StartPosition parsetypes.Position
+	StartPosition parsetypes.Position `json:"startPosition"`
 }
 
 func (docInfo DocumentInfo) newOffsetRange(start, end int) parsetypes.OffsetRange {
@@ -36,12 +37,6 @@ func (docInfo DocumentInfo) translateRange(rng parsetypes.OffsetRange) parsetype
 		Start: docInfo.ByteOffset + rng.Start,
 		End:   docInfo.ByteOffset + rng.End,
 	}
-}
-
-type Option = func(cfg *parseConfig)
-
-type parseConfig struct {
-	docInfo DocumentInfo
 }
 
 func newParseConfig(opts []Option) parseConfig {
@@ -74,6 +69,8 @@ type Tokenizer struct {
 	src          string
 	offset       int
 	err          *TokenError
+	lastLinePos  parsetypes.Position
+	exprStarted  TokenType
 }
 
 // NewTokenizer constructs a new tokenizer.
@@ -84,9 +81,10 @@ func NewTokenizer(src string, opts ...Option) *Tokenizer {
 
 func newTokenizer(cfg parseConfig, src string) *Tokenizer {
 	return &Tokenizer{
-		docInfo: cfg.docInfo,
-		src:     src,
-		stack:   make([]*stackEntry, 0, 10),
+		docInfo:     cfg.docInfo,
+		src:         src,
+		lastLinePos: cfg.docInfo.StartPosition,
+		stack:       make([]*stackEntry, 0, 10),
 	}
 }
 
@@ -95,7 +93,7 @@ func (t *Tokenizer) pos() parsetypes.Position {
 		return parsetypes.NewEmptyPosition()
 	}
 
-	return t.prevToken.rng.End
+	return t.prevToken.Range.End
 }
 
 func (t *Tokenizer) lastOpenExpr() *stackEntry {
@@ -112,7 +110,8 @@ func (t *Tokenizer) setPrevToken(tok *Token) {
 	}
 
 	if t.prevToken != nil {
-		t.prevToken.prev = tok
+		tok.Prev = t.prevToken
+		t.prevToken = tok.Prev
 	}
 
 	t.prevToken = tok
@@ -123,11 +122,16 @@ func (t *Tokenizer) IterTokens() iter.Seq2[*Token, *TokenError] {
 	return func(yield func(*Token, *TokenError) bool) {
 		for {
 			tok := t.Next()
-			if !yield(tok, t.err) {
+			if t.err != nil {
+				yield(tok, t.err)
 				return
 			}
 
 			if tok == nil {
+				return
+			}
+
+			if !yield(tok, t.err) {
 				return
 			}
 		}
@@ -141,7 +145,7 @@ func (t *Tokenizer) Err() *TokenError {
 
 // Next searches and returns a next token.
 func (t *Tokenizer) Next() *Token {
-	if t.err == nil {
+	if t.err != nil {
 		return nil
 	}
 
@@ -157,16 +161,19 @@ func (t *Tokenizer) Next() *Token {
 	pos := startPos
 
 	endOffset := t.offset
-	//strStartOffset := -1
+	lastIndex := len(t.src) - 1
 	for i := t.offset; i < len(t.src); i++ {
+		//fmt.Printf("%3d; pos:%5s %c\n", i, pos, t.src[i])
 		switch char := t.src[i]; char {
 		case '\n':
+			// TODO: consume windows \r\n as one char.
 			endOffset = i
+			t.lastLinePos = pos
 			pos.Line++
 			pos.Column = 1
 			t.updateStackEndPos(pos)
 		case exprPrefix:
-			tok, err := t.checkOpenToken(i, pos)
+			tok, nextOffset, err := t.checkOpenToken(i, pos)
 			if err != nil {
 				t.err = err
 				return nil
@@ -174,12 +181,13 @@ func (t *Tokenizer) Next() *Token {
 
 			if tok == nil {
 				endOffset = i
+
 				pos.Column++
 				t.updateStackEndPos(pos)
 				continue
 			}
 
-			t.offset += len(tok.content) - 1
+			t.offset = nextOffset
 			t.setPrevToken(tok)
 			return tok
 
@@ -194,17 +202,20 @@ func (t *Tokenizer) Next() *Token {
 			if endTok == nil {
 				// just a char, skip
 				endOffset = i
+				if i != lastIndex {
+					pos.Column++
+				}
+
 				t.updateStackEndPos(pos)
-				pos.Column++
 				continue
 			}
 
 			// expression closed
-			t.offset = endTok.offset + len(endTok.content) - 1 // FIXME: -2?
-			if endTok.prev != nil && endTok.prev.typ == TokenTypeString {
+			t.offset = endTok.Offset + len(endTok.Content) - 1 // FIXME: -2?
+			if endTok.Prev != nil && endTok.Prev.Type == TokenTypeString {
 				// return contents first and then expr terminator.
 				t.pendingToken = endTok
-				endTok = endTok.prev
+				endTok = endTok.Prev
 			}
 
 			t.setPrevToken(endTok)
@@ -229,16 +240,22 @@ func (t *Tokenizer) Next() *Token {
 	}
 
 	// assembly string left behind
-	return &Token{
-		prev:    t.prevToken,
-		typ:     TokenTypeString,
-		content: t.src[t.offset:],
-		offset:  t.offset,
-		rng:     parsetypes.NewRange(startPos, pos),
+	tok := &Token{
+		Prev:    t.prevToken,
+		Type:    TokenTypeString,
+		Content: t.src[t.offset:],
+		Offset:  t.offset,
+		Range:   parsetypes.NewRange(startPos, pos),
 	}
+
+	t.offset = endOffset
+	t.setPrevToken(tok)
+	return tok
 }
 
 // checkCloseToken checks if there are expression close parentheses at given offset.
+//
+// Passed pos should point to a previous char.
 //
 // Returns an error if there are parentheses at unexpected place.
 // Returns nil if there are no close tokens found.
@@ -255,51 +272,82 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 		return nil, nil
 	}
 
-	tokRange := parsetypes.NewRange(pos, pos.Add(0, len(tokStr)-1)) // FIXME: -2?
+	// NOTE: passed pos still points to a prev char.
+	closeTokRange := parsetypes.Range{
+		Start: pos.Add(0, 1),
+		End:   pos.Add(0, len(tokStr)),
+	}
+
 	if !openTok.typ.isClosedBy(tokTyp) {
 		// Break if close and open tokens don't match
 		return nil, &TokenError{
-			Position: tokRange,
+			//Position: tokRange,
+			Position: closeTokRange,
 			Offset:   t.docInfo.newOffsetRange(offset, offset+len(tokStr)-1),
 			Err:      fmt.Errorf("unexpected Token %q", tokStr),
 			Note:     noteRemoveToken(tokStr),
 		}
 	}
 
-	// mark expression closed
-	t.popExprStack(tokRange.End)
+	// mark expression closed.
+	//exprRange := openTok.rng.WithEndPosition(closeTokRange.End)
+	t.popExprStack(closeTokRange.End)
 	closeTok := &Token{
-		prev:    t.prevToken,
-		typ:     tokTyp,
-		content: tokStr,
-		offset:  offset,
-		rng:     tokRange,
+		Prev:    t.prevToken,
+		Type:    tokTyp,
+		Content: tokStr,
+		Offset:  offset + t.docInfo.ByteOffset,
+		Range:   closeTokRange,
 	}
 
-	// Just return a Token if there is no content inside expression.
-	if t.prevToken.typ.isClosedBy(tokTyp) {
+	// Just return a Token if there is no Content inside expression.
+	contentLen := closeTok.Offset - t.prevToken.EndOffset() - 1
+	if contentLen == 0 {
 		return closeTok, nil
 	}
 
-	// offsets are prefixed with global Offset
-	i := t.prevToken.offset - t.docInfo.ByteOffset + len(t.prevToken.content)
+	i := offset - contentLen
+	str := t.src[i:offset]
 
-	// make string contents parent of close Token
-	closeTok.prev = &Token{
-		prev:    t.prevToken,
-		typ:     TokenTypeString,
-		content: t.src[i:offset],
-		offset:  i + t.docInfo.ByteOffset,
-		rng:     parsetypes.NewRange(t.prevToken.rng.End, pos),
+	// String might start from a new line.
+	startPos := t.prevToken.Range.End
+	if str[0] == '\n' {
+		// TODO: handle \r\n
+		startPos.Line++
+		startPos.Column = 1
+	} else {
+		startPos.Column++
 	}
 
+	// Close token can be at line start
+	endPos := pos
+	//switch {
+	//case len(str) == 1:
+	//	endPos = startPos
+	//case iterutil.LastChar(str) == '\n':
+	//	// TODO: handle \r\n
+	//	endPos = t.lastLinePos
+	//default:
+	//	endPos = endPos.Add(0, -1)
+	//}
+
+	// make string contents parent of close Token
+	strTok := &Token{
+		Prev:    t.prevToken,
+		Type:    TokenTypeString,
+		Content: str,
+		Offset:  i + t.docInfo.ByteOffset,
+		Range:   parsetypes.NewRange(startPos, endPos),
+	}
+
+	closeTok.Prev = strTok
 	return closeTok, nil
 }
 
 // checkOpenToken checks whether at current offset there an open expression start and returns it as a Token.
 //
 // Note: pos should be a position of a previous character, not an expression delimiter (`$`)!
-func (t *Tokenizer) checkOpenToken(offset int, pos parsetypes.Position) (*Token, *TokenError) {
+func (t *Tokenizer) checkOpenToken(offset int, pos parsetypes.Position) (*Token, int, *TokenError) {
 	var (
 		tokTyp TokenType
 		tokStr string
@@ -307,51 +355,60 @@ func (t *Tokenizer) checkOpenToken(offset int, pos parsetypes.Position) (*Token,
 
 	switch {
 	case hasNextPrefix(t.src, offset+1, evalStartTok):
-		tokTyp = TokenTypeExprStart
+		tokTyp = TokenTypeEvalStart
 		tokStr = evalStartTok
 	case hasNextPrefix(t.src, offset+1, shellStartTok):
 		tokTyp = TokenTypeShellStart
 		tokStr = shellStartTok
 	default:
-		return nil, nil
+		return nil, 0, nil
 	}
 
+	tokContent := t.src[offset : offset+len(tokStr)+1]
+	nextOffset := offset + len(tokStr) + 1
 	tok := &Token{
-		prev:    t.prevToken,
-		typ:     tokTyp,
-		content: string(exprPrefix) + tokStr,
-		offset:  offset + t.docInfo.ByteOffset,
-		rng: parsetypes.NewRange(
-			// passed Position references char before expression start.
-			pos.Add(0, 1),
-			pos.Add(0, len(tokStr)+1),
+		Prev:    t.prevToken,
+		Type:    tokTyp,
+		Content: tokContent,
+		Offset:  offset + t.docInfo.ByteOffset,
+		Range: parsetypes.NewRange(
+			pos,
+			pos.Add(0, len(tokStr)),
 		),
 	}
 
 	if err := t.validateExprStart(tok); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	t.pushExprStack(offset, tok)
 	if offset-t.offset > 1 {
 		// consume string left behind
 		prevPos := t.pos()
+		strContent := t.src[t.offset:offset]
+
+		strEndPos := pos.Sub(0, 1)
+		if iterutil.LastChar(strContent) == '\n' {
+			strEndPos = t.lastLinePos
+		}
+
+		//strContent := t.src[t.offset : offset-1]
 		strTok := &Token{
-			prev:    t.prevToken,
-			typ:     TokenTypeString,
-			content: t.src[t.offset : offset-1],
-			offset:  t.offset + t.docInfo.ByteOffset,
-			rng: parsetypes.NewRange(
-				prevPos, pos,
+			Prev:    t.prevToken,
+			Type:    TokenTypeString,
+			Content: strContent,
+			Offset:  t.offset + t.docInfo.ByteOffset,
+			Range: parsetypes.NewRange(
+				prevPos, strEndPos,
 			),
 		}
 
-		tok.prev = strTok
+		tok.Prev = strTok
 		t.pendingToken = tok
-		return strTok, nil
+		return strTok, nextOffset, nil
 	}
 
-	return tok, nil
+	return tok, nextOffset, nil
 }
 
 func (t *Tokenizer) validateExprStart(tok *Token) *TokenError {
@@ -360,19 +417,19 @@ func (t *Tokenizer) validateExprStart(tok *Token) *TokenError {
 		return nil
 	}
 
-	offset := parsetypes.NewOffsetRange(tok.offset, len(tok.content)-1)
+	offset := parsetypes.NewOffsetRange(tok.Offset, len(tok.Content)-1)
 	switch openTok.typ {
-	case TokenTypeExprStart:
+	case TokenTypeEvalStart:
 		return &TokenError{
-			Position: tok.rng,
+			Position: tok.Range,
 			Offset:   offset,
 			Err:      newUnexpectedTokenErr(tok),
 			Note:     "eval expression cannot contain another expression",
 		}
 	case TokenTypeShellStart:
-		if tok.typ == openTok.typ {
+		if tok.Type == openTok.typ {
 			return &TokenError{
-				Position: tok.rng,
+				Position: tok.Range,
 				Offset:   offset,
 				Err:      newUnexpectedTokenErr(tok),
 				Note:     "shell expression cannot contain another shell expression",
@@ -387,10 +444,10 @@ func (t *Tokenizer) validateExprStart(tok *Token) *TokenError {
 
 // pushExprStack adds a Token to a queue to mark expression open start.
 func (t *Tokenizer) pushExprStack(offset int, tok *Token) {
-	t.updateStackEndPos(tok.rng.End)
+	t.updateStackEndPos(tok.Range.End)
 	t.stack = append(t.stack, &stackEntry{
-		typ:    tok.typ,
-		rng:    tok.rng,
+		typ:    tok.Type,
+		rng:    tok.Range,
 		offset: offset,
 	})
 }

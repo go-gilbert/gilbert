@@ -1,0 +1,18 @@
+-- simple-string --
+foobar
+-- multi-line-string --
+foo
+bar
+-- multi-line-string-with-eol --
+foo
+
+bar
+-- single-expr --
+${{ 2 + 2 }}
+-- single-shell-expr --
+$(ls -la /)
+-- string+shell --
+hello $(whoami)
+-- string+eval --
+hello ${{ 2 / 0 }}
+-- end --

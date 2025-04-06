@@ -10,6 +10,7 @@ import (
 	"github.com/expr-lang/expr/compiler"
 	"github.com/expr-lang/expr/conf"
 	"github.com/expr-lang/expr/parser"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type Range struct {
@@ -35,8 +36,8 @@ type Expression interface {
 	// Can be used to restrict usage of dynamic expressions.
 	Evaluable() bool
 
-	// Range returns start and end position of expression.
-	Range() Range
+	// Location position and offset where expression is defined.
+	Location() parsetypes.Location
 
 	// Eval evaluates an expression and returns a value.
 	Eval(ctx context.Context, eCtx EvalContext) (any, error)
@@ -46,17 +47,24 @@ type Expression interface {
 }
 
 type expressionHeader struct {
-	Pos Range
+	docPos documentPos
 }
 
-func newExpressionHeader(pos Range) expressionHeader {
+func newExpressionHeader(docPos documentPos) expressionHeader {
 	return expressionHeader{
-		Pos: pos,
+		docPos: docPos,
 	}
 }
 
-func (h expressionHeader) Range() Range {
-	return h.Pos
+func (h expressionHeader) Location() parsetypes.Location {
+	return parsetypes.Location{
+		FileName: h.docPos.fileName,
+		Range:    parsetypes.NewRange(h.docPos.startPos, h.docPos.endPos),
+		Offset: parsetypes.OffsetRange{
+			Start: h.docPos.docOffset + h.docPos.offset.Start,
+			End:   h.docPos.docOffset + h.docPos.offset.End,
+		},
+	}
 }
 
 // EmptyExpression represents an empty statement.
@@ -66,8 +74,8 @@ func (e EmptyExpression) Evaluable() bool {
 	return false
 }
 
-func (e EmptyExpression) Range() Range {
-	return Range{}
+func (e EmptyExpression) Location() parsetypes.Location {
+	return parsetypes.Location{}
 }
 
 func (e EmptyExpression) ByteString(_ context.Context, _ EvalContext) ([]byte, error) {
@@ -88,9 +96,9 @@ type LiteralExpression struct {
 	Value string
 }
 
-func NewLiteralExpression(pos Range, value string) *LiteralExpression {
+func NewLiteralExpression(docPos documentPos, value string) *LiteralExpression {
 	return &LiteralExpression{
-		expressionHeader: newExpressionHeader(pos),
+		expressionHeader: newExpressionHeader(docPos),
 		Value:            value,
 	}
 }
@@ -118,7 +126,7 @@ type EvalExpression struct {
 	EvalConfig *conf.Config
 }
 
-func NewEvalExpression(pos Range, exprStr string, cfg *conf.Config) (*EvalExpression, error) {
+func NewEvalExpression(pos documentPos, exprStr string, cfg *conf.Config) (*EvalExpression, error) {
 	if cfg == nil {
 		cfg = evalConfWithOptions()
 	}
@@ -179,9 +187,9 @@ type CompositeExpression struct {
 	Parts []Expression
 }
 
-func NewCompositeExpression(rng Range, parts []Expression) *CompositeExpression {
+func NewCompositeExpression(docPos documentPos, parts []Expression) *CompositeExpression {
 	return &CompositeExpression{
-		expressionHeader: newExpressionHeader(rng),
+		expressionHeader: newExpressionHeader(loc),
 		Parts:            parts,
 	}
 }
@@ -220,9 +228,9 @@ type ShellExpression struct {
 	Parts []Expression
 }
 
-func NewShellExpression(pos Range, parts []Expression) *ShellExpression {
+func NewShellExpression(docPos documentPos, parts []Expression) *ShellExpression {
 	return &ShellExpression{
-		expressionHeader: newExpressionHeader(pos),
+		expressionHeader: newExpressionHeader(docPos),
 		Parts:            parts,
 	}
 }

@@ -2,14 +2,26 @@ package parsetypes
 
 import "fmt"
 
-type Position struct {
-	Line   int
-	Column int
+type Location struct {
+	FileName string      `json:"fileName"`
+	Offset   OffsetRange `json:"offset"`
+	Range    Range       `json:"range"`
 }
 
-func (p Position) Add(line int, column int) Position {
+type Position struct {
+	Line   int `json:"line"`
+	Column int `json:"column"`
+}
+
+func (p Position) Add(line, column int) Position {
 	p.Line += line
 	p.Column += column
+	return p
+}
+
+func (p Position) Sub(line, column int) Position {
+	p.Line -= line
+	p.Column -= column
 	return p
 }
 
@@ -21,6 +33,13 @@ func (p Position) String() string {
 	return fmt.Sprintf("%d:%d", p.Line, p.Column)
 }
 
+func NewEmptyPosition() Position {
+	return Position{
+		Line:   1,
+		Column: 1,
+	}
+}
+
 func NewPosition(line int, column int) Position {
 	return Position{
 		Line:   line,
@@ -29,12 +48,28 @@ func NewPosition(line int, column int) Position {
 }
 
 type Range struct {
-	Start Position
-	End   Position
+	Start Position `json:"start"`
+	End   Position `json:"end"`
 }
 
 func (r Range) IsEmpty() bool {
 	return r.Start.IsEmpty() && r.End.IsEmpty()
+}
+
+// WithStartPosition returns a copy of a range with updated start position.
+func (r Range) WithStartPosition(pos Position) Range {
+	r.Start = pos
+	return r
+}
+
+// WithEndPosition returns a copy of a range with updated end position.
+func (r Range) WithEndPosition(pos Position) Range {
+	r.End = pos
+	return r
+}
+
+func (r Range) String() string {
+	return r.Start.String() + "-" + r.End.String()
 }
 
 func NewRange(start, end Position) Range {
@@ -45,8 +80,8 @@ func NewRange(start, end Position) Range {
 }
 
 type OffsetRange struct {
-	Start int
-	End   int
+	Start int `json:"start"`
+	End   int `json:"end"`
 }
 
 func NewOffsetRange(offset, count int) OffsetRange {

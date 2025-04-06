@@ -2,7 +2,8 @@ package expr
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
@@ -15,32 +16,32 @@ var (
 // ExpressionError represents error related to an expression
 type ExpressionError struct {
 	// ParentRange is range of a parent expression.
-	ParentRange Range
+	ParentLocation parsetypes.Location
 
 	// Range is related statement range.
-	Range Range
+	Location parsetypes.Location
 
 	// Err is occurred error.
 	Err error
 }
 
-func newExprError(err error, rng Range) *ExpressionError {
+func newExprError(err error, pos documentPos) *ExpressionError {
 	return &ExpressionError{
-		Range: rng,
-		Err:   err,
+		Location: pos.location(),
+		Err:      err,
 	}
 }
 
-func newNestedExprError(err error, rng Range, parRng Range) *ExpressionError {
+func newNestedExprError(err error, pos, parentPos documentPos) *ExpressionError {
 	return &ExpressionError{
-		Range:       rng,
-		ParentRange: parRng,
-		Err:         err,
+		Location:       pos.location(),
+		ParentLocation: parentPos.location(),
+		Err:            err,
 	}
 }
 
 func (err ExpressionError) Error() string {
-	return fmt.Sprintf("%s (at %d:%d)", err.Err, err.Range.StartCol, err.Range.EndCol)
+	return err.Err.Error()
 }
 
 func (err ExpressionError) Unwrap() error {
@@ -49,4 +50,8 @@ func (err ExpressionError) Unwrap() error {
 
 func isUnterminatedErr(err *ExpressionError) bool {
 	return errors.Is(err.Err, ErrUnterminatedExpression)
+}
+
+func convertEvalError(err error) {
+
 }

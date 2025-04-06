@@ -1,12 +1,86 @@
-simple-string:
-  tokens:
-    - type: String
-      content: foobar
-      offset: 0
-      range:
-        start:
-          line: 1
-          column: 1
-        end:
-          line: 1
-          column: 7
+cases:
+  simple-string:
+    keepEOL: true
+    tokens:
+      - type: String
+        content: inputs://self
+        offset: 0
+        range: '1:1-2:1'
+  multi-line-string:
+    keepEOL: true
+    tokens:
+      - type: String
+        content: inputs://self
+        offset: 0
+        range: '1:1-3:1'
+  multi-line-string-with-eol:
+    tokens:
+      - type: String
+        content: inputs://self
+        offset: 0
+        range: '1:1-3:3'
+  single-expr:
+    tokens:
+      - type: EvalStart
+        content: '${{'
+        offset: 0
+        range: '1:1-1:3'
+      - type: String
+        content: ' 2 + 2 '
+        offset: 3
+        range: '1:4-1:10'
+      - type: EvalEnd
+        content: '}}'
+        offset: 10
+        range: '1:11-1:12'
+  single-shell-expr:
+    tokens:
+      - type: ShellStart
+        content: '$('
+        offset: 0
+        range: '1:1-1:2'
+      - type: String
+        content: 'ls -la /'
+        offset: 2
+        range: '1:3-1:10'
+      - type: ShellEnd
+        content: ')'
+        offset: 10
+        range: '1:11-1:11'
+  string+shell:
+    tokens:
+      - type: String
+        content: 'hello '
+        offset: 0
+        range: '1:1-1:6'
+      - type: ShellStart
+        content: '$('
+        offset: 6
+        range: '1:7-1:8'
+      - type: String
+        content: 'whoami'
+        offset: 8
+        range: '1:9-1:14'
+      - type: ShellEnd
+        content: ')'
+        offset: 14
+        range: '1:15-1:15'
+  string+eval:
+    tokens:
+      - type: String
+        content: 'hello '
+        offset: 0
+        range: '1:1-1:6'
+      - type: EvalStart
+        content: '${{'
+        offset: 6
+        range: '1:7-1:9'
+      - type: String
+        content: ' 2 / 0 '
+        offset: 9
+        range: '1:10-1:16'
+      - type: EvalEnd
+        content: '}}'
+        offset: 16
+        range: '1:17-1:18'
+only: string+eval

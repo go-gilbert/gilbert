@@ -1,32 +1,20 @@
-package expr2
+package expr
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
-var (
-	errDoubleShellExpr = errors.New("shell expression cannot contain another shell expression")
-
-	ErrUnterminatedShellExpr = errors.New("unterminated shell expression")
-	ErrUnterminatedEvalExpr  = errors.New("unterminated eval expression")
-)
-
-// ${} $(${})
-// $() $(${}
-// $(${$(
-
 type TokenError struct {
-	Position parsetypes.Range
-	Offset   parsetypes.OffsetRange
-	Err      error
-	Note     string
+	Position parsetypes.Range       `json:"position"`
+	Offset   parsetypes.OffsetRange `json:"offset"`
+	Err      error                  `json:"err"`
+	Note     string                 `json:"note"`
 }
 
 func (err *TokenError) Error() string {
-	return fmt.Sprintf("%s (at %s)", err, err.Position)
+	return fmt.Sprintf("%s (at %s - %s)", err.Err, err.Position.Start, err.Position.End)
 }
 
 func noteCloseExpr(exprTok string) string {
@@ -38,5 +26,5 @@ func noteRemoveToken(str string) string {
 }
 
 func newUnexpectedTokenErr(tok *Token) error {
-	return fmt.Errorf("unexpected Token %q", tok.content)
+	return fmt.Errorf("unexpected Token %q", tok.Content)
 }
