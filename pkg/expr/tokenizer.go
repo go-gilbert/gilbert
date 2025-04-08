@@ -162,12 +162,8 @@ func (t *Tokenizer) Next() *Token {
 
 	startPos := t.pos()
 	pos := startPos
-	//charFound := false
-
 	endOffset := t.offset
-	//lastIndex := len(t.src) - 1
 	for i := t.offset; i < len(t.src); i++ {
-		//fmt.Printf("%3d; pos:%5s %q\n", i, pos, string(t.src[i]))
 		switch char := t.src[i]; char {
 		case '\r', '\n':
 			tok, nextOffset, err := t.consumeEOL(i, pos)
@@ -252,7 +248,7 @@ func (t *Tokenizer) Next() *Token {
 		Prev:    t.prevToken,
 		Type:    TokenTypeString,
 		Content: t.src[t.offset:],
-		Offset:  t.offset,
+		Offset:  t.offset + t.docInfo.ByteOffset,
 		Range:   parsetypes.NewRange(startPos, pos),
 	}
 
@@ -500,7 +496,7 @@ loop:
 		Prev:    t.prevToken,
 		Type:    TokenTypeString,
 		Content: str,
-		Offset:  t.offset,
+		Offset:  t.docInfo.ByteOffset + t.offset,
 		Range: parsetypes.NewRange(
 			strStartPos, strEndPos,
 		),

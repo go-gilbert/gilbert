@@ -178,18 +178,6 @@ func (t *Token) EndOffset() int {
 	return t.Offset + len(t.Content) - 1
 }
 
-// hasOpenTokenPrefix checks if there is token open clause.
-func hasOpenTokenPrefix(str string) (TokenType, bool) {
-	switch {
-	case strings.HasPrefix(str, evalEndTok):
-		return TokenTypeEvalEnd, true
-	case strings.HasPrefix(str, shellEndTok):
-		return TokenTypeShellEnd, true
-	default:
-		return TokenTypeEmpty, false
-	}
-}
-
 // hasTokenClosePrefix checks if string starts with shell or eval expression close Token.
 //
 // Returns Token type and its contents.

@@ -32,7 +32,7 @@ type tokenTestCases struct {
 }
 
 func TestTokenizer(t *testing.T) {
-	inputsFs := loadTxtar(t, "inputs.txtar")
+	inputsFs := loadTxtar(t, "token-inputs.txtar")
 	root := loadYaml[tokenTestCases](t, "token-cases.yml")
 
 	for name, tc := range root.Cases {
