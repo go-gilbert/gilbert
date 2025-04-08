@@ -21,7 +21,7 @@ type TokenType uint
 const (
 	TokenTypeEmpty TokenType = iota
 	TokenTypeString
-	TokenEOL
+	TokenTypeEOL
 	TokenTypeShellStart
 	TokenTypeShellEnd
 	TokenTypeEvalStart
@@ -41,7 +41,7 @@ func TokenTypeFromString(str string) TokenType {
 	case "String":
 		return TokenTypeString
 	case "EOL":
-		return TokenEOL
+		return TokenTypeEOL
 	default:
 		return TokenTypeEmpty
 	}
@@ -78,7 +78,7 @@ func (t TokenType) String() string {
 		return "ShellEnd"
 	case TokenTypeString:
 		return "String"
-	case TokenEOL:
+	case TokenTypeEOL:
 		return "EOL"
 	default:
 		return ""
@@ -95,14 +95,14 @@ func (t TokenType) Text() string {
 		return string(exprPrefix) + shellStartTok
 	case TokenTypeShellEnd:
 		return shellEndTok
-	case TokenEOL:
+	case TokenTypeEOL:
 		return "\n"
 	default:
 		return ""
 	}
 }
 
-func (t TokenType) getPair() TokenType {
+func (t TokenType) GetPair() TokenType {
 	switch t {
 	case TokenTypeEvalStart:
 		return TokenTypeEvalEnd
@@ -117,7 +117,7 @@ func (t TokenType) getPair() TokenType {
 	}
 }
 
-func (t TokenType) isClosedBy(tok TokenType) bool {
+func (t TokenType) IsClosedBy(tok TokenType) bool {
 	switch t {
 	case TokenTypeEvalStart:
 		return tok == TokenTypeEvalEnd
@@ -128,7 +128,7 @@ func (t TokenType) isClosedBy(tok TokenType) bool {
 	}
 }
 
-func (t TokenType) isOpenedBy(tok TokenType) bool {
+func (t TokenType) IsOpenedBy(tok TokenType) bool {
 	switch t {
 	case TokenTypeEvalEnd:
 		return tok == TokenTypeEvalStart
@@ -139,26 +139,8 @@ func (t TokenType) isOpenedBy(tok TokenType) bool {
 	}
 }
 
-func (t TokenType) isPairOf(tok TokenType) bool {
-	return t.isClosedBy(tok) || t.isOpenedBy(tok)
-}
-
-func (t TokenType) isCloseToken() bool {
-	switch t {
-	case TokenTypeEvalEnd, TokenTypeShellEnd:
-		return true
-	}
-
-	return false
-}
-
-func (t TokenType) isOpenToken() bool {
-	switch t {
-	case TokenTypeShellStart, TokenTypeEvalStart:
-		return true
-	}
-
-	return false
+func (t TokenType) IsPairOf(tok TokenType) bool {
+	return t.IsClosedBy(tok) || t.IsOpenedBy(tok)
 }
 
 type Token struct {
@@ -190,20 +172,5 @@ func hasTokenClosePrefix(str string) (TokenType, string) {
 		return TokenTypeShellEnd, shellEndTok
 	default:
 		return TokenTypeEmpty, ""
-	}
-}
-
-func tokenToString(t TokenType) string {
-	switch t {
-	case TokenTypeEvalStart:
-		return string(exprPrefix) + evalStartTok
-	case TokenTypeEvalEnd:
-		return evalEndTok
-	case TokenTypeShellStart:
-		return string(exprPrefix) + shellStartTok
-	case TokenTypeShellEnd:
-		return shellEndTok
-	default:
-		return ""
 	}
 }

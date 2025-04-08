@@ -34,17 +34,6 @@ func (docInfo DocumentInfo) newOffsetRange(start, end int) parsetypes.OffsetRang
 	}
 }
 
-func (docInfo DocumentInfo) translateRange(rng parsetypes.OffsetRange) parsetypes.OffsetRange {
-	return parsetypes.OffsetRange{
-		Start: docInfo.ByteOffset + rng.Start,
-		End:   docInfo.ByteOffset + rng.End,
-	}
-}
-
-func (docInfo DocumentInfo) intoLocalOffset(offset int) int {
-	return offset - docInfo.ByteOffset
-}
-
 func newParseConfig(opts []Option) parseConfig {
 	cfg := parseConfig{
 		docInfo: DocumentInfo{
@@ -228,7 +217,7 @@ func (t *Tokenizer) Next() *Token {
 			Position: openTok.rng,
 			Offset:   t.docInfo.newOffsetRange(openTok.offset, endOffset),
 			Err:      errors.New("unexpected end of input"),
-			Note:     fmt.Sprintf("missing %q", tokenToString(openTok.typ.getPair())),
+			Note:     fmt.Sprintf("missing %q", openTok.typ.GetPair().Text()),
 		}
 		return nil
 	}
@@ -279,14 +268,14 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 		End:   pos.Add(0, len(tokStr)-1),
 	}
 
-	if !openTok.typ.isClosedBy(tokTyp) {
+	if !openTok.typ.IsClosedBy(tokTyp) {
 		// Break if close and open tokens don't match
 		return nil, 0, &TokenError{
 			//Position: tokRange,
 			Position: closeTokRange,
 			Offset:   t.docInfo.newOffsetRange(offset, offset+len(tokStr)-1),
 			Err:      fmt.Errorf("unexpected token %q", tokStr),
-			Note:     fmt.Sprintf("expected %q", openTok.typ.getPair().Text()),
+			Note:     fmt.Sprintf("expected %q", openTok.typ.GetPair().Text()),
 		}
 	}
 
@@ -475,7 +464,7 @@ loop:
 
 	eolTol := &Token{
 		Prev:    t.prevToken,
-		Type:    TokenEOL,
+		Type:    TokenTypeEOL,
 		Content: content,
 		Offset:  t.docInfo.ByteOffset + offset,
 		Range: parsetypes.Range{
