@@ -17,10 +17,11 @@ import (
 )
 
 type tokenExpectation struct {
-	Type     TokenType    `json:"type"`
-	Content  string       `json:"content"`
-	Offset   int          `json:"offset"`
-	RawRange *rangeString `json:"range"`
+	Type       TokenType    `json:"type"`
+	Content    string       `json:"content"`
+	RawContent string       `json:"rawContent"`
+	Offset     int          `json:"offset"`
+	RawRange   *rangeString `json:"range"`
 }
 
 func (exp tokenExpectation) Token() *Token {

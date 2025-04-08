@@ -21,6 +21,7 @@ type TokenType uint
 const (
 	TokenTypeEmpty TokenType = iota
 	TokenTypeString
+	TokenEOL
 	TokenTypeShellStart
 	TokenTypeShellEnd
 	TokenTypeEvalStart
@@ -39,6 +40,8 @@ func TokenTypeFromString(str string) TokenType {
 		return TokenTypeShellEnd
 	case "String":
 		return TokenTypeString
+	case "EOL":
+		return TokenEOL
 	default:
 		return TokenTypeEmpty
 	}
@@ -75,6 +78,8 @@ func (t TokenType) String() string {
 		return "ShellEnd"
 	case TokenTypeString:
 		return "String"
+	case TokenEOL:
+		return "EOL"
 	default:
 		return ""
 	}

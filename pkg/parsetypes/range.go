@@ -36,7 +36,7 @@ func (p Position) String() string {
 func NewEmptyPosition() Position {
 	return Position{
 		Line:   1,
-		Column: 1,
+		Column: 0,
 	}
 }
 

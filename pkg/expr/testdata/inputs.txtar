@@ -15,4 +15,12 @@ $(ls -la /)
 hello $(whoami)
 -- string+eval --
 hello ${{ 2 / 0 }}
+-- string+eval+string --
+foo ${{bar}} baz
+-- eval+str --
+${{2+2}} foobar
+-- eval+lf+str --
+${{2+2}}
+foobar
+-- eval+lf+str-input --
 -- end --

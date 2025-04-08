@@ -6,7 +6,6 @@ import (
 	"iter"
 	"strings"
 
-	"github.com/go-gilbert/gilbert/pkg/iterutil"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -22,6 +21,9 @@ type DocumentInfo struct {
 	// StartPosition is line and column number of where expression starts.
 	//
 	// Added to expression nodes location information.
+	//
+	// Note: Column value should be one character before start of expression.
+	// That means, if string starts at start - Column should be 0.
 	StartPosition parsetypes.Position `json:"startPosition"`
 }
 
@@ -37,6 +39,10 @@ func (docInfo DocumentInfo) translateRange(rng parsetypes.OffsetRange) parsetype
 		Start: docInfo.ByteOffset + rng.Start,
 		End:   docInfo.ByteOffset + rng.End,
 	}
+}
+
+func (docInfo DocumentInfo) intoLocalOffset(offset int) int {
+	return offset - docInfo.ByteOffset
 }
 
 func newParseConfig(opts []Option) parseConfig {
@@ -70,7 +76,6 @@ type Tokenizer struct {
 	offset       int
 	err          *TokenError
 	lastLinePos  parsetypes.Position
-	exprStarted  TokenType
 }
 
 // NewTokenizer constructs a new tokenizer.
@@ -159,61 +164,60 @@ func (t *Tokenizer) Next() *Token {
 
 	startPos := t.pos()
 	pos := startPos
+	//charFound := false
 
 	endOffset := t.offset
-	lastIndex := len(t.src) - 1
+	//lastIndex := len(t.src) - 1
 	for i := t.offset; i < len(t.src); i++ {
-		//fmt.Printf("%3d; pos:%5s %c\n", i, pos, t.src[i])
+		//fmt.Printf("%3d; pos:%5s %q\n", i, pos, string(t.src[i]))
 		switch char := t.src[i]; char {
-		case '\n':
-			// TODO: consume windows \r\n as one char.
-			endOffset = i
-			t.lastLinePos = pos
-			pos.Line++
-			pos.Column = 1
+		case '\r', '\n':
+			tok, nextOffset, err := t.consumeEOL(i, pos)
+			if err != nil {
+				t.err = err
+				return nil
+			}
+
 			t.updateStackEndPos(pos)
+			t.setPrevToken(tok)
+			t.offset = nextOffset
+			return tok
+
 		case exprPrefix:
-			tok, nextOffset, err := t.checkOpenToken(i, pos)
+			pos.Column++
+			endOffset = i
+			tok, newOffset, err := t.checkOpenToken(i, pos)
 			if err != nil {
 				t.err = err
 				return nil
 			}
 
 			if tok == nil {
-				endOffset = i
-
-				pos.Column++
 				t.updateStackEndPos(pos)
 				continue
 			}
 
-			t.offset = nextOffset
+			t.offset = newOffset
 			t.setPrevToken(tok)
 			return tok
 
 		default:
-			// is this a close parentheses?
-			endTok, err := t.checkCloseToken(i, pos)
+			pos.Column++
+			endOffset = i
+			endTok, nextOffset, err := t.checkCloseToken(i, pos)
 			if err != nil {
 				t.err = err
 				return nil
 			}
 
 			if endTok == nil {
-				// just a char, skip
-				endOffset = i
-				if i != lastIndex {
-					pos.Column++
-				}
-
 				t.updateStackEndPos(pos)
 				continue
 			}
 
-			// expression closed
-			t.offset = endTok.Offset + len(endTok.Content) - 1 // FIXME: -2?
+			// If string was before close token:
+			t.offset = nextOffset
 			if endTok.Prev != nil && endTok.Prev.Type == TokenTypeString {
-				// return contents first and then expr terminator.
 				t.pendingToken = endTok
 				endTok = endTok.Prev
 			}
@@ -239,7 +243,13 @@ func (t *Tokenizer) Next() *Token {
 		return nil
 	}
 
-	// assembly string left behind
+	// assembly string left behind (if any left)
+	strChunk := t.src[t.offset:]
+	if strChunk == "" {
+		return nil
+	}
+
+	startPos = startPos.Add(0, 1)
 	tok := &Token{
 		Prev:    t.prevToken,
 		Type:    TokenTypeString,
@@ -255,32 +265,29 @@ func (t *Tokenizer) Next() *Token {
 
 // checkCloseToken checks if there are expression close parentheses at given offset.
 //
-// Passed pos should point to a previous char.
-//
 // Returns an error if there are parentheses at unexpected place.
 // Returns nil if there are no close tokens found.
-func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token, *TokenError) {
+func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token, int, *TokenError) {
 	// TODO: support escapes?
 	tokTyp, tokStr := hasTokenClosePrefix(t.src[offset:])
 	if tokTyp == TokenTypeEmpty {
-		return nil, nil
+		return nil, 0, nil
 	}
 
 	openTok := t.lastOpenExpr()
 	if t.prevToken == nil || openTok == nil {
 		// outside of expression, we don't care
-		return nil, nil
+		return nil, 0, nil
 	}
 
-	// NOTE: passed pos still points to a prev char.
 	closeTokRange := parsetypes.Range{
-		Start: pos.Add(0, 1),
-		End:   pos.Add(0, len(tokStr)),
+		Start: pos,
+		End:   pos.Add(0, len(tokStr)-1),
 	}
 
 	if !openTok.typ.isClosedBy(tokTyp) {
 		// Break if close and open tokens don't match
-		return nil, &TokenError{
+		return nil, 0, &TokenError{
 			//Position: tokRange,
 			Position: closeTokRange,
 			Offset:   t.docInfo.newOffsetRange(offset, offset+len(tokStr)-1),
@@ -290,7 +297,6 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 	}
 
 	// mark expression closed.
-	//exprRange := openTok.rng.WithEndPosition(closeTokRange.End)
 	t.popExprStack(closeTokRange.End)
 	closeTok := &Token{
 		Prev:    t.prevToken,
@@ -301,35 +307,24 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 	}
 
 	// Just return a Token if there is no Content inside expression.
-	contentLen := closeTok.Offset - t.prevToken.EndOffset() - 1
-	if contentLen == 0 {
-		return closeTok, nil
+	nextOffset := offset + len(tokStr)
+	strLen := closeTok.Offset - t.prevToken.EndOffset() - 1
+
+	if strLen < 0 {
+		// bug assertion
+		panic(fmt.Sprintf("checkCloseToken: strLen is less than zero (got: %d)", strLen))
 	}
 
-	i := offset - contentLen
+	if strLen == 0 {
+		return closeTok, nextOffset, nil
+	}
+
+	// Read string behind
+	i := offset - strLen
 	str := t.src[i:offset]
 
-	// String might start from a new line.
-	startPos := t.prevToken.Range.End
-	if str[0] == '\n' {
-		// TODO: handle \r\n
-		startPos.Line++
-		startPos.Column = 1
-	} else {
-		startPos.Column++
-	}
-
-	// Close token can be at line start
-	endPos := pos
-	//switch {
-	//case len(str) == 1:
-	//	endPos = startPos
-	//case iterutil.LastChar(str) == '\n':
-	//	// TODO: handle \r\n
-	//	endPos = t.lastLinePos
-	//default:
-	//	endPos = endPos.Add(0, -1)
-	//}
+	strStartPos := t.prevToken.Range.End.Add(0, 1)
+	strEndPos := strStartPos.Add(0, len(str)-1)
 
 	// make string contents parent of close Token
 	strTok := &Token{
@@ -337,16 +332,14 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 		Type:    TokenTypeString,
 		Content: str,
 		Offset:  i + t.docInfo.ByteOffset,
-		Range:   parsetypes.NewRange(startPos, endPos),
+		Range:   parsetypes.NewRange(strStartPos, strEndPos),
 	}
 
 	closeTok.Prev = strTok
-	return closeTok, nil
+	return closeTok, nextOffset, nil
 }
 
 // checkOpenToken checks whether at current offset there an open expression start and returns it as a Token.
-//
-// Note: pos should be a position of a previous character, not an expression delimiter (`$`)!
 func (t *Tokenizer) checkOpenToken(offset int, pos parsetypes.Position) (*Token, int, *TokenError) {
 	var (
 		tokTyp TokenType
@@ -364,8 +357,8 @@ func (t *Tokenizer) checkOpenToken(offset int, pos parsetypes.Position) (*Token,
 		return nil, 0, nil
 	}
 
-	tokContent := t.src[offset : offset+len(tokStr)+1]
 	nextOffset := offset + len(tokStr) + 1
+	tokContent := t.src[offset:nextOffset]
 	tok := &Token{
 		Prev:    t.prevToken,
 		Type:    tokTyp,
@@ -382,33 +375,29 @@ func (t *Tokenizer) checkOpenToken(offset int, pos parsetypes.Position) (*Token,
 	}
 
 	t.pushExprStack(offset, tok)
-	if offset-t.offset > 1 {
-		// consume string left behind
-		prevPos := t.pos()
-		strContent := t.src[t.offset:offset]
-
-		strEndPos := pos.Sub(0, 1)
-		if iterutil.LastChar(strContent) == '\n' {
-			strEndPos = t.lastLinePos
-		}
-
-		//strContent := t.src[t.offset : offset-1]
-		strTok := &Token{
-			Prev:    t.prevToken,
-			Type:    TokenTypeString,
-			Content: strContent,
-			Offset:  t.offset + t.docInfo.ByteOffset,
-			Range: parsetypes.NewRange(
-				prevPos, strEndPos,
-			),
-		}
-
-		tok.Prev = strTok
-		t.pendingToken = tok
-		return strTok, nextOffset, nil
+	if offset-t.offset == 0 {
+		return tok, nextOffset, nil
 	}
 
-	return tok, nextOffset, nil
+	// consume string left behind
+	prevPos := t.pos()
+	strContent := t.src[t.offset:offset]
+	strStartPos := prevPos.Add(0, 1)
+	strEndPos := pos.Sub(0, 1)
+
+	strTok := &Token{
+		Prev:    t.prevToken,
+		Type:    TokenTypeString,
+		Content: strContent,
+		Offset:  t.offset + t.docInfo.ByteOffset,
+		Range: parsetypes.NewRange(
+			strStartPos, strEndPos,
+		),
+	}
+
+	tok.Prev = strTok
+	t.pendingToken = tok
+	return strTok, nextOffset, nil
 }
 
 func (t *Tokenizer) validateExprStart(tok *Token) *TokenError {
@@ -440,6 +429,90 @@ func (t *Tokenizer) validateExprStart(tok *Token) *TokenError {
 	}
 
 	return nil
+}
+
+func (t *Tokenizer) consumeEOL(offset int, curPos parsetypes.Position) (*Token, int, *TokenError) {
+	lineCount := 0
+	j := offset
+	crSet := false
+loop:
+	for i := offset; i < len(t.src); i++ {
+		switch char := t.src[i]; char {
+		case '\r':
+			// just for windows.
+			j = i
+			if crSet {
+				// double \r\r means broken newline.
+				break loop
+			}
+
+			crSet = true
+			continue
+		case '\n':
+			j = i
+			crSet = false
+			lineCount++
+		default:
+			break loop
+		}
+	}
+
+	nextOffset := j + 1
+	content := t.src[offset:nextOffset]
+	startPos := parsetypes.NewPosition(curPos.Line+1, 0)
+	endPos := startPos.Add(lineCount-1, 0)
+	if lineCount == 1 {
+		endPos = startPos
+	}
+
+	// if for some reason there is unexpected value between CRLF newline:
+	if crSet {
+		return nil, 0, &TokenError{
+			Err: errors.New("broken CRLF - expected '\n' after '\r'"),
+			Position: parsetypes.Range{
+				Start: startPos,
+				End:   endPos,
+			},
+			Offset: t.docInfo.newOffsetRange(
+				offset, j,
+			),
+		}
+	}
+
+	eolTol := &Token{
+		Prev:    t.prevToken,
+		Type:    TokenEOL,
+		Content: content,
+		Offset:  t.docInfo.ByteOffset + offset,
+		Range: parsetypes.Range{
+			Start: startPos,
+			End:   endPos,
+		},
+	}
+
+	// is there any string left behind?
+	str := t.src[t.offset:offset] // offset points to first \n
+	if str == "" {
+		return eolTol, nextOffset, nil
+	}
+
+	strEndPos := curPos // curPos points to a char before newline
+	strStartPos := curPos.Sub(0, len(str)-1)
+	strTok := &Token{
+		Prev:    t.prevToken,
+		Type:    TokenTypeString,
+		Content: str,
+		Offset:  t.offset,
+		Range: parsetypes.NewRange(
+			strStartPos, strEndPos,
+		),
+	}
+
+	eolTol.Prev = strTok
+	t.pendingToken = eolTol
+	t.offset = offset
+
+	return strTok, nextOffset, nil
 }
 
 // pushExprStack adds a Token to a queue to mark expression open start.

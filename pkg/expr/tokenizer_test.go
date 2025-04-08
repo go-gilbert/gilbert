@@ -2,6 +2,7 @@ package expr
 
 import (
 	"io/fs"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -39,6 +40,7 @@ func TestTokenizer(t *testing.T) {
 			src, err := fs.ReadFile(inputsFs, name)
 			require.NoError(t, err, "input is missing in inputs file")
 
+			t.Logf("input: %q", src)
 			if !tc.KeepEOL {
 				src = trimEOL(src)
 			}
@@ -72,6 +74,14 @@ func intoTokens(t *testing.T, fsys fs.FS, name string, tc tokenTestCase) []*Toke
 	out := make([]*Token, 0, len(tc.Tokens))
 	for _, tokExp := range tc.Tokens {
 		tok := tokExp.Token()
+		if tokExp.RawContent != "" {
+			unescaped, err := strconv.Unquote(`"` + tokExp.RawContent + `"`)
+			require.NoErrorf(t, err, "can't unescape: %s", tokExp.RawContent)
+			tok.Content = unescaped
+			out = append(out, tok)
+			continue
+		}
+
 		fpath, ok := resolveContent(name, tokExp.Content)
 		if ok {
 			content, err := fs.ReadFile(fsys, fpath)

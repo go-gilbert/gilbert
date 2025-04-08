@@ -3,22 +3,41 @@ cases:
     keepEOL: true
     tokens:
       - type: String
-        content: inputs://self
+        content: foobar
         offset: 0
-        range: '1:1-2:1'
+        range: '1:1-1:6'
+      - type: EOL
+        offset: 6
+        rawContent: '\n'
+        range: '2:0-2:0'
   multi-line-string:
-    keepEOL: true
     tokens:
       - type: String
-        content: inputs://self
+        content: 'foo'
         offset: 0
-        range: '1:1-3:1'
+        range: '1:1-1:3'
+      - type: EOL
+        rawContent: '\n'
+        offset: 3
+        range: '2:0-2:0'
+      - type: String
+        offset: 4
+        content: 'bar'
+        range: '2:1-2:3'
   multi-line-string-with-eol:
     tokens:
       - type: String
-        content: inputs://self
+        content: foo
         offset: 0
-        range: '1:1-3:3'
+        range: '1:1-1:3'
+      - type: EOL
+        rawContent: '\n\n'
+        offset: 3
+        range: '2:0-3:0'
+      - type: String
+        content: bar
+        offset: 5
+        range: '3:1-3:3'
   single-expr:
     tokens:
       - type: EvalStart
@@ -83,4 +102,66 @@ cases:
         content: '}}'
         offset: 16
         range: '1:17-1:18'
-only: string+eval
+  string+eval+string:
+    tokens:
+      - type: String
+        content: 'foo '
+        offset: 0
+        range: '1:1-1:4'
+      - type: EvalStart
+        content: '${{'
+        offset: 4
+        range: '1:5-1:7'
+      - type: String
+        content: 'bar'
+        offset: 7
+        range: '1:8-1:10'
+      - type: EvalEnd
+        content: '}}'
+        offset: 10
+        range: '1:11-1:12'
+      - type: String
+        content: ' baz'
+        offset: 12
+        range: '1:13-1:16'
+  eval+str:
+    tokens:
+      - type: EvalStart
+        content: '${{'
+        offset: 0
+        range: '1:1-1:3'
+      - type: String
+        content: '2+2'
+        offset: 3
+        range: '1:4-1:6'
+      - type: EvalEnd
+        content: '}}'
+        offset: 6
+        range: '1:7-1:8'
+      - type: String
+        content: ' foobar'
+        offset: 8
+        range: '1:9-1:15'
+  eval+lf+str:
+    tokens:
+      - type: EvalStart
+        content: '${{'
+        offset: 0
+        range: '1:1-1:3'
+      - type: String
+        content: '2+2'
+        offset: 3
+        range: '1:4-1:6'
+      - type: EvalEnd
+        content: '}}'
+        offset: 6
+        range: '1:7-1:8'
+      - type: EOL
+        rawContent: '\n'
+        offset: 8
+        range: '2:0-2:0'
+      - type: String
+        unescapeContent: true
+        content: 'foobar'
+        offset: 9
+        range: '2:1-2:6'
