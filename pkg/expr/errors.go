@@ -13,10 +13,14 @@ type TokenError struct {
 	Note     string                 `json:"note"`
 }
 
+func (err *TokenError) Unwrap() error {
+	return err.Err
+}
+
 func (err *TokenError) Error() string {
 	return fmt.Sprintf("%s (at %s - %s)", err.Err, err.Position.Start, err.Position.End)
 }
 
 func newUnexpectedTokenErr(tok *Token) error {
-	return fmt.Errorf("unexpected token %q", tok.Content)
+	return fmt.Errorf("unexpected Token %q", tok.Content)
 }
