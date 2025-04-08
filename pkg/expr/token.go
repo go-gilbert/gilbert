@@ -85,6 +85,23 @@ func (t TokenType) String() string {
 	}
 }
 
+func (t TokenType) Text() string {
+	switch t {
+	case TokenTypeEvalStart:
+		return string(exprPrefix) + evalStartTok
+	case TokenTypeEvalEnd:
+		return evalEndTok
+	case TokenTypeShellStart:
+		return string(exprPrefix) + shellStartTok
+	case TokenTypeShellEnd:
+		return shellEndTok
+	case TokenEOL:
+		return "\n"
+	default:
+		return ""
+	}
+}
+
 func (t TokenType) getPair() TokenType {
 	switch t {
 	case TokenTypeEvalStart:

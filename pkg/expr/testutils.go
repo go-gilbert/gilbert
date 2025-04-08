@@ -2,6 +2,7 @@ package expr
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -15,6 +16,26 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/tools/txtar"
 )
+
+type tokenErrExpectation struct {
+	Position rangeString       `json:"position"`
+	Offset   offsetRangeString `json:"offset"`
+	Err      string            `json:"err"`
+	Note     string            `json:"note"`
+}
+
+func (exp *tokenErrExpectation) TokenError() *TokenError {
+	if exp == nil {
+		return nil
+	}
+
+	return &TokenError{
+		Position: exp.Position.Range,
+		Offset:   exp.Offset.Range,
+		Err:      errors.New(exp.Err),
+		Note:     exp.Note,
+	}
+}
 
 type tokenExpectation struct {
 	Type       TokenType    `json:"type"`
@@ -36,6 +57,33 @@ func (exp tokenExpectation) Token() *Token {
 		Offset:  exp.Offset,
 		Range:   rng,
 	}
+}
+
+type offsetRangeString struct {
+	Range parsetypes.OffsetRange
+}
+
+func (ors *offsetRangeString) UnmarshalText(text []byte) error {
+	parts := bytes.SplitN(text, []byte{'-'}, 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid offset range %q", parts)
+	}
+
+	dst := [2]*int{
+		&ors.Range.Start,
+		&ors.Range.End,
+	}
+
+	for i, chunk := range parts {
+		num, err := strconv.Atoi(string(bytes.TrimSpace(chunk)))
+		if err != nil {
+			return err
+		}
+
+		*dst[i] = num
+	}
+
+	return nil
 }
 
 type rangeString struct {

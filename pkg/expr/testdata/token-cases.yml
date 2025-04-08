@@ -102,6 +102,70 @@ cases:
         content: '}}'
         offset: 16
         range: '1:17-1:18'
+  eval+shell:
+    tokens:
+      - type: EvalStart
+        content: '${{'
+        offset: 0
+        range: '1:1-1:3'
+      - type: String
+        content: ' a '
+        offset: 3
+        range: '1:4-1:6'
+      - type: EvalEnd
+        content: '}}'
+        offset: 6
+        range: '1:7-1:8'
+      - type: ShellStart
+        content: '$('
+        offset: 8
+        range: '1:9-1:10'
+      - type: String
+        content: 'b'
+        offset: 10
+        range: '1:11-1:11'
+      - type: ShellEnd
+        content: ')'
+        offset: 11
+        range: '1:12-1:12'
+  eval+shell+eval:
+    tokens:
+      - type: EvalStart
+        content: '${{'
+        offset: 0
+        range: '1:1-1:3'
+      - type: String
+        content: ' a '
+        offset: 3
+        range: '1:4-1:6'
+      - type: EvalEnd
+        content: '}}'
+        offset: 6
+        range: '1:7-1:8'
+      - type: ShellStart
+        content: '$('
+        offset: 8
+        range: '1:9-1:10'
+      - type: String
+        content: 'b'
+        offset: 10
+        range: '1:11-1:11'
+      - type: ShellEnd
+        content: ')'
+        offset: 11
+        range: '1:12-1:12'
+      - type: EvalStart
+        content: '${{'
+        offset: 12
+        range: '1:13-1:15'
+      - type: String
+        content: 'c'
+        offset: 15
+        range: '1:16-1:16'
+      - type: EvalEnd
+        content: '}}'
+        offset: 16
+        range: '1:17-1:18'
   string+eval+string:
     tokens:
       - type: String
@@ -165,3 +229,105 @@ cases:
         content: 'foobar'
         offset: 9
         range: '2:1-2:6'
+  expr-in-shell:
+    tokens:
+      - type: ShellStart
+        content: '$('
+        offset: 0
+        range: '1:1-1:2'
+      - type: EvalStart
+        content: '${{'
+        offset: 2
+        range: '1:3-1:5'
+      - type: String
+        content: 'msg'
+        offset: 5
+        range: '1:6-1:8'
+      - type: EvalEnd
+        content: '}}'
+        offset: 8
+        range: '1:9-1:10'
+      - type: ShellEnd
+        content: ')'
+        offset: 10
+        range: '1:11-1:11'
+  expr+str-in-shell:
+    tokens:
+      - type: ShellStart
+        content: '$('
+        offset: 0
+        range: '1:1-1:2'
+      - type: EvalStart
+        content: '${{'
+        offset: 2
+        range: '1:3-1:5'
+      - type: String
+        content: 'msg'
+        offset: 5
+        range: '1:6-1:8'
+      - type: EvalEnd
+        content: '}}'
+        offset: 8
+        range: '1:9-1:10'
+      - type: String
+        content: ' bar'
+        offset: 10
+        range: '1:11-1:14'
+      - type: ShellEnd
+        content: ')'
+        offset: 14
+        range: '1:15-1:15'
+  # EOL
+  eol-crlf:
+    unquoteSource: true
+    tokens:
+      - type: String
+        content: 'foo'
+        offset: 0
+        range: '1:1-1:3'
+      - type: EOL
+        rawContent: '\r\n'
+        offset: 3
+        range: '2:0-2:0'
+      - type: String
+        offset: 5
+        content: 'bar'
+        range: '2:1-2:3'
+
+  # Errors
+  err-bad-crlf:
+    unquoteSource: true
+    err:
+      position: '2:0-2:0'
+      offset: '3-3'
+      err: 'broken CRLF - expected "\n" after "\r"'
+  err-bad-crlf-multi:
+    unquoteSource: true
+    err:
+      position: '2:0-2:0'
+      offset: '3-5'
+      err: 'broken CRLF - expected "\n" after "\r"'
+  err-unterminated-eval:
+    err:
+      position: '1:11-1:16'
+      offset: '10-15'
+      err: 'unexpected end of input'
+      note: 'missing "}}"'
+  err-unterminated-nested:
+    err:
+      position: '1:19-1:19'
+      offset: '18-18'
+      err: 'unexpected token ")"'
+      note: 'expected "}}"'
+  err-shell-in-shell:
+    err:
+      position: '1:3-1:4'
+      offset: '2-3'
+      err: 'unexpected token "$("'
+      note: 'shell expression cannot contain another shell expression'
+  err-shell-in-expr:
+    err:
+      position: '1:12-1:13'
+      offset: '11-12'
+      err: 'unexpected token "$("'
+      note: 'eval expression cannot contain another expression'

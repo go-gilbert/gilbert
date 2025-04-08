@@ -75,7 +75,6 @@ type Tokenizer struct {
 	src          string
 	offset       int
 	err          *TokenError
-	lastLinePos  parsetypes.Position
 }
 
 // NewTokenizer constructs a new tokenizer.
@@ -86,10 +85,9 @@ func NewTokenizer(src string, opts ...Option) *Tokenizer {
 
 func newTokenizer(cfg parseConfig, src string) *Tokenizer {
 	return &Tokenizer{
-		docInfo:     cfg.docInfo,
-		src:         src,
-		lastLinePos: cfg.docInfo.StartPosition,
-		stack:       make([]*stackEntry, 0, 10),
+		docInfo: cfg.docInfo,
+		src:     src,
+		stack:   make([]*stackEntry, 0, 10),
 	}
 }
 
@@ -227,10 +225,6 @@ func (t *Tokenizer) Next() *Token {
 		}
 	}
 
-	if t.offset == endOffset {
-		return nil
-	}
-
 	openTok := t.lastOpenExpr()
 	if openTok != nil {
 		// Missing token to close last expression clause.
@@ -238,8 +232,12 @@ func (t *Tokenizer) Next() *Token {
 			Position: openTok.rng,
 			Offset:   t.docInfo.newOffsetRange(openTok.offset, endOffset),
 			Err:      errors.New("unexpected end of input"),
-			Note:     fmt.Sprintf("missing %q", tokenToString(openTok.typ)),
+			Note:     fmt.Sprintf("missing %q", tokenToString(openTok.typ.getPair())),
 		}
+		return nil
+	}
+
+	if t.offset == endOffset {
 		return nil
 	}
 
@@ -291,8 +289,8 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 			//Position: tokRange,
 			Position: closeTokRange,
 			Offset:   t.docInfo.newOffsetRange(offset, offset+len(tokStr)-1),
-			Err:      fmt.Errorf("unexpected Token %q", tokStr),
-			Note:     noteRemoveToken(tokStr),
+			Err:      fmt.Errorf("unexpected token %q", tokStr),
+			Note:     fmt.Sprintf("expected %q", openTok.typ.getPair().Text()),
 		}
 	}
 
@@ -461,14 +459,14 @@ loop:
 	content := t.src[offset:nextOffset]
 	startPos := parsetypes.NewPosition(curPos.Line+1, 0)
 	endPos := startPos.Add(lineCount-1, 0)
-	if lineCount == 1 {
+	if lineCount <= 1 {
 		endPos = startPos
 	}
 
 	// if for some reason there is unexpected value between CRLF newline:
 	if crSet {
 		return nil, 0, &TokenError{
-			Err: errors.New("broken CRLF - expected '\n' after '\r'"),
+			Err: errors.New(`broken CRLF - expected "\n" after "\r"`),
 			Position: parsetypes.Range{
 				Start: startPos,
 				End:   endPos,

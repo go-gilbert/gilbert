@@ -3,6 +3,7 @@ package expr
 import (
 	"io/fs"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,9 +14,13 @@ type tokenTestCase struct {
 	// eol trim is enabled by default to mitigate txtar behavior as it always adds eol.
 	KeepEOL bool `json:"keepEOL"`
 
-	Doc    *DocumentInfo      `json:"doc"`
-	Tokens []tokenExpectation `json:"tokens"`
-	Err    *TokenError        `json:"err"`
+	// UnquoteSource unquotes source from imputs.txtar
+	// to parse control characters like \n.
+	UnquoteSource bool `json:"unquoteSource"`
+
+	Doc    *DocumentInfo        `json:"doc"`
+	Tokens []tokenExpectation   `json:"tokens"`
+	Err    *tokenErrExpectation `json:"err"`
 }
 
 type tokenTestCases struct {
@@ -39,6 +44,11 @@ func TestTokenizer(t *testing.T) {
 			wantToks := intoTokens(t, inputsFs, name, tc)
 			src, err := fs.ReadFile(inputsFs, name)
 			require.NoError(t, err, "input is missing in inputs file")
+			if tc.UnquoteSource {
+				trimmed, err := strconv.Unquote(`"` + strings.TrimSpace(string(src)) + `"`)
+				require.NoError(t, err, "can't unquote input")
+				src = []byte(trimmed)
+			}
 
 			t.Logf("input: %q", src)
 			if !tc.KeepEOL {
@@ -52,18 +62,28 @@ func TestTokenizer(t *testing.T) {
 
 			toker := NewTokenizer(string(src), opts...)
 			consumedTokens := make([]*Token, 0, len(tc.Tokens))
+			var (
+				gotErr  *TokenError
+				wantErr = tc.Err.TokenError()
+			)
+
 			for tok, err := range toker.IterTokens() {
-				if tc.Err != nil {
-					require.NotNil(t, err)
-					require.Equal(t, tc.Err, err)
-					return
+				if err != nil {
+					gotErr = err
+					break
 				}
 
-				require.Nil(t, err, "unexpected tokenizer error")
 				require.NotNil(t, tok, "nil token returned")
 				consumedTokens = append(consumedTokens, tok)
 			}
 
+			if wantErr != nil {
+				require.NotNil(t, gotErr, "expected parser error")
+				require.Equal(t, wantErr, gotErr, "parser error doesn't match")
+				return
+			}
+
+			require.Nil(t, gotErr, "unexpected tokenizer error")
 			checkTokenList(t, wantToks, consumedTokens)
 		})
 	}

@@ -17,14 +17,6 @@ func (err *TokenError) Error() string {
 	return fmt.Sprintf("%s (at %s - %s)", err.Err, err.Position.Start, err.Position.End)
 }
 
-func noteCloseExpr(exprTok string) string {
-	return fmt.Sprintf("missing %q", exprTok)
-}
-
-func noteRemoveToken(str string) string {
-	return fmt.Sprintf("remove unecessary %q", str)
-}
-
 func newUnexpectedTokenErr(tok *Token) error {
-	return fmt.Errorf("unexpected Token %q", tok.Content)
+	return fmt.Errorf("unexpected token %q", tok.Content)
 }
