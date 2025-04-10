@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -35,7 +35,7 @@ type inputFlagBinding interface {
 }
 
 type InputBindingOpts struct {
-	EvalContext expr.EvalContext
+	EvalParams  expr.EvalParams
 	EnvVars     map[string]string
 	Scope       *scope.Scope
 	Diagnostics *DiagnosticsCollector
@@ -63,7 +63,7 @@ func NewInputFlagsBinder(ctx context.Context, logger *log.Logger, opts InputBind
 
 func (b *InputFlagsBinder) bindFlag(input *manifest.InputDefinition, cmd *cobra.Command, isGlobal bool) error {
 	inputCtx := inputFlagContext{
-		evalContext:      b.opts.EvalContext,
+		evalParams:       b.opts.EvalParams,
 		envVars:          b.opts.EnvVars,
 		dstScope:         b.opts.Scope,
 		inputDiagnostics: b.diags,

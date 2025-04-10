@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -62,7 +62,7 @@ func (i *DiagnosticsCollector) AddErrorAtLocation(loc *manifest.ReferenceLocatio
 }
 
 type inputFlagContext struct {
-	evalContext      expr.EvalContext
+	evalParams       expr.EvalParams
 	envVars          map[string]string
 	dstScope         *scope.Scope
 	inputDiagnostics *DiagnosticsCollector
@@ -171,7 +171,7 @@ func (i *inputBindingBase) initDefaultFromDef(ctx context.Context) error {
 		return i.addInputError(errors.New("default value type doesn't match input type"))
 	}
 
-	val, err := i.inputDef.DefaultValue.Value.Expand(ctx, i.flagCtx.evalContext)
+	val, err := i.inputDef.DefaultValue.Value.Expand(ctx, i.flagCtx.evalParams)
 	if err != nil {
 		var diags parsetypes.Diagnostics
 		if errors.Is(err, &diags) {

@@ -154,7 +154,7 @@ type flagBindingOpts struct {
 
 func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
 	return inputflag.InputBindingOpts{
-		EvalContext: scope.NewEvalContext(opts.scope),
+		EvalParams:  scope.NewEvalParams(opts.scope),
 		EnvVars:     opts.scope.Globals.Env,
 		Scope:       opts.scope,
 		Diagnostics: opts.diags,
