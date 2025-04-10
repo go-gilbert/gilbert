@@ -9,7 +9,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/runner/job"
 	"github.com/go-gilbert/gilbert/internal/scope"
 	"github.com/go-gilbert/gilbert/internal/support/test"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,8 +22,6 @@ type results struct {
 }
 
 func TestTaskRunner_Run(t *testing.T) {
-	defaultParser := expr.SpecV2Parser{}
-
 	cases := map[string]struct {
 		skip     bool
 		taskName string
@@ -301,10 +298,6 @@ func TestTaskRunner_Run(t *testing.T) {
 			handlers := NewHandlerSet(ActionHandlers{
 				testAction: newTestAction,
 			})
-
-			if tc.m.Parser == nil {
-				tc.m.Parser = defaultParser
-			}
 
 			tr := NewTaskRunner(Config{
 				Logger:   l,

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
@@ -19,8 +18,7 @@ func TestVarsScan(t *testing.T) {
 		},
 	}
 
-	c.parser = expr.SpecV2Parser{}
-	input := "foo${foo}"
+	input := "foo${{foo}}"
 	assert.NoError(t, c.Scan(&input))
 	assert.Equal(t, "foobar", input)
 }
@@ -33,11 +31,9 @@ func TestVarsExtract(t *testing.T) {
 		},
 		Variables: manifest.Vars{
 			"package": "github.com/go-gilbert/gorn",
-			"nested":  "${GOPATH}/foo",
+			"nested":  "${{GOPATH}}/foo",
 		},
 	}
-
-	c.parser = expr.SpecV2Parser{}
 
 	cases := map[string]struct {
 		input       string
@@ -46,19 +42,19 @@ func TestVarsExtract(t *testing.T) {
 		trimResult  bool
 	}{
 		"should extract valid variables": {
-			input:     "${GOROOT}/src/${ package }",
+			input:     "${{GOROOT}}/src/${ package }",
 			expString: fmt.Sprintf("%s/src/%s", c.Globals["GOROOT"], c.Variables["package"]),
 		},
 		"another extract test": {
-			input:     "/var/lib/${GOPATH}/foo",
+			input:     "/var/lib/${{GOPATH}}/foo",
 			expString: fmt.Sprintf("/var/lib/%s/foo", c.Globals["GOPATH"]),
 		},
 		"should include nested variables in local variable": {
-			input:     "/var/${nested}/bar",
+			input:     "/var/${{nested}}/bar",
 			expString: fmt.Sprintf("/var/%s/foo/bar", c.Globals["GOPATH"]),
 		},
 		"should fail on undefined variable": {
-			input:       "/foo/${ bar }/baz",
+			input:       "/foo/${{ bar }}/baz",
 			shouldError: true,
 			expString:   `"bar" is not defined`,
 		},

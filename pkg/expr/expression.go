@@ -26,7 +26,9 @@ type Expression interface {
 	// Eval evaluates an expression and returns a value.
 	Eval(ctx context.Context, p EvalParams) (any, *parsetypes.Diagnostic)
 
-	// EvalText returns string bytes representation of evaluated value.
+	// EvalText evaluates an expression and returns a string representation as bytes.
+	//
+	// Returns an error if result cannot be converted to string.
 	EvalText(ctx context.Context, p EvalParams) ([]byte, *parsetypes.Diagnostic)
 }
 
