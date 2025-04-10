@@ -53,6 +53,9 @@ func (e scopeExprAdapter) ValueByName(varName string) (string, bool) {
 func (e scopeExprAdapter) Values() (map[string]any, error) {
 	// FIXME: keep this to get v1 building. remove when v1 is decommissioned.
 	dst := make(map[string]any, len(e.ctx.Variables))
+	for k, v := range e.ctx.Globals {
+		dst[k] = v
+	}
 	for k, v := range e.ctx.Variables {
 		dst[k] = v
 	}
