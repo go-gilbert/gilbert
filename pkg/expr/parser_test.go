@@ -142,7 +142,7 @@ func (tc parserTestCase) mapExpression(t *testing.T, fname string, src *expressi
 		}
 
 		return &CompositeExpression{
-			header: newHeader(loc),
+			Header: newHeader(loc),
 			Parts:  children,
 		}
 	case "eval":
@@ -151,7 +151,7 @@ func (tc parserTestCase) mapExpression(t *testing.T, fname string, src *expressi
 		require.NoError(t, err, "bad test input expression")
 
 		return &EvalExpression{
-			header:          newHeader(loc),
+			Header:          newHeader(loc),
 			AST:             expr,
 			EvalConfig:      evalCfg,
 			ContentPosition: src.ContentPosition.Range,

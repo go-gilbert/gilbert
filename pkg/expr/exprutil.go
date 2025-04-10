@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/checker"
 	"github.com/expr-lang/expr/conf"
 	"github.com/expr-lang/expr/file"
@@ -42,19 +41,6 @@ func bytesAsString(b []byte) string {
 	}
 
 	return unsafe.String(unsafe.SliceData(b), len(b))
-}
-
-func evalConfWithOptions(opts ...expr.Option) *conf.Config {
-	c := conf.CreateNew()
-	for _, op := range opts {
-		op(c)
-	}
-	for name := range c.Disabled {
-		delete(c.Builtins, name)
-	}
-	c.Check()
-
-	return c
 }
 
 func evalExprFromBody(c *conf.Config, body Expression) (*parser.Tree, error) {

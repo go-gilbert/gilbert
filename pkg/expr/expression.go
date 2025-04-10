@@ -30,27 +30,27 @@ type Expression interface {
 	EvalText(ctx context.Context, p EvalParams) ([]byte, *parsetypes.Diagnostic)
 }
 
-type header struct {
-	location parsetypes.Location
+type Header struct {
+	Source parsetypes.Location
 }
 
-func newHeader(loc parsetypes.Location) header {
-	return header{
-		location: loc,
+func newHeader(loc parsetypes.Location) Header {
+	return Header{
+		Source: loc,
 	}
 }
 
-func (h header) Location() parsetypes.Location {
-	return h.location
+func (h Header) Location() parsetypes.Location {
+	return h.Source
 }
 
 type EmptyExpression struct {
-	header
+	Header
 }
 
 func NewEmptyExpression(loc parsetypes.Location) *EmptyExpression {
 	return &EmptyExpression{
-		header: newHeader(loc),
+		Header: newHeader(loc),
 	}
 }
 
@@ -72,7 +72,7 @@ func (*EmptyExpression) EvalText(_ context.Context, _ EvalParams) ([]byte, *pars
 //
 //	"foo ${bar} $(baz)"
 type CompositeExpression struct {
-	header
+	Header
 
 	Parts []Expression
 }
@@ -92,7 +92,7 @@ func NewCompositeExpression(parentLoc parsetypes.Location, parts []Expression) *
 	}
 
 	return &CompositeExpression{
-		header: newHeader(loc),
+		Header: newHeader(loc),
 		Parts:  parts,
 	}
 }
@@ -104,7 +104,7 @@ func (exp *CompositeExpression) Evaluable() bool {
 		}
 	}
 
-	return true
+	return false
 }
 
 func (exp *CompositeExpression) Eval(ctx context.Context, p EvalParams) (any, *parsetypes.Diagnostic) {
@@ -150,13 +150,13 @@ func (exp *CompositeExpression) EvalText(ctx context.Context, p EvalParams) ([]b
 //
 //	"foobar"
 type StringExpression struct {
-	header
+	Header
 	Value string
 }
 
 func NewStringExpression(loc parsetypes.Location, value string) *StringExpression {
 	return &StringExpression{
-		header: newHeader(loc),
+		Header: newHeader(loc),
 		Value:  value,
 	}
 }
@@ -179,7 +179,7 @@ func (exp *StringExpression) EvalText(_ context.Context, _ EvalParams) ([]byte, 
 //
 //	"${{foo.bar}}"
 type EvalExpression struct {
-	header
+	Header
 
 	AST             *parser.Tree
 	EvalConfig      *conf.Config
@@ -193,12 +193,12 @@ func (*EvalExpression) Evaluable() bool {
 
 func NewEvalExpression(loc parsetypes.Location, body Expression, cfg *conf.Config) (*EvalExpression, *parsetypes.Diagnostic) {
 	if cfg == nil {
-		cfg = evalConfWithOptions()
+		cfg = conf.CreateNew()
 	}
 
 	contentLoc := body.Location()
 	exp := &EvalExpression{
-		header:          newHeader(loc),
+		Header:          newHeader(loc),
 		EvalConfig:      cfg,
 		ContentPosition: contentLoc.Range,
 		ContentOffset:   contentLoc.Offset,
@@ -215,7 +215,7 @@ func NewEvalExpression(loc parsetypes.Location, body Expression, cfg *conf.Confi
 
 func (exp *EvalExpression) errorToDiagnostic(err error, msg string) *parsetypes.Diagnostic {
 	diag := &parsetypes.Diagnostic{
-		FileName: exp.location.FileName,
+		FileName: exp.Source.FileName,
 		Severity: parsetypes.DiagnosticSeverityError,
 		Range:    exp.ContentPosition,
 		Offset:   exp.ContentOffset,
@@ -227,19 +227,21 @@ func (exp *EvalExpression) errorToDiagnostic(err error, msg string) *parsetypes.
 	case errors.As(err, &t):
 		// TODO: figure out if t.Location is actually useful.
 		lineNo := t.Line - 1
-		colNo := t.Column
+		startCol := t.Location.From
 		if diag.Range.Start.Column > 0 {
-			colNo--
+			startCol--
 		}
 
 		// set offset only for a first line as line bounds not known.
 		if t.Line == 1 {
-			offset := diag.Offset.Start + t.From - 1
-			diag.Offset = parsetypes.NewOffsetRange(offset, offset)
+			startOffset := diag.Offset.Start + t.Location.From - 1
+			endOffset := diag.Offset.Start + t.Location.To - 1
+			diag.Offset = parsetypes.NewOffsetRange(startOffset, endOffset)
 		}
 
-		errPos := diag.Range.Start.Add(lineNo, colNo)
-		diag.Range = parsetypes.NewRange(errPos, errPos)
+		startPos := diag.Range.Start.Add(lineNo, startCol)
+		endPos := startPos.Add(0, t.Location.To-t.Location.From)
+		diag.Range = parsetypes.NewRange(startPos, endPos)
 		diag.Note = t.Message
 		diag.Err = fmt.Errorf("%s: %s", msg, t.Message)
 	}
@@ -252,7 +254,7 @@ func (exp *EvalExpression) Eval(_ context.Context, p EvalParams) (any, *parsetyp
 	if err != nil {
 		// FIXME: map error to diagnostics
 		return nil, &parsetypes.Diagnostic{
-			FileName: exp.location.FileName,
+			FileName: exp.Source.FileName,
 			Severity: parsetypes.DiagnosticSeverityError,
 			Range:    exp.ContentPosition,
 			Offset:   exp.ContentOffset,
@@ -263,7 +265,7 @@ func (exp *EvalExpression) Eval(_ context.Context, p EvalParams) (any, *parsetyp
 	vals, err := p.Env.Values()
 	if err != nil {
 		return nil, &parsetypes.Diagnostic{
-			FileName: exp.location.FileName,
+			FileName: exp.Source.FileName,
 			Severity: parsetypes.DiagnosticSeverityError,
 			Range:    exp.ContentPosition,
 			Offset:   exp.ContentOffset,
@@ -273,14 +275,7 @@ func (exp *EvalExpression) Eval(_ context.Context, p EvalParams) (any, *parsetyp
 
 	output, err := expr.Run(prog, vals)
 	if err != nil {
-		// FIXME: map error to diagnostics
-		return nil, &parsetypes.Diagnostic{
-			FileName: exp.location.FileName,
-			Severity: parsetypes.DiagnosticSeverityError,
-			Range:    exp.ContentPosition,
-			Offset:   exp.ContentOffset,
-			Err:      err,
-		}
+		return nil, exp.errorToDiagnostic(err, "expression error")
 	}
 
 	return output, nil
@@ -295,7 +290,7 @@ func (exp *EvalExpression) EvalText(ctx context.Context, p EvalParams) ([]byte, 
 	b, err := valueToBytes(res)
 	if err != nil {
 		return nil, &parsetypes.Diagnostic{
-			FileName: exp.location.FileName,
+			FileName: exp.Source.FileName,
 			Severity: parsetypes.DiagnosticSeverityError,
 			Range:    exp.ContentPosition,
 			Offset:   exp.ContentOffset,
@@ -307,16 +302,20 @@ func (exp *EvalExpression) EvalText(ctx context.Context, p EvalParams) ([]byte, 
 }
 
 type ShellExpression struct {
-	header
+	Header
 
 	Body Expression
 }
 
 func NewShellExpression(loc parsetypes.Location, body Expression) *ShellExpression {
 	return &ShellExpression{
-		header: newHeader(loc),
+		Header: newHeader(loc),
 		Body:   body,
 	}
+}
+
+func (exp *ShellExpression) Evaluable() bool {
+	return exp.Body != nil
 }
 
 func (exp *ShellExpression) Eval(ctx context.Context, p EvalParams) (any, *parsetypes.Diagnostic) {
@@ -344,18 +343,15 @@ func (exp *ShellExpression) EvalText(ctx context.Context, p EvalParams) ([]byte,
 
 	r, err := p.CommandProcessor.EvalCommand(ctx, bytesAsString(src))
 	if err != nil {
+		loc := exp.Body.Location()
 		return nil, &parsetypes.Diagnostic{
-			FileName: exp.location.FileName,
+			FileName: exp.Source.FileName,
 			Severity: parsetypes.DiagnosticSeverityError,
-			Range:    exp.header.location.Range,
-			Offset:   exp.header.location.Offset,
-			Err:      err,
+			Range:    loc.Range,
+			Offset:   loc.Offset,
+			Err:      fmt.Errorf("shell expression error: %w", err),
 		}
 	}
 
 	return r, nil
-}
-
-func (exp *ShellExpression) Evaluable() bool {
-	return exp.Body != nil
 }
