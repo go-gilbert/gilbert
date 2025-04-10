@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
 )
@@ -83,9 +82,14 @@ var jobSchema = Struct(
 		"if",
 		Transform(
 			String(), func(ctx context.Context, n ast.Node, val string) (*manifest.LazyValue, error) {
-				ex, err := expr.Parse(val)
+				ldCtx, err := getLoaderContext(ctx)
 				if err != nil {
 					return nil, err
+				}
+
+				ex, diag := expressionFromAnyNode(ldCtx.filePath, n, val)
+				if diag != nil {
+					return nil, diag
 				}
 
 				if !ex.Evaluable() {

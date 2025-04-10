@@ -3,7 +3,7 @@ package manifest
 import (
 	"context"
 
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -18,7 +18,7 @@ type TypedLazyValue struct {
 	Value LazyValue
 }
 
-func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	// TODO: typecheck?
 	return tlz.Value.Expand(ctx, opts)
 }
@@ -35,7 +35,7 @@ type LazyValue struct {
 	Value    AnySpec
 }
 
-func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	// TODO: convert into diagnostics
 	return v.Value.Expand(ctx, opts)
 }
@@ -58,7 +58,7 @@ func (s ArraySpec) Literal() bool {
 	return len(s.LiteralItems) > 0
 }
 
-func (s ArraySpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (s ArraySpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	if len(s.LiteralItems) != 0 {
 		return s.LiteralItems, nil
 	}
@@ -140,7 +140,7 @@ func (s AnySpec) Optimize() AnySpec {
 	return s
 }
 
-func (s AnySpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (s AnySpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	if s.LiteralSpec != nil {
 		return s.LiteralSpec.Value, nil
 	}
@@ -169,7 +169,7 @@ type ObjectSpec struct {
 	Values map[string]AnySpec
 }
 
-func (s ObjectSpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (s ObjectSpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	dst := make(map[string]any, len(s.Values))
 
 	for k, spec := range s.Values {

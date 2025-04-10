@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
@@ -67,7 +66,7 @@ func lazyFromNode(opts *yamltree.TraverseOpts, node ast.Node) (rawNode manifest.
 	case *ast.MappingNode:
 		return lazyFromDictNode(opts, n)
 	case *ast.StringNode:
-		return lazyFromStringNode(opts, n)
+		return lazyFromStringNode(opts, n, nil)
 	case *ast.LiteralNode:
 		return lazyFromLiteralNode(opts, n)
 	case *ast.IntegerNode:
@@ -86,7 +85,8 @@ func lazyFromNode(opts *yamltree.TraverseOpts, node ast.Node) (rawNode manifest.
 }
 
 func lazyFromLiteralNode(opts *yamltree.TraverseOpts, node *ast.LiteralNode) (manifest.AnySpec, endPosition, parsetypes.Diagnostics) {
-	return lazyFromStringNode(opts, node.Value)
+	// TODO: handle new lines before body
+	return lazyFromStringNode(opts, node.Value, node)
 	//s, diags := lazyFromStringNode(opts, node.Value)
 	//if diags.HasError() {
 	//	return s, diags
@@ -97,7 +97,7 @@ func lazyFromLiteralNode(opts *yamltree.TraverseOpts, node *ast.LiteralNode) (ma
 	//}
 }
 
-func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (manifest.AnySpec, endPosition, parsetypes.Diagnostics) {
+func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode, parent *ast.LiteralNode) (manifest.AnySpec, endPosition, parsetypes.Diagnostics) {
 	endPos := endPositionFromToken(node.Token)
 	if node.Value == "" {
 		return manifest.AnySpec{
@@ -107,11 +107,10 @@ func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (mani
 		}, endPos, nil
 	}
 
-	// TODO: unwrap
-	e, err := expr.Parse(node.Value)
+	e, err := expressionFromStringNode(opts.FileName, node, parent)
 	if err != nil {
 		return manifest.AnySpec{}, endPos, parsetypes.Diagnostics{
-			newErrDiagnosticFromNode(opts.FileName, node, err),
+			err,
 		}
 	}
 

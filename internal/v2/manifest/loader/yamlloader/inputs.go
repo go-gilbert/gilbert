@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 	"github.com/goccy/go-yaml/ast"
@@ -256,9 +256,9 @@ func (v defaultValVisitor) readString(ctx context.Context, n *ast.StringNode, lo
 		return nil, fmt.Errorf("expected value of type %s but got string", typ)
 	}
 
-	exp, err := expr.Parse(n.Value)
-	if err != nil {
-		return nil, err
+	exp, diag := expressionFromStringNode(loc.FileName, n, nil)
+	if diag != nil {
+		return nil, diag
 	}
 
 	typedVal := &manifest.TypedLazyValue{
@@ -279,12 +279,16 @@ func (v defaultValVisitor) readString(ctx context.Context, n *ast.StringNode, lo
 	}
 
 	// should never return errors as isn't evaluable
-	rawVal, err := exp.ByteString(ctx, expr.EvalContext{})
-	if err != nil {
-		return nil, err
+	rawVal, diag := exp.EvalText(ctx, expr.NoopEvalParams)
+	if diag != nil {
+		return nil, diag
 	}
 
-	var outVal any = string(rawVal)
+	var (
+		outVal any = string(rawVal)
+		err    error
+	)
+
 	if parseFunc != nil {
 		outVal, err = parseFunc(string(rawVal))
 		if err != nil {
