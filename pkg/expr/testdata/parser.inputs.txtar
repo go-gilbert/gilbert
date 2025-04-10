@@ -12,4 +12,10 @@ $(chown ${{env.USER}} -R $PWD)
 -- errors --
 -- err-nested-eval --
 ${{ ${{ foo }} }}
+-- err-shell-in-eval --
+${{ foo $( ls -la ) }}
+-- err-shell-in-shell --
+$($())
+-- err-eval-syntax-err --
+prefix ${{ foo( }} with $(suffix)
 -- end --

@@ -2,11 +2,13 @@ package expr
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/compiler"
 	"github.com/expr-lang/expr/conf"
+	"github.com/expr-lang/expr/file"
 	"github.com/expr-lang/expr/parser"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
@@ -195,25 +197,54 @@ func NewEvalExpression(loc parsetypes.Location, body Expression, cfg *conf.Confi
 	}
 
 	contentLoc := body.Location()
-	tree, err := evalExprFromBody(cfg, body)
-	if err != nil {
-		// FIXME: map error to diagnostic
-		return nil, &parsetypes.Diagnostic{
-			FileName: loc.FileName,
-			Severity: parsetypes.DiagnosticSeverityError,
-			Range:    contentLoc.Range,
-			Offset:   contentLoc.Offset,
-			Err:      err,
-		}
-	}
-
-	return &EvalExpression{
+	exp := &EvalExpression{
 		header:          newHeader(loc),
-		AST:             tree,
 		EvalConfig:      cfg,
 		ContentPosition: contentLoc.Range,
 		ContentOffset:   contentLoc.Offset,
-	}, nil
+	}
+
+	var err error
+	exp.AST, err = evalExprFromBody(cfg, body)
+	if err != nil {
+		return nil, exp.errorToDiagnostic(err, "syntax error in eval expression")
+	}
+
+	return exp, nil
+}
+
+func (exp *EvalExpression) errorToDiagnostic(err error, msg string) *parsetypes.Diagnostic {
+	diag := &parsetypes.Diagnostic{
+		FileName: exp.location.FileName,
+		Severity: parsetypes.DiagnosticSeverityError,
+		Range:    exp.ContentPosition,
+		Offset:   exp.ContentOffset,
+		Err:      err,
+	}
+
+	var t *file.Error
+	switch {
+	case errors.As(err, &t):
+		// TODO: figure out if t.Location is actually useful.
+		lineNo := t.Line - 1
+		colNo := t.Column
+		if diag.Range.Start.Column > 0 {
+			colNo--
+		}
+
+		// set offset only for a first line as line bounds not known.
+		if t.Line == 1 {
+			offset := diag.Offset.Start + t.From - 1
+			diag.Offset = parsetypes.NewOffsetRange(offset, offset)
+		}
+
+		errPos := diag.Range.Start.Add(lineNo, colNo)
+		diag.Range = parsetypes.NewRange(errPos, errPos)
+		diag.Note = t.Message
+		diag.Err = fmt.Errorf("%s: %s", msg, t.Message)
+	}
+
+	return diag
 }
 
 func (exp *EvalExpression) Eval(_ context.Context, p EvalParams) (any, *parsetypes.Diagnostic) {
