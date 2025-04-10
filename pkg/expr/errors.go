@@ -22,5 +22,5 @@ func (err *TokenError) Error() string {
 }
 
 func newUnexpectedTokenErr(tok *Token) error {
-	return fmt.Errorf("unexpected Token %q", tok.Content)
+	return fmt.Errorf("unexpected token %q", tok.Content)
 }

@@ -84,7 +84,14 @@ type OffsetRange struct {
 	End   int `json:"end"`
 }
 
-func NewOffsetRange(offset, count int) OffsetRange {
+func NewOffsetRange(start, end int) OffsetRange {
+	return OffsetRange{
+		Start: start,
+		End:   end,
+	}
+}
+
+func NewOffsetRangeFromLen(offset, count int) OffsetRange {
 	return OffsetRange{
 		Start: offset,
 		End:   offset + count,

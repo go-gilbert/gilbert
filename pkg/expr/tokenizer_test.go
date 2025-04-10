@@ -32,8 +32,8 @@ type tokenTestCases struct {
 }
 
 func TestTokenizer(t *testing.T) {
-	inputsFs := loadTxtar(t, "token-inputs.txtar")
-	root := loadYaml[tokenTestCases](t, "token-cases.yml")
+	inputsFs := loadTxtar(t, "token.inputs.txtar")
+	root := loadYaml[tokenTestCases](t, "token.cases.yml")
 
 	for name, tc := range root.Cases {
 		if root.Only != "" && root.Only != name {

@@ -131,7 +131,7 @@ func lazyFromStringNode(opts *yamltree.TraverseOpts, node *ast.StringNode) (mani
 			Location: manifest.ReferenceLocation{
 				FileName: opts.FileName,
 				Range:    parsetypes.NewRange(pos, pos.Add(0, len(node.Value)-1)),
-				Offset:   parsetypes.NewOffsetRange(node.Token.Position.Offset, len(node.Token.Origin)-1),
+				Offset:   parsetypes.NewOffsetRangeFromLen(node.Token.Position.Offset, len(node.Token.Origin)-1),
 			},
 		},
 	}, endPos, nil

@@ -64,6 +64,10 @@ type offsetRangeString struct {
 }
 
 func (ors *offsetRangeString) UnmarshalText(text []byte) error {
+	if len(text) == 0 {
+		return nil
+	}
+
 	parts := bytes.SplitN(text, []byte{'-'}, 2)
 	if len(parts) != 2 {
 		return fmt.Errorf("invalid offset range %q", parts)
@@ -91,6 +95,10 @@ type rangeString struct {
 }
 
 func (rs *rangeString) UnmarshalText(text []byte) error {
+	if len(text) == 0 {
+		return nil
+	}
+
 	parts := bytes.SplitN(text, []byte{'-'}, 2)
 	if len(parts) != 2 {
 		return fmt.Errorf("invalid range %q", parts)

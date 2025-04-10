@@ -1,0 +1,15 @@
+-- simple-string --
+foobar
+-- multiline-string --
+foo
+bar
+-- single-eval-expr --
+${{ 2/3}}
+-- eval-with-strings --
+foo ${{ bar }} baz ${{fizz}}
+-- shell-with-eval --
+$(chown ${{env.USER}} -R $PWD)
+-- errors --
+-- err-nested-eval --
+${{ ${{ foo }} }}
+-- end --

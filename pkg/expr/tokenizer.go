@@ -9,47 +9,6 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
-type DocumentInfo struct {
-	// FileName is document filename to which expression belongs.
-	FileName string `json:"fileName"`
-
-	// ByteOffset is Offset in bytes where expression starts.
-	//
-	// This value affects all Offset numbers returned by Tokenizer and errors.
-	ByteOffset int `json:"byteOffset"`
-
-	// StartPosition is line and column number of where expression starts.
-	//
-	// Added to expression nodes location information.
-	//
-	// Note: Column value should be one character before start of expression.
-	// That means, if string starts at start - Column should be 0.
-	StartPosition parsetypes.Position `json:"startPosition"`
-}
-
-func (docInfo DocumentInfo) newOffsetRange(start, end int) parsetypes.OffsetRange {
-	return parsetypes.OffsetRange{
-		Start: docInfo.ByteOffset + start,
-		End:   docInfo.ByteOffset + end,
-	}
-}
-
-func newParseConfig(opts []Option) parseConfig {
-	cfg := parseConfig{
-		docInfo: DocumentInfo{
-			FileName:      "",
-			ByteOffset:    0,
-			StartPosition: parsetypes.NewEmptyPosition(),
-		},
-	}
-
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
-	return cfg
-}
-
 type stackEntry struct {
 	typ    TokenType
 	rng    parsetypes.Range
@@ -389,7 +348,7 @@ func (t *Tokenizer) validateExprStart(tok *Token) *TokenError {
 		return nil
 	}
 
-	offset := parsetypes.NewOffsetRange(tok.Offset, len(tok.Content)-1)
+	offset := parsetypes.NewOffsetRangeFromLen(tok.Offset, len(tok.Content)-1)
 	switch openTok.typ {
 	case TokenTypeEvalStart:
 		return &TokenError{
