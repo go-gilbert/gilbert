@@ -66,6 +66,27 @@ cases:
         content: ')'
         offset: 10
         range: '1:11-1:11'
+  shell-expr-with-doc:
+    source: single-shell-expr
+    doc:
+      fileName: shell-expr-with-doc
+      byteOffset: 100
+      startPosition:
+        line: 30
+        column: 10
+    tokens:
+      - type: ShellStart
+        content: '$('
+        offset: 100
+        range: '30:11-30:12'
+      - type: String
+        content: 'ls -la /'
+        offset: 102
+        range: '30:13-30:20'
+      - type: ShellEnd
+        content: ')'
+        offset: 110
+        range: '30:21-30:21'
   string+shell:
     tokens:
       - type: String
@@ -277,6 +298,26 @@ cases:
         content: ')'
         offset: 14
         range: '1:15-1:15'
+  expr-allow-braces:
+    doc:
+      fileName: err-allow-braces
+      byteOffset: 100
+      startPosition:
+        line: 10
+        column: 9
+    tokens:
+      - type: EvalStart
+        content: '${{'
+        offset: 100
+        range: '10:10-10:12'
+      - type: String
+        content: '()'
+        offset: 103
+        range: '10:13-10:14'
+      - type: EvalEnd
+        content: '}}'
+        offset: 105
+        range: '10:15-10:16'
   # EOL
   eol-crlf:
     unquoteSource: true
@@ -315,10 +356,10 @@ cases:
       note: 'missing "}}"'
   err-unterminated-nested:
     err:
-      position: '1:19-1:19'
-      offset: '18-18'
-      err: 'unexpected token ")"'
-      note: 'expected "}}"'
+      position: '1:12-1:20'
+      offset: '11-19'
+      err: 'unexpected end of input'
+      note: 'missing "}}"'
   err-shell-in-shell:
     err:
       position: '1:3-1:4'
@@ -331,3 +372,15 @@ cases:
       offset: '11-12'
       err: 'unexpected token "$("'
       note: 'eval expression cannot contain another expression'
+  err-respect-doc-pos:
+    doc:
+      fileName: err-respect-doc-pos
+      byteOffset: 100
+      startPosition:
+        line: 68
+        column: 14
+    err:
+      err: 'unexpected token "${{"'
+      note: 'eval expression cannot contain another expression'
+      offset: '108-110'
+      position: '68:23-68:25'

@@ -33,6 +33,8 @@ foobar
 $(${{msg}})
 -- expr+str-in-shell --
 $(${{msg}} bar)
+-- expr-allow-braces --
+${{()}}
 -- eol-crlf --
 foo\r\nbar
 -- err-bad-crlf --
@@ -47,4 +49,6 @@ start $(ls ${{HOME)!
 start ${{2+$(nproc) / 1}} end
 -- err-shell-in-shell --
 $($())
+-- err-respect-doc-pos --
+${{ foo ${{ bar }} baz}}
 -- end --

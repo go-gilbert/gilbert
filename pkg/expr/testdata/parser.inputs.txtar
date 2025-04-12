@@ -18,4 +18,6 @@ ${{ foo $( ls -la ) }}
 $($())
 -- err-eval-syntax-err --
 prefix ${{ foo( }} with $(suffix)
+-- err-respect-doc-pos --
+${{ foo ${{ bar }} baz}}
 -- end --

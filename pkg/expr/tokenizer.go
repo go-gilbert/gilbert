@@ -41,7 +41,7 @@ func newTokenizer(cfg parseConfig, src string) *Tokenizer {
 
 func (t *Tokenizer) pos() parsetypes.Position {
 	if t.prevToken == nil {
-		return parsetypes.NewEmptyPosition()
+		return t.docInfo.StartPosition
 	}
 
 	return t.prevToken.Range.End
@@ -217,7 +217,7 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 	}
 
 	openTok := t.lastOpenExpr()
-	if t.prevToken == nil || openTok == nil {
+	if t.prevToken == nil || openTok == nil || isBracketInsideEval(openTok.typ, t.src[offset]) {
 		// outside of expression, we don't care
 		return nil, 0, nil
 	}
@@ -230,7 +230,6 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 	if !openTok.typ.IsClosedBy(tokTyp) {
 		// Break if close and open tokens don't match
 		return nil, 0, &TokenError{
-			//Position: tokRange,
 			Position: closeTokRange,
 			Offset:   t.docInfo.newOffsetRange(offset, offset+len(tokStr)-1),
 			Err:      fmt.Errorf("unexpected token %q", tokStr),
@@ -279,6 +278,10 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 
 	closeTok.Prev = strTok
 	return closeTok, nextOffset, nil
+}
+
+func isBracketInsideEval(groupTok TokenType, char byte) bool {
+	return groupTok == TokenTypeEvalStart && char == ')'
 }
 
 // checkOpenToken checks whether at current offset there an open expression start and returns it as a Token.

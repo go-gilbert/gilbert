@@ -113,5 +113,19 @@ cases:
       location:
         offset: '14-15'
         range: '1:15-1:16'
+  err-respect-doc-pos:
+    opts:
+      doc:
+        fileName: err-respect-doc-pos
+        byteOffset: 100
+        startPosition:
+          line: 68
+          column: 9
+    err:
+      err: 'unexpected token "${{"'
+      note: 'eval expression cannot contain another expression'
+      location:
+        offset: '108-110'
+        range: '68:18-68:20'
 
-#only: single-eval-expr
+only: err-respect-doc-pos

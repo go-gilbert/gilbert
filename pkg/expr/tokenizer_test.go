@@ -14,9 +14,12 @@ type tokenTestCase struct {
 	// eol trim is enabled by default to mitigate txtar behavior as it always adds eol.
 	KeepEOL bool `json:"keepEOL"`
 
-	// UnquoteSource unquotes source from imputs.txtar
+	// UnquoteSource unquotes source from inputs.txtar
 	// to parse control characters like \n.
 	UnquoteSource bool `json:"unquoteSource"`
+
+	// Source overrides source input file from inputs.txtar.
+	Source string `json:"source"`
 
 	Doc    *DocumentInfo        `json:"doc"`
 	Tokens []tokenExpectation   `json:"tokens"`
@@ -42,7 +45,11 @@ func TestTokenizer(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			wantToks := intoTokens(t, inputsFs, name, tc)
-			src, err := fs.ReadFile(inputsFs, name)
+			fname := name
+			if tc.Source != "" {
+				fname = tc.Source
+			}
+			src, err := fs.ReadFile(inputsFs, fname)
 			require.NoError(t, err, "input is missing in inputs file")
 			if tc.UnquoteSource {
 				trimmed, err := strconv.Unquote(`"` + strings.TrimSpace(string(src)) + `"`)
