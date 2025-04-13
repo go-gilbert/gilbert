@@ -3,6 +3,7 @@ package cmdutil
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -16,6 +17,7 @@ var (
 	colorWarnMarker = color.New(color.FgYellow)
 	colorNoteMarker = color.New(color.FgHiBlue)
 	colorGutter     = color.New(color.ResetBold, color.FgHiBlue)
+	colorHeading    = color.New(color.FgHiWhite, color.Bold)
 	colorReset      = color.New(color.Reset)
 )
 
@@ -27,19 +29,54 @@ type colorPrinter interface {
 
 type nopColor struct{}
 
-func (_ nopColor) Fprintf(w io.Writer, format string, a ...interface{}) (int, error) {
+func (_ nopColor) Fprintf(w io.Writer, format string, a ...any) (int, error) {
 	return fmt.Fprintf(w, format, a...)
 }
 
-func (_ nopColor) Fprint(w io.Writer, a ...interface{}) (int, error) {
+func (_ nopColor) Fprint(w io.Writer, a ...any) (int, error) {
 	return fmt.Fprint(w, a...)
 }
 
-func (_ nopColor) Fprintln(w io.Writer, a ...interface{}) (int, error) {
+func (_ nopColor) Fprintln(w io.Writer, a ...any) (int, error) {
 	return fmt.Fprintln(w, a...)
 }
 
+type UsageColorPalette struct {
+	NoColor bool
+	Heading colorPrinter
+	Reset   colorPrinter
+}
+
+func (p UsageColorPalette) RenderHeading(str string) string {
+	if p.NoColor {
+		return str
+	}
+
+	sb := &strings.Builder{}
+	sb.Grow(len(str) + 8)
+	p.Heading.Fprint(sb, str)
+	p.Reset.Fprint(sb)
+	return sb.String()
+}
+
+func NewUsageColorPalette(noColor bool) UsageColorPalette {
+	if noColor {
+		return UsageColorPalette{
+			NoColor: noColor,
+			Heading: nopColor{},
+			Reset:   nopColor{},
+		}
+	}
+
+	return UsageColorPalette{
+		NoColor: noColor,
+		Heading: colorHeading,
+		Reset:   colorReset,
+	}
+}
+
 type diagColorPalette struct {
+	noColor    bool
 	diagError  colorPrinter
 	diagWarn   colorPrinter
 	diagMsg    colorPrinter
@@ -64,6 +101,7 @@ func (pal *diagColorPalette) getHighlightColor(severity parsetypes.DiagnosticSev
 func newDiagColorPalette(noColor bool) diagColorPalette {
 	if noColor {
 		return diagColorPalette{
+			noColor:    noColor,
 			diagError:  nopColor{},
 			diagWarn:   nopColor{},
 			diagMsg:    nopColor{},
@@ -75,6 +113,7 @@ func newDiagColorPalette(noColor bool) diagColorPalette {
 	}
 
 	return diagColorPalette{
+		noColor:    noColor,
 		diagError:  colorDiagError,
 		diagWarn:   colorDiagWarn,
 		diagMsg:    colorDiagMsg,

@@ -14,28 +14,26 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
-
-type flagMountParams struct {
-	logger     *log.Logger
-	defaults   cmdutil.BootstrapOpts
-	inputDiags *inputflag.DiagnosticsCollector
-	fileDiags  parsetypes.Diagnostics
-}
 
 type runContext struct {
 	jobFile   manifest.JobFile
 	rootScope *scope.Scope
 }
 
-func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
+// newCmdRun constructs a run command with mounted flags and sub-commands from a workflow file.
+//
+// globalFlags passed will be used for per-task usage help func.
+func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *cobra.Command {
 	diagRenderer := cmdutil.NewDiagnosticsRenderer(opts.Logger, opts.GlobalDefaults)
 
 	var runCtx runContext
-	mp := flagMountParams{
-		logger:     opts.Logger,
-		defaults:   opts.GlobalDefaults,
-		inputDiags: inputflag.NewDiagnosticsCollector(),
+	mp := taskFlagMountParams{
+		logger:      opts.Logger,
+		defaults:    opts.GlobalDefaults,
+		globalFlags: globalFlags,
+		inputDiags:  inputflag.NewDiagnosticsCollector(),
 	}
 
 	if opts.Workflow != nil {
@@ -126,7 +124,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		},
 	}
 
-	err := addRootInputs(ctx, cmd, flagBindingOpts{
+	workflowFlags, err := addRootInputs(ctx, cmd, flagBindingOpts{
 		logger: opts.Logger,
 		scope:  runCtx.rootScope,
 		inputs: opts.Workflow.File.Inputs,
@@ -138,6 +136,7 @@ func newCmdRun(ctx context.Context, opts RunOpts) *cobra.Command {
 		return cmd
 	}
 
+	mp.workflowFlags = workflowFlags
 	if err := addTaskCommands(ctx, cmd, mp, runCtx); err != nil {
 		opts.Logger.Error(err)
 	}
@@ -161,20 +160,35 @@ func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
 	}
 }
 
-func addRootInputs(ctx context.Context, cmd *cobra.Command, opts flagBindingOpts) error {
-	// TODO: add global inputs into a group
-	binder := inputflag.NewInputFlagsBinder(ctx, opts.logger, opts.inputBindingOpts())
+func addRootInputs(ctx context.Context, cmd *cobra.Command, opts flagBindingOpts) (*pflag.FlagSet, error) {
+	binder := inputflag.NewInputFlagsBinder(opts.logger, opts.inputBindingOpts())
 
-	for _, input := range opts.inputs {
-		if err := binder.BindGlobalInput(input, cmd); err != nil {
-			return err
+	fset := cmdutil.NewWorkflowFlagSet()
+	requiredFields, err := binder.BindInputsToFlagSet(ctx, fset, true, opts.inputs)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.PersistentFlags().AddFlagSet(fset)
+	for _, fname := range requiredFields {
+		if err := cmd.MarkPersistentFlagRequired(fname); err != nil {
+			return nil, fmt.Errorf("can't mark flag %q as required: %w", fname, err)
 		}
 	}
 
-	return nil
+	return fset, nil
 }
 
-func addTaskCommands(ctx context.Context, dst *cobra.Command, fp flagMountParams, runCtx runContext) error {
+type taskFlagMountParams struct {
+	logger        *log.Logger
+	defaults      cmdutil.BootstrapOpts
+	inputDiags    *inputflag.DiagnosticsCollector
+	fileDiags     parsetypes.Diagnostics
+	globalFlags   *pflag.FlagSet
+	workflowFlags *pflag.FlagSet
+}
+
+func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountParams, runCtx runContext) error {
 	if len(runCtx.jobFile.Tasks) == 0 {
 		return nil
 	}
@@ -197,10 +211,12 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp flagMountParams
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				cmd.Println("test!", name)
+				cmd.InheritedFlags().FlagUsages()
 				return nil
 			},
 		}
 
+		fset := cmdutil.NewTaskFlagSet()
 		if len(task.Inputs) > 0 {
 			bindOpts := flagBindingOpts{
 				logger: fp.logger,
@@ -208,15 +224,31 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp flagMountParams
 				inputs: task.Inputs,
 				diags:  &inputflag.DiagnosticsCollector{},
 			}
-			binder := inputflag.NewInputFlagsBinder(ctx, bindOpts.logger, bindOpts.inputBindingOpts())
-			for _, input := range bindOpts.inputs {
-				if err := binder.BindTaskInput(input, cmd); err != nil {
-					return err
+
+			binder := inputflag.NewInputFlagsBinder(bindOpts.logger, bindOpts.inputBindingOpts())
+			requiredFlags, err := binder.BindInputsToFlagSet(ctx, fset, false, bindOpts.inputs)
+			if err != nil {
+				return err
+			}
+
+			cmd.Flags().AddFlagSet(fset)
+			fset.FlagUsages()
+			for _, fname := range requiredFlags {
+				if err := cmd.MarkFlagRequired(fname); err != nil {
+					return fmt.Errorf("can't mark flag %q of task %q as required: %w", fname, name, err)
 				}
 			}
 		}
 
-		// TODO: mount flags
+		// TODO: gen usage
+		usageFunc := cmdutil.NewTaskUsageFunc(cmdutil.TaskUsageInfo{
+			Palette:       cmdutil.NewUsageColorPalette(fp.defaults.NoColor),
+			GlobalFlags:   fp.globalFlags,
+			WorkflowFlags: fp.workflowFlags,
+			TaskFlags:     fset,
+		})
+
+		cmd.SetUsageFunc(usageFunc)
 		dst.AddCommand(cmd)
 	}
 

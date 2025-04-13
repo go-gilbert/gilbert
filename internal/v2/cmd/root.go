@@ -7,7 +7,6 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/loader/yamlloader"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -49,12 +48,10 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 	})
 
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
-	mountCoreGlobalFlags(&opts.GlobalDefaults, cmd.PersistentFlags())
-	if opts.Workflow != nil && !opts.Workflow.HasErrors {
-		mountWorkflowInputsFlags(opts.Workflow.File.Inputs, cmd.PersistentFlags())
-	}
+	fset := buildGlobalsFlagSet(&opts.GlobalDefaults)
+	cmd.PersistentFlags().AddFlagSet(fset)
 
-	cmd.AddCommand(newCmdRun(ctx, opts))
+	cmd.AddCommand(newCmdRun(ctx, opts, fset))
 	return cmd
 }
 
@@ -72,15 +69,12 @@ func printDebugRunOpts(opts RunOpts) {
 	}
 }
 
-func mountWorkflowInputsFlags(inputs manifest.Inputs, flagSet *pflag.FlagSet) {
-	// TODO: implement
-}
-
-// mountCoreGlobalFlags mounts core options as cobra command flags only for documentation purposes.
+// buildGlobalsFlagSet constructs and returns flag set with global flags.
 //
 // Although core flags were already processed by uflag before, it's still useful to validate flag values and
 // display then in help output.
-func mountCoreGlobalFlags(opts *cmdutil.BootstrapOpts, flagSet *pflag.FlagSet) {
+func buildGlobalsFlagSet(opts *cmdutil.BootstrapOpts) *pflag.FlagSet {
+	fset := pflag.NewFlagSet("globals", pflag.ExitOnError)
 	defaultLogFormat := log.FormatConsole
 	switch true {
 	case opts.JSON:
@@ -90,8 +84,9 @@ func mountCoreGlobalFlags(opts *cmdutil.BootstrapOpts, flagSet *pflag.FlagSet) {
 	}
 
 	// Log writer was already set by uflag, just add flag for docs.
-	flagSet.Var(log.NewFlagFormat(nil, defaultLogFormat), cmdutil.FlagLogFormat, "Set output log format")
-	flagSet.Var(log.NewFlagLevel(&opts.LogLevel), cmdutil.FlagLogLevel, "Set output log level")
-	flagSet.StringVar(&opts.WorkDir, cmdutil.FlagWorkDir, opts.WorkDir, "Working directory to use")
-	flagSet.BoolVar(&opts.NoCache, cmdutil.FlagNoCache, opts.NoCache, "Disable caches")
+	fset.Var(log.NewFlagFormat(nil, defaultLogFormat), cmdutil.FlagLogFormat, "Set output log format")
+	fset.Var(log.NewFlagLevel(&opts.LogLevel), cmdutil.FlagLogLevel, "Set output log level")
+	fset.StringVar(&opts.WorkDir, cmdutil.FlagWorkDir, opts.WorkDir, "Working directory to use")
+	fset.BoolVar(&opts.NoCache, cmdutil.FlagNoCache, opts.NoCache, "Disable caches")
+	return fset
 }

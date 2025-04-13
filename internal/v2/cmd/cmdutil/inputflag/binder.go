@@ -8,7 +8,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/pkg/expr"
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
@@ -46,22 +45,23 @@ type InputBindingOpts struct {
 // Flag values are parsed and validated against input definition schema.
 // Parsed input values are mounted into a scope passed in InputBindingOpts.
 type InputFlagsBinder struct {
-	ctx    context.Context
 	logger *log.Logger
 	opts   InputBindingOpts
 	diags  *DiagnosticsCollector
 }
 
-func NewInputFlagsBinder(ctx context.Context, logger *log.Logger, opts InputBindingOpts) *InputFlagsBinder {
+func NewInputFlagsBinder(logger *log.Logger, opts InputBindingOpts) *InputFlagsBinder {
 	return &InputFlagsBinder{
 		logger: logger,
 		opts:   opts,
-		ctx:    ctx,
 		diags:  opts.Diagnostics,
 	}
 }
 
-func (b *InputFlagsBinder) bindFlag(input *manifest.InputDefinition, cmd *cobra.Command, isGlobal bool) error {
+// BindInputsToFlagSet constructs flag set from inputs list.
+//
+// Returns list of required flags.
+func (b *InputFlagsBinder) BindInputsToFlagSet(ctx context.Context, fset *pflag.FlagSet, isGlobal bool, inputs manifest.Inputs) ([]string, error) {
 	inputCtx := inputFlagContext{
 		evalParams:       b.opts.EvalParams,
 		envVars:          b.opts.EnvVars,
@@ -69,45 +69,27 @@ func (b *InputFlagsBinder) bindFlag(input *manifest.InputDefinition, cmd *cobra.
 		inputDiagnostics: b.diags,
 	}
 
-	binding, err := flagBindingFromInput(b.logger, input, inputCtx)
-	if err != nil {
-		return err
-	}
-
-	binding.initDefaultValue(b.ctx)
-	flagName := binding.flagName()
-	flagDoc := binding.getDoc(isGlobal)
-	if isGlobal {
-		cmd.PersistentFlags().Var(binding, flagName, flagDoc)
-	} else {
-		cmd.Flags().Var(binding, flagName, flagDoc)
-	}
-
-	if binding.isRequired() {
-		if isGlobal {
-			err = cmd.MarkPersistentFlagRequired(flagName)
-		} else {
-			err = cmd.MarkFlagRequired(flagName)
+	requiredFlags := make([]string, 0, len(inputs)/2)
+	for _, input := range inputs {
+		binding, err := flagBindingFromInput(b.logger, input, inputCtx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to bind input %q to flag: %w", input.Name, err)
 		}
+
+		binding.initDefaultValue(ctx)
+		flagName := binding.flagName()
+		flagDoc := binding.getDoc(isGlobal)
+		if binding.isRequired() {
+			requiredFlags = append(requiredFlags, flagName)
+		}
+
+		fset.Var(binding, flagName, flagDoc)
 	}
 
-	if err != nil {
-		err = fmt.Errorf("failed to bind input to flag %q: %w", flagName, err)
-	}
-
-	return err
-}
-
-// BindGlobalInput binds given global input parameter as a cobra persistent command flag.
-func (b *InputFlagsBinder) BindGlobalInput(input *manifest.InputDefinition, cmd *cobra.Command) error {
-	return b.bindFlag(input, cmd, true)
+	return requiredFlags, nil
 }
 
 // BindTaskInput binds given task input parameter as a cobra command flag.
-func (b *InputFlagsBinder) BindTaskInput(input *manifest.InputDefinition, cmd *cobra.Command) error {
-	return b.bindFlag(input, cmd, false)
-}
-
 func flagBindingFromInput(logger *log.Logger, inputDef *manifest.InputDefinition, inputCtx inputFlagContext) (inputFlagBinding, error) {
 	if inputDef.Schema.Type.IsList() {
 		return newListInputFlagBinding(logger, inputDef, inputCtx), nil
