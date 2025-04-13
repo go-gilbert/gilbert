@@ -1,4 +1,4 @@
-package cmdutil
+package help
 
 import (
 	"strings"
@@ -19,6 +19,7 @@ var tplFuncs = map[string]any{
 
 		return str + strings.Repeat(" ", padCount)
 	},
+	"indent": text.Indent,
 	"trimTrailingWhitespaces": func(str string) string {
 		return strings.TrimRightFunc(str, func(r rune) bool {
 			return unicode.IsSpace(r)

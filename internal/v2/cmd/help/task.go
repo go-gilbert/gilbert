@@ -1,34 +1,19 @@
-package cmdutil
+package help
 
 import (
 	_ "embed"
 	"text/template"
 
+	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
-const (
-	WorkflowInputsFlagSetName = "workflowInputs"
-	TaskInputsFlagSetName     = "taskInputs"
-)
+//go:embed resources/task.usage.gohtml
+var taskUsageTpl []byte
 
-var (
-	//go:embed resources/task.usage.gohtml
-	taskUsageTpl []byte
-)
-
-func NewWorkflowFlagSet() *pflag.FlagSet {
-	return pflag.NewFlagSet(WorkflowInputsFlagSetName, pflag.ExitOnError)
-}
-
-func NewTaskFlagSet() *pflag.FlagSet {
-	return pflag.NewFlagSet(TaskInputsFlagSetName, pflag.ExitOnError)
-}
-
-type UsageFunc = func(cmd *cobra.Command) error
 type TaskUsageInfo struct {
-	Palette       UsageColorPalette
+	Palette       cmdutil.UsageColorPalette
 	Cmd           *cobra.Command
 	WorkflowFlags *pflag.FlagSet
 	TaskFlags     *pflag.FlagSet

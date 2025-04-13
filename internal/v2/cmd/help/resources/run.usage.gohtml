@@ -1,24 +1,24 @@
 {{.Heading "USAGE"}}{{if .Cmd.Runnable}}
   {{.Cmd.UseLine}}{{end}}{{if .Cmd.HasAvailableSubCommands}}
-  {{.Cmd.CommandPath}} [command]{{end}}{{if gt (len .Cmd.Aliases) 0}}
+  {{.Cmd.CommandPath}} [command]{{end}}{{if .Cmd.HasExample }}
 
-{{.Palette.RenderHeading "EXAMPLES"}}
-{{.Cmd.Example}}{{end}}{{if .Cmd.HasAvailableSubCommands}}{{$cmds := .Cmd.Commands}}{{if eq (len .Cmd.Groups) 0}}
+{{.Heading "EXAMPLES"}}
+{{indent .Cmd.Example "  "}}{{end}}{{if .Cmd.HasAvailableSubCommands}}{{$cmds := .Cmd.Commands}}{{if eq (len .Cmd.Groups) 0}}
 
 {{.Heading "AVAILABLE COMMANDS"}}{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Cmd.Groups}}
 
-{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+{{$.GroupHeading .Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .Cmd.AllChildCommandsHaveGroup}}
 
 {{.Heading "ADDITIONAL COMMANDS"}}{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasTaskFlags}}
-
-{{.Heading "TASK FLAGS"}}
-{{ flagUsages .TaskFlags | trimTrailingWhitespaces}}{{end}}{{if .HasWorkflowFlags}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasWorkflowFlags}}
 
 {{.Heading "WORKFLOW FLAGS"}}
-{{ flagUsages .WorkflowFlags | trimTrailingWhitespaces}}{{end}}{{if .HasGlobalFlags}}
+{{ flagUsages .WorkflowFlags | trimTrailingWhitespaces}}{{end}}{{if .HasCommandFlags}}
+
+{{.Heading "FLAGS"}}
+{{ flagUsages .TaskFlags | trimTrailingWhitespaces}}{{end}}{{if .HasGlobalFlags}}
 
 {{.Heading "GLOBAL FLAGS"}}
 {{ flagUsages .GlobalFlags | trimTrailingWhitespaces}}{{end}}{{if .Cmd.HasHelpSubCommands}}

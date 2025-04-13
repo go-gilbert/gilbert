@@ -21,7 +21,7 @@ var (
 	colorReset      = color.New(color.Reset)
 )
 
-type colorPrinter interface {
+type ColorPrinter interface {
 	Fprintf(w io.Writer, format string, a ...interface{}) (int, error)
 	Fprint(w io.Writer, a ...interface{}) (int, error)
 	Fprintln(w io.Writer, a ...interface{}) (int, error)
@@ -43,8 +43,8 @@ func (_ nopColor) Fprintln(w io.Writer, a ...any) (int, error) {
 
 type UsageColorPalette struct {
 	NoColor bool
-	Heading colorPrinter
-	Reset   colorPrinter
+	Heading ColorPrinter
+	Reset   ColorPrinter
 }
 
 func (p UsageColorPalette) RenderHeading(str string) string {
@@ -77,17 +77,17 @@ func NewUsageColorPalette(noColor bool) UsageColorPalette {
 
 type diagColorPalette struct {
 	noColor    bool
-	diagError  colorPrinter
-	diagWarn   colorPrinter
-	diagMsg    colorPrinter
-	gutter     colorPrinter
-	errMarker  colorPrinter
-	warnMarker colorPrinter
-	noteMarker colorPrinter
-	reset      colorPrinter
+	diagError  ColorPrinter
+	diagWarn   ColorPrinter
+	diagMsg    ColorPrinter
+	gutter     ColorPrinter
+	errMarker  ColorPrinter
+	warnMarker ColorPrinter
+	noteMarker ColorPrinter
+	reset      ColorPrinter
 }
 
-func (pal *diagColorPalette) getHighlightColor(severity parsetypes.DiagnosticSeverity) colorPrinter {
+func (pal *diagColorPalette) getHighlightColor(severity parsetypes.DiagnosticSeverity) ColorPrinter {
 	switch severity {
 	case parsetypes.DiagnosticSeverityError:
 		return pal.errMarker

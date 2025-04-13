@@ -1,0 +1,29 @@
+{{.Heading "USAGE"}}{{if .Cmd.Runnable}}
+  {{.Cmd.UseLine}}{{end}}{{if .Cmd.HasAvailableSubCommands}}
+  {{.Cmd.CommandPath}} [command]{{end}}{{if gt (len .Cmd.Aliases) 0}}
+
+{{.Heading "ALIASES"}}
+{{.Cmd.NameAndAliases}}{{end}}{{if .Cmd.HasExample}}
+
+{{.Heading "EXAMPLES"}}
+{{indent .Cmd.Example "  "}}{{end}}{{if .Cmd.HasAvailableSubCommands}}{{$cmds := .Cmd.Commands}}{{if eq (len .Cmd.Groups) 0}}
+
+{{.Heading "AVAILABLE COMMANDS"}}{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Cmd.Groups}}
+
+{{$.GroupHeading .Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .Cmd.AllChildCommandsHaveGroup}}
+
+{{.Heading "ADDITIONAL COMMANDS"}}{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .Cmd.HasAvailableLocalFlags}}
+
+{{.Heading "FLAGS"}}
+{{ flagUsages .Cmd.LocalFlags | trimTrailingWhitespaces}}{{end}}{{if .Cmd.HasAvailableInheritedFlags}}
+
+{{.Heading "GLOBAL FLAGS"}}
+{{ flagUsages .Cmd.InheritedFlags | trimTrailingWhitespaces}}{{end}}{{if .Cmd.HasHelpSubCommands}}
+
+{{.Heading "HELP TOPICS"}}{{range .Cmd.Commands}}{{if .Cmd.IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .Cmd.HasAvailableSubCommands}}
+
+Use "{{.Cmd.CommandPath}} [command] --help" for more information about a command.{{end}}

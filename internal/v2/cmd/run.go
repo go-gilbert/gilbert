@@ -9,6 +9,7 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil/inputflag"
+	"github.com/go-gilbert/gilbert/internal/v2/cmd/help"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
@@ -101,6 +102,12 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 		return err
 	})
 
+	runHelp := &help.RunUsageInfo{
+		Palette:     cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor),
+		GlobalFlags: globalFlags,
+	}
+
+	cmd.SetUsageFunc(help.NewRunUsageFunc(runHelp))
 	cmd.AddGroup(&cobra.Group{
 		ID:    "tasks",
 		Title: "Available Tasks:",
@@ -130,6 +137,7 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 		inputs: opts.Workflow.File.Inputs,
 		diags:  mp.inputDiags,
 	})
+	runHelp.WorkflowFlags = workflowFlags
 
 	if err != nil {
 		opts.Logger.Error(err)
@@ -163,7 +171,7 @@ func (opts flagBindingOpts) inputBindingOpts() inputflag.InputBindingOpts {
 func addRootInputs(ctx context.Context, cmd *cobra.Command, opts flagBindingOpts) (*pflag.FlagSet, error) {
 	binder := inputflag.NewInputFlagsBinder(opts.logger, opts.inputBindingOpts())
 
-	fset := cmdutil.NewWorkflowFlagSet()
+	fset := pflag.NewFlagSet("workflow", pflag.ExitOnError)
 	requiredFields, err := binder.BindInputsToFlagSet(ctx, fset, true, opts.inputs)
 	if err != nil {
 		return nil, err
@@ -216,7 +224,7 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 			},
 		}
 
-		fset := cmdutil.NewTaskFlagSet()
+		fset := pflag.NewFlagSet("task", pflag.ExitOnError)
 		if len(task.Inputs) > 0 {
 			bindOpts := flagBindingOpts{
 				logger: fp.logger,
@@ -232,7 +240,6 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 			}
 
 			cmd.Flags().AddFlagSet(fset)
-			fset.FlagUsages()
 			for _, fname := range requiredFlags {
 				if err := cmd.MarkFlagRequired(fname); err != nil {
 					return fmt.Errorf("can't mark flag %q of task %q as required: %w", fname, name, err)
@@ -241,7 +248,7 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 		}
 
 		// TODO: gen usage
-		usageFunc := cmdutil.NewTaskUsageFunc(cmdutil.TaskUsageInfo{
+		usageFunc := help.NewTaskUsageFunc(help.TaskUsageInfo{
 			Palette:       cmdutil.NewUsageColorPalette(fp.defaults.NoColor),
 			GlobalFlags:   fp.globalFlags,
 			WorkflowFlags: fp.workflowFlags,

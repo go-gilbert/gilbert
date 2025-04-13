@@ -6,6 +6,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
+	"github.com/go-gilbert/gilbert/internal/v2/cmd/help"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/loader/yamlloader"
 	"github.com/spf13/cobra"
@@ -42,10 +43,7 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 		},
 	}
 
-	cmd.AddGroup(&cobra.Group{
-		ID:    "tasks",
-		Title: "Available tasks",
-	})
+	cmd.SetUsageFunc(help.NewGeneralUsageFunc(cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor)))
 
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
 	fset := buildGlobalsFlagSet(&opts.GlobalDefaults)
