@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/go-gilbert/gilbert/internal/support/shell"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 )
 
 var (
@@ -50,18 +50,21 @@ func (e scopeExprAdapter) ValueByName(varName string) (string, bool) {
 	return val, ok
 }
 
-func (e scopeExprAdapter) Values() map[string]any {
+func (e scopeExprAdapter) Values() (map[string]any, error) {
 	// FIXME: keep this to get v1 building. remove when v1 is decommissioned.
 	dst := make(map[string]any, len(e.ctx.Variables))
+	for k, v := range e.ctx.Globals {
+		dst[k] = v
+	}
 	for k, v := range e.ctx.Variables {
 		dst[k] = v
 	}
 
-	return dst
+	return dst, nil
 }
 
-func (e scopeExprAdapter) evalContext() expr.EvalContext {
-	return expr.EvalContext{
+func (e scopeExprAdapter) evalParams() expr.EvalParams {
+	return expr.EvalParams{
 		CommandProcessor: e,
 		Env:              e,
 	}

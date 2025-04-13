@@ -3,7 +3,7 @@ package manifest
 import (
 	"context"
 
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -18,7 +18,7 @@ type TypedLazyValue struct {
 	Value LazyValue
 }
 
-func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (tlz TypedLazyValue) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	// TODO: typecheck?
 	return tlz.Value.Expand(ctx, opts)
 }
@@ -35,8 +35,7 @@ type LazyValue struct {
 	Value    AnySpec
 }
 
-func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
-	// TODO: convert into diagnostics
+func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	return v.Value.Expand(ctx, opts)
 }
 
@@ -58,7 +57,7 @@ func (s ArraySpec) Literal() bool {
 	return len(s.LiteralItems) > 0
 }
 
-func (s ArraySpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (s ArraySpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	if len(s.LiteralItems) != 0 {
 		return s.LiteralItems, nil
 	}
@@ -140,14 +139,20 @@ func (s AnySpec) Optimize() AnySpec {
 	return s
 }
 
-func (s AnySpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (s AnySpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	if s.LiteralSpec != nil {
 		return s.LiteralSpec.Value, nil
 	}
 
 	if s.BindingSpec != nil {
-		// TODO: convert into diagnostics
-		return s.BindingSpec.Expr.Eval(ctx, opts)
+		// Return error only if diagnostic isn't nil.
+		// nil diagnostic is a not-nil error.
+		v, diag := s.BindingSpec.Expr.Eval(ctx, opts)
+		if diag != nil {
+			return nil, diag
+		}
+
+		return v, nil
 	}
 
 	if s.ObjectSpec != nil {
@@ -169,7 +174,7 @@ type ObjectSpec struct {
 	Values map[string]AnySpec
 }
 
-func (s ObjectSpec) Expand(ctx context.Context, opts expr.EvalContext) (any, error) {
+func (s ObjectSpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	dst := make(map[string]any, len(s.Values))
 
 	for k, spec := range s.Values {

@@ -1,9 +1,5 @@
 package manifest
 
-import (
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
-)
-
 const (
 	// FileName is default manifest filename
 	FileName = "gilbert.yaml"
@@ -11,9 +7,6 @@ const (
 
 // Manifest represents manifest file (gilbert.yaml)
 type Manifest struct {
-	// Parser contains template expressions parser for a particular language spec.
-	Parser expr.Parser
-
 	// Plugins is plugins import list
 	Plugins []string `yaml:"plugins,omitempty"`
 

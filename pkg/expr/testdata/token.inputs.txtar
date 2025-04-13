@@ -1,0 +1,54 @@
+-- simple-string --
+foobar
+-- multi-line-string --
+foo
+bar
+-- multi-line-string-with-eol --
+foo
+
+bar
+-- single-expr --
+${{ 2 + 2 }}
+-- single-shell-expr --
+$(ls -la /)
+-- string+shell --
+hello $(whoami)
+-- string+eval --
+hello ${{ 2 / 0 }}
+-- eval+shell --
+${{ a }}$(b)
+-- eval+shell+eval --
+${{ a }}$(b)${{c}}
+-- string+eval+string --
+foo ${{bar}} baz
+-- eval+str --
+${{2+2}} foobar
+-- eval+lf+str --
+${{2+2}}
+foobar
+-- str+lf+eval --
+${{2+2}}
+foobar
+-- expr-in-shell --
+$(${{msg}})
+-- expr+str-in-shell --
+$(${{msg}} bar)
+-- expr-allow-braces --
+${{()}}
+-- eol-crlf --
+foo\r\nbar
+-- err-bad-crlf --
+foo\r \nbar
+-- err-bad-crlf-multi --
+foo\r\n\rbar
+-- err-unterminated-eval --
+answer is ${{42!
+-- err-unterminated-nested --
+start $(ls ${{HOME)!
+-- err-shell-in-expr --
+start ${{2+$(nproc) / 1}} end
+-- err-shell-in-shell --
+$($())
+-- err-respect-doc-pos --
+${{ foo ${{ bar }} baz}}
+-- end --

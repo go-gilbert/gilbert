@@ -17,7 +17,7 @@ func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOp
 	switch t := node.(type) {
 	case *ast.StringNode:
 		// allow expressions
-		v, _, diags := lazyFromStringNode(opts, t)
+		v, _, diags := lazyFromStringNode(opts, t, nil)
 		if diags.HasError() {
 			return nil, diags
 		}

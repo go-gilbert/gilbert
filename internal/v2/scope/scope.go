@@ -85,7 +85,7 @@ func (s *Scope) Fork(newRole Role) *Scope {
 // Values exports scope values environment with visible variables for executing expressions.
 //
 // Exported values are inherited from parent scopes.
-func (s *Scope) Values() map[string]any {
+func (s *Scope) Values() (map[string]any, error) {
 	// TODO: check if storing chain leaks memory
 	globalsCount := len(s.Consts) + scopeFieldsCount + projectFieldsCount
 
@@ -103,7 +103,7 @@ func (s *Scope) Values() map[string]any {
 	globals[InputsKey] = inputs
 	globals[ProjectKey] = s.Globals.Project.Values()
 	globals[EnvKey] = s.Globals.Env
-	return globals
+	return globals, nil
 }
 
 // Dispose detaches scope.

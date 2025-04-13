@@ -1,0 +1,131 @@
+cases:
+  # Outputs
+  simple-string:
+    expect:
+      type: string
+      value: 'foobar'
+      location:
+        offset: '0-5'
+        range: '1:1-1:6'
+  multiline-string:
+    expect:
+      type: string
+      unquote: true
+      value: 'foo\nbar'
+      location:
+        offset: '0-6'
+        range: '1:1-2:3'
+  single-eval-expr:
+    expect:
+      type: eval
+      value: ' 2/3'
+      contentPosition: '1:4-1:7'
+      contentOffset: '3-6'
+      location:
+        offset: '0-8'
+        range: '1:1-1:9'
+  eval-with-strings:
+    expect:
+      type: composite
+      location:
+        offset: '0-27'
+        range: '1:1-1:28'
+      parts:
+        - type: string
+          value: 'foo '
+          location:
+            offset: '0-3'
+            range: '1:1-1:4'
+        - type: eval
+          value: ' bar '
+          contentPosition: '1:8-1:12'
+          contentOffset: '7-11'
+          location:
+            offset: '4-13'
+            range: '1:5-1:14'
+        - type: string
+          value: ' baz '
+          location:
+            offset: '14-18'
+            range: '1:15-1:19'
+        - type: eval
+          value: 'fizz'
+          contentPosition: '1:23-1:26'
+          contentOffset: '22-25'
+          location:
+            offset: '19-27'
+            range: '1:20-1:28'
+  shell-with-eval:
+    expect:
+      type: shell
+      location:
+        offset: '0-29'
+        range: '1:1-1:30'
+      body:
+        type: composite
+        location:
+          offset: '2-28'
+          range: '1:3-1:29'
+        parts:
+          - type: string
+            value: 'chown '
+            location:
+              offset: '2-7'
+              range: '1:3-1:8'
+          - type: eval
+            value: 'env.USER'
+            contentPosition: '1:12-1:19'
+            contentOffset: '11-18'
+            location:
+              offset: '8-20'
+              range: '1:9-1:21'
+          - type: string
+            value: ' -R $PWD'
+            location:
+              offset: '21-28'
+              range: '1:22-1:29'
+  # Errors
+  err-nested-eval:
+    err:
+      note: 'eval expression cannot contain another expression'
+      err: 'unexpected token "${{"'
+      location:
+        offset: '4-6'
+        range: '1:5-1:7'
+  err-shell-in-eval:
+    err:
+      note: 'eval expression cannot contain another expression'
+      err: 'unexpected token "$("'
+      location:
+        offset: '8-9'
+        range: '1:9-1:10'
+  err-shell-in-shell:
+    err:
+      note: 'shell expression cannot contain another shell expression'
+      err: 'unexpected token "$("'
+      location:
+        offset: '2-3'
+        range: '1:3-1:4'
+  err-eval-syntax-err:
+    err:
+      err: 'syntax error in eval expression: unexpected token EOF'
+      note: 'unexpected token EOF'
+      location:
+        offset: '14-15'
+        range: '1:15-1:16'
+  err-respect-doc-pos:
+    opts:
+      doc:
+        fileName: err-respect-doc-pos
+        byteOffset: 100
+        startPosition:
+          line: 68
+          column: 9
+    err:
+      err: 'unexpected token "${{"'
+      note: 'eval expression cannot contain another expression'
+      location:
+        offset: '108-110'
+        range: '68:18-68:20'
+
+only: err-respect-doc-pos

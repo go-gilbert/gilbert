@@ -1,12 +1,12 @@
 package scope
 
 import (
-	"errors"
+	"context"
 	"os"
 	"path/filepath"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 )
 
 // Scope contains a set of globals and variables related to specific job
@@ -16,12 +16,11 @@ type Scope struct {
 
 	// Variables are set of variables for specific job
 	Variables   manifest.Vars
-	parser      expr.Parser
 	environment ProjectEnvironment
 }
 
 // CreateScope creates a new context
-func CreateScope(parser expr.Parser, projectDirectory string, vars manifest.Vars) (c *Scope) {
+func CreateScope(projectDirectory string, vars manifest.Vars) (c *Scope) {
 	c = &Scope{
 		Globals: manifest.Vars{
 			"PROJECT": projectDirectory,
@@ -31,7 +30,6 @@ func CreateScope(parser expr.Parser, projectDirectory string, vars manifest.Vars
 		Variables: vars,
 	}
 
-	c.parser = parser
 	c.environment.ProjectDirectory = projectDirectory
 	return
 }
@@ -80,25 +78,17 @@ func (c *Scope) Var(varName string) (isLocal bool, out string, ok bool) {
 
 // ExpandVariables expands an expression stored inside a passed string
 func (c *Scope) ExpandVariables(str string) (out string, err error) {
-	if c.parser == nil {
-		return "", errors.New("scope.ExpandVariables: missing expression parser")
-	}
-
-	ctx := newScopeExprAdapter(c).evalContext()
-	return c.parser.ReadString(ctx, str)
+	params := newScopeExprAdapter(c).evalParams()
+	return expandString(str, params)
 }
 
 // Scan does the same as ExpandVariables but with multiple variables and updates the value in pointer with expanded value
 //
 // Useful for bulk mapping of struct fields
 func (c *Scope) Scan(vals ...*string) (err error) {
-	if c.parser == nil {
-		return errors.New("scope.Scan: missing expression parser")
-	}
-
-	ctx := newScopeExprAdapter(c).evalContext()
+	params := newScopeExprAdapter(c).evalParams()
 	for _, ptr := range vals {
-		*ptr, err = c.parser.ReadString(ctx, *ptr)
+		*ptr, err = expandString(*ptr, params)
 		if err != nil {
 			return err
 		}
@@ -115,4 +105,18 @@ func (c *Scope) Environ() (env []string) {
 	}
 
 	return
+}
+
+func expandString(val string, params expr.EvalParams) (string, error) {
+	exp, diag := expr.NewParser(val).Parse()
+	if diag != nil {
+		return "", diag.Err
+	}
+
+	r, diag := exp.EvalText(context.TODO(), params)
+	if diag != nil {
+		return "", diag.Err
+	}
+
+	return string(r), nil
 }

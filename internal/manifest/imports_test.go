@@ -3,7 +3,6 @@ package manifest
 import (
 	"testing"
 
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,7 +10,6 @@ const testFile = "./testdata/a.yaml"
 
 func TestLoadManifest(t *testing.T) {
 	expected := Manifest{
-		Parser:   expr.SpecV2Parser{},
 		Version:  "2",
 		location: "./testdata/a.yaml",
 		Imports: []string{

@@ -206,7 +206,11 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 		palette.reset.Fprintln(buff, bytesToString(line))
 
 		// Draw highlight & annotation
-		msg := tryGetErrorReason(diag.Err)
+		msg := diag.Note
+		if msg == "" {
+			msg = tryGetErrorReason(diag.Err)
+		}
+
 		noteColor := palette.getHighlightColor(diag.Severity)
 
 		//palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")

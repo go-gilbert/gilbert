@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-gilbert/gilbert/internal/support/shell"
-	"github.com/go-gilbert/gilbert/internal/v2/manifest/expr"
+	"github.com/go-gilbert/gilbert/pkg/expr"
 )
 
 const commandEvalTimeout = 30 * time.Second
@@ -55,8 +55,8 @@ func (runner CommandRunner) EvalCommand(ctx context.Context, cmdline string) (re
 }
 
 // NewEvalContext builds eval context for expanding dynamic expressions.
-func NewEvalContext(s *Scope) expr.EvalContext {
-	return expr.EvalContext{
+func NewEvalParams(s *Scope) expr.EvalParams {
+	return expr.EvalParams{
 		CommandProcessor: NewCommandRunner(s),
 		Env:              s,
 	}
