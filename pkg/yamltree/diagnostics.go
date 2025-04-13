@@ -8,6 +8,11 @@ import (
 )
 
 func NewErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
+	diag, ok := parsetypes.DiagnosticFromError(err)
+	if ok {
+		return diag
+	}
+
 	rng, offset := GetNodeRange(node)
 
 	return &parsetypes.Diagnostic{

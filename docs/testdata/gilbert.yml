@@ -50,9 +50,7 @@ tasks:
         default: $(git describe --tags --abbrev=0)
     steps:
       - action: go/build
-        if: ${!!(}
-#        if: ${!(matrix.os == "darwin" && matrix.arch == "386")
-#        if: ${!(matrix.os == "darwin" && matrix.arch == "386")}
+        if: ${{!(matrix.os == "darwin" && matrix.arch == "386")}}
         delay: 5s
         timeout: 30s
         strategy:

@@ -36,7 +36,6 @@ type LazyValue struct {
 }
 
 func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
-	// TODO: convert into diagnostics
 	return v.Value.Expand(ctx, opts)
 }
 
@@ -146,8 +145,14 @@ func (s AnySpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) 
 	}
 
 	if s.BindingSpec != nil {
-		// TODO: convert into diagnostics
-		return s.BindingSpec.Expr.Eval(ctx, opts)
+		// Return error only if diagnostic isn't nil.
+		// nil diagnostic is a not-nil error.
+		v, diag := s.BindingSpec.Expr.Eval(ctx, opts)
+		if diag != nil {
+			return nil, diag
+		}
+
+		return v, nil
 	}
 
 	if s.ObjectSpec != nil {

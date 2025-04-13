@@ -93,7 +93,7 @@ var jobSchema = Struct(
 				}
 
 				if !ex.Evaluable() {
-					return nil, errors.New("expected evaluable expression")
+					return nil, errors.New("value should be an evaluable expression")
 				}
 
 				loc, err := buildRefLocation(ctx, n)

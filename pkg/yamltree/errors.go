@@ -39,6 +39,10 @@ func errorToDiagnostics(fileName string, err error) parsetypes.Diagnostics {
 		return parsetypes.Diagnostics{diags}
 	}
 
+	if diag, ok := parsetypes.DiagnosticFromError(err); ok {
+		return parsetypes.Diagnostics{diag}
+	}
+
 	return parsetypes.Diagnostics{
 		&parsetypes.Diagnostic{
 			Severity: parsetypes.DiagnosticSeverityError,

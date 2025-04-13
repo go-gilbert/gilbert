@@ -1,6 +1,8 @@
 package yamlloader
 
 import (
+	"fmt"
+
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
@@ -75,28 +77,80 @@ func copyMapWithCheck[T any](dst, src map[string]T, errFunc func(k string, v T) 
 // Last argument is optional reference to a parent multiline node.
 // Used to set correct start position of the expression.
 func expressionFromStringNode(fileName string, n *ast.StringNode, parent *ast.LiteralNode) (expr.Expression, *parsetypes.Diagnostic) {
-	// TODO: handle *ast.LiteralNode
+	offset, pos := exprPositionFromStrNode(n, parent)
 	docInfo := expr.DocumentInfo{
-		FileName: fileName,
-		// TODO: use previous token as start position
-		ByteOffset:    max(n.Token.Position.Offset-1, 0),
-		StartPosition: parsetypes.NewPosition(n.Token.Position.Line, n.Token.Position.Column),
+		FileName:      fileName,
+		ByteOffset:    offset,
+		StartPosition: pos,
 	}
 
-	parser := expr.NewParser(n.Value, expr.WithDocumentInfo(docInfo))
-	return parser.Parse()
+	return parseExpr(n.Value, docInfo)
 }
 
 func expressionFromAnyNode(fileName string, n ast.Node, v string) (expr.Expression, *parsetypes.Diagnostic) {
-	// TODO: visit nodes
-	tok := n.GetToken()
+	offset, pos := exprPositionFromAnyNode(n)
 	docInfo := expr.DocumentInfo{
-		FileName: fileName,
-		// TODO: use previous token as start position
-		ByteOffset:    max(tok.Position.Offset-1, 0),
-		StartPosition: parsetypes.NewPosition(tok.Position.Line, tok.Position.Column),
+		FileName:      fileName,
+		ByteOffset:    offset,
+		StartPosition: pos,
 	}
 
-	parser := expr.NewParser(v, expr.WithDocumentInfo(docInfo))
-	return parser.Parse()
+	return parseExpr(v, docInfo)
+}
+
+func parseExpr(src string, docInfo expr.DocumentInfo) (expr.Expression, *parsetypes.Diagnostic) {
+	parser := expr.NewParser(src, expr.WithDocumentInfo(docInfo))
+	v, diag := parser.Parse()
+	if diag != nil {
+		diag.Err = fmt.Errorf("syntax error in expression: %w", diag.Err)
+	}
+
+	return v, diag
+}
+
+func exprPositionFromAnyNode(node ast.Node) (int, parsetypes.Position) {
+	switch t := node.(type) {
+	case *ast.LiteralNode:
+		return exprPositionFromStrNode(t.Value, t)
+	case *ast.StringNode:
+		return exprPositionFromStrNode(t, nil)
+	}
+
+	tok := node.GetToken()
+	offset := max(tok.Position.Offset, 0)
+	pos := parsetypes.NewPosition(tok.Position.Line, tok.Position.Column)
+
+	if tok.Prev != nil && tok.Prev.Position.Line == pos.Line {
+		offset = tok.Prev.Position.Offset - 1
+		pos = pos.Sub(0, 1)
+	}
+
+	return offset, pos
+}
+
+func exprPositionFromStrNode(node *ast.StringNode, parent *ast.LiteralNode) (int, parsetypes.Position) {
+	if parent != nil {
+		// TODO: handle multiline string
+	}
+
+	// Expression should start one column before.
+	// If string is quoted - use quote position.
+	// If string is field value or list item, get position of a space between delimiter (: or -) and a string.
+	tok := node.Token
+	offset := max(tok.Position.Offset, 0)
+	pos := parsetypes.NewPosition(tok.Position.Line, tok.Position.Column)
+
+	if tok.Prev != nil && tok.Prev.Position.Line == pos.Line {
+		offset = tok.Prev.Position.Offset - 1
+		pos.Column--
+		return offset, pos
+	}
+
+	// Quoted string?
+	if tok.Value == "" || tok.Origin[0] != tok.Value[0] {
+		// TODO: seek until string start
+		pos.Column--
+	}
+
+	return offset, pos
 }

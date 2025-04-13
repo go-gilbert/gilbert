@@ -1,6 +1,9 @@
 package parsetypes
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type DiagnosticSeverity uint8
 
@@ -91,4 +94,17 @@ func HasErrorDiagnostics(diags Diagnostics) bool {
 	}
 
 	return diags.HasError()
+}
+
+// DiagnosticFromError checks if the error is a Diagnostic and returns it if so.
+func DiagnosticFromError(err error) (*Diagnostic, bool) {
+	if err == nil {
+		return nil, false
+	}
+
+	diagnostic := new(Diagnostic)
+	if errors.As(err, &diagnostic) {
+		return diagnostic, true
+	}
+	return nil, false
 }
