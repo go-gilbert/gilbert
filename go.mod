@@ -5,15 +5,20 @@ go 1.24
 toolchain go1.24.0
 
 require (
+	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/axw/gocov v0.0.0-20170322000131-3a69a0d2a4ef
 	github.com/expr-lang/expr v1.16.9
 	github.com/fatih/color v1.18.0
 	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/goccy/go-yaml v1.15.15
 	github.com/google/go-github/v25 v25.0.2
+	github.com/hashicorp/go-set/v3 v3.0.0
 	github.com/rjeczalik/notify v0.9.3
+	github.com/spf13/cobra v1.9.1
+	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.20.0
+	github.com/valyala/bytebufferpool v1.0.0
 	go.uber.org/mock v0.5.0
 	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
@@ -22,21 +27,18 @@ require (
 )
 
 require (
-	github.com/MakeNowJust/heredoc/v2 v2.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
-	github.com/hashicorp/go-set/v3 v3.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/spf13/cobra v1.9.1 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/expr-lang/expr => github.com/x1unix/expr v0.0.0-20251206055702-c1e84a15659c
