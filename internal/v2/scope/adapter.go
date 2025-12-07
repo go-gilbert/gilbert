@@ -27,7 +27,7 @@ func NewCommandRunner(scope *Scope) CommandRunner {
 func (runner CommandRunner) prepareProcess(ctx context.Context, cmd string) (proc *exec.Cmd) {
 	proc = shell.PrepareContextCommand(ctx, cmd)
 	vars := shell.Environment(runner.scope.Globals.Env)
-	proc.Dir = runner.scope.Globals.Project.WorkDir()
+	proc.Dir = runner.scope.Globals.Project.WorkDir
 
 	// TODO: should inputs & consts be exported into env?
 	if !vars.Empty() {

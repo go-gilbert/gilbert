@@ -2,18 +2,6 @@ package scope
 
 import (
 	"iter"
-	"maps"
-)
-
-type Role uint
-
-const (
-	RoleRoot Role = iota
-	RoleWorkflow
-	RoleTask
-	RoleMixin
-	RoleJob
-	RoleClosure
 )
 
 const (
@@ -27,6 +15,12 @@ const (
 	EnvKey     = "env"
 )
 
+type ProjectInfo struct {
+	WorkDir      string `expr:"workDir"`
+	WorkspaceDir string `expr:"workspaceDir"`
+	WorkflowFile string `expr:"workflowFile"`
+}
+
 type Globals struct {
 	Project ProjectInfo
 	Env     map[string]string
@@ -37,12 +31,9 @@ type Globals struct {
 type Scope struct {
 	Root    *Scope
 	Parent  *Scope
-	Role    Role
 	Globals Globals
 	Inputs  map[string]any
 	Consts  map[string]any
-
-	chain scopeChain
 }
 
 // ValueByName is a stub for expr.EvalContext compatibility.
@@ -53,30 +44,18 @@ func (s *Scope) ValueByName(_ string) (string, bool) {
 }
 
 // Fork returns a new child scope referencing a parent scope.
-func (s *Scope) Fork(newRole Role) *Scope {
+func (s *Scope) Fork() *Scope {
 	root := s.Root
 	if root == nil {
 		root = s
 	}
 
-	newTail := &chainNode{
-		value: s,
-		prev:  s.chain.tail,
-	}
-	newChain := s.chain
-	newChain.tail = newTail
-	if newChain.head == nil {
-		newChain.head = newTail
-	}
-
 	newScope := &Scope{
 		Root:    root,
 		Parent:  s,
-		Role:    newRole,
 		Globals: s.Globals,
 		Consts:  s.Consts,
 		Inputs:  map[string]any{}, // no need to copy as we've a reference to a parent.
-		chain:   newChain,
 	}
 
 	return newScope
@@ -86,24 +65,7 @@ func (s *Scope) Fork(newRole Role) *Scope {
 //
 // Exported values are inherited from parent scopes.
 func (s *Scope) Values() (any, error) {
-	// TODO: check if storing chain leaks memory
-	globalsCount := len(s.Consts) + scopeFieldsCount + projectFieldsCount
-
-	inputs := make(map[string]any, s.chain.inputsCount+len(s.Inputs))
-	globals := make(map[string]any, s.chain.constCount+globalsCount)
-
-	for parent := range iterChain(s.chain) {
-		maps.Copy(inputs, parent.Inputs)
-		maps.Copy(globals, parent.Consts)
-	}
-
-	maps.Copy(inputs, s.Inputs)
-	maps.Copy(globals, s.Consts)
-
-	globals[InputsKey] = inputs
-	globals[ProjectKey] = s.Globals.Project.Values()
-	globals[EnvKey] = s.Globals.Env
-	return globals, nil
+	return newExprEnvironment(s), nil
 }
 
 // Dispose detaches scope.

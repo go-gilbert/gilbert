@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil/inputflag"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/help"
@@ -14,8 +17,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 type runContext struct {
@@ -123,11 +124,11 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 		Inputs: make(map[string]any),
 		Globals: scope.Globals{
 			Env: scope.Env(),
-			Project: scope.NewProjectInfo(scope.ProjectInfoOpts{
+			Project: scope.ProjectInfo{
 				WorkDir:      opts.WorkDir,
 				WorkspaceDir: opts.WorkDir,
 				WorkflowFile: opts.Workflow.File.Path,
-			}),
+			},
 		},
 	}
 
