@@ -1,9 +1,5 @@
 package scope
 
-import (
-	"iter"
-)
-
 const (
 	projectFieldsCount = 2
 	scopeFieldsCount   = 2
@@ -71,30 +67,4 @@ func (s *Scope) Values() (any, error) {
 // Dispose detaches scope.
 func (s *Scope) Dispose() {
 	*s = Scope{}
-}
-
-type chainNode struct {
-	value *Scope
-	next  *chainNode
-	prev  *chainNode
-}
-
-type scopeChain struct {
-	inputsCount int
-	constCount  int
-	chainSize   int
-	head        *chainNode
-	tail        *chainNode
-}
-
-func iterChain(s scopeChain) iter.Seq[*Scope] {
-	return func(yield func(*Scope) bool) {
-		current := s.head
-		for current != nil {
-			if !yield(current.value) {
-				return
-			}
-			current = current.next
-		}
-	}
 }
