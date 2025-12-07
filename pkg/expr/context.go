@@ -14,7 +14,7 @@ type CommandProcessor interface {
 // ValueResolver resolves variables mentioned in expressions.
 type ValueResolver interface {
 	// Values returns a raw value of a container holding all values.
-	Values() (map[string]any, error)
+	Values() (any, error)
 }
 
 type EvalParams struct {
@@ -38,6 +38,6 @@ func (NoopCommandProcessor) EvalCommand(context.Context, string) ([]byte, error)
 
 type NoopValueResolver struct{}
 
-func (NoopValueResolver) Values() (map[string]any, error) {
+func (NoopValueResolver) Values() (any, error) {
 	return nil, errors.New("expressions are not allowed in this context")
 }
