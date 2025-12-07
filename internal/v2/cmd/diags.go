@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -53,13 +52,13 @@ func newCmdList(opts RunOpts) *cobra.Command {
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Workflow == nil {
-				return fmt.Errorf(`no %q file found. Run "gilbert init" to create a new project`, cmdutil.DefaultWorkflowFilename)
+				return errWorkflowNotFound
 			}
 
 			diagRenderer.RenderDiagnostics(opts.Workflow.Diagnostics)
 			diagRenderer.Reset()
 			if opts.Workflow.HasErrors {
-				return errors.New("workflow file contains errors")
+				return newErrWorkflowFileHasErrors(opts.Workflow.File.Path)
 			}
 
 			if opts.GlobalDefaults.JSON {
