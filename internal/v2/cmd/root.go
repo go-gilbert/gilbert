@@ -5,12 +5,13 @@ import (
 	"runtime"
 
 	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/help"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/loader/yamlloader"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 type RunOpts struct {
@@ -30,6 +31,7 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 		SilenceUsage:  true,
 		Example: heredoc.Doc(`
 			$ gilbert init
+			$ gilbert list
 			$ gilbert run foobar
 		`),
 		Annotations: map[string]string{
@@ -50,6 +52,8 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 	cmd.PersistentFlags().AddFlagSet(fset)
 
 	cmd.AddCommand(newCmdRun(ctx, opts, fset))
+	cmd.AddCommand(newCmdDiagnostics(opts))
+	cmd.AddCommand(newCmdList(opts))
 	return cmd
 }
 

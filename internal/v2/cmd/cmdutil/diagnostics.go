@@ -10,9 +10,10 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/valyala/bytebufferpool"
+
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
-	"github.com/valyala/bytebufferpool"
 )
 
 const sourceLinesCount = 6
@@ -23,8 +24,7 @@ type ErrorNote interface {
 
 var padBuff = []byte("            ")
 
-//var padBuff = []byte("______________")
-
+// var padBuff = []byte("______________")
 func getPad(size int) string {
 	if size > len(padBuff) {
 		padBuff = bytes.Repeat([]byte(" "), size)
@@ -178,7 +178,7 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 
 	// Source text
 	lines, err := r.fp.iterDiagLines(diag, sourceLinesCount)
-	//line, err := fp.getDiagLine(diag)
+	// line, err := fp.getDiagLine(diag)
 	if err != nil {
 		return
 	}
@@ -192,8 +192,8 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 	//	diag.Range.End.Column-diag.Range.Start.Column+1,
 	//)
 
-	//palette.gutter.Fprintf(os.Stderr, "%s |#", lineNumber)
-	//palette.reset.Fprintln(os.Stderr, string(line))
+	// palette.gutter.Fprintf(os.Stderr, "%s |#", lineNumber)
+	// palette.reset.Fprintln(os.Stderr, string(line))
 	errLine := diag.Range.Start.Line
 	for lineNo, line := range lines {
 		if lineNo != errLine {
@@ -213,7 +213,7 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 
 		noteColor := palette.getHighlightColor(diag.Severity)
 
-		//palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")
+		// palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")
 		palette.gutter.Fprint(buff, getPad(len(lineNumber)), " | ")
 		palette.reset.Fprint(buff, getPad(startChar))
 		noteColor.Fprint(buff, strings.Repeat("^", highlightLen), " ", msg)
@@ -225,9 +225,10 @@ func renderDiagnosticsJSON(logger *log.Logger, diags parsetypes.Diagnostics) {
 	l := logger.Named("diagnostics")
 	for _, diag := range diags {
 		fields := []log.Field{
-			log.NewField("file", diag.FileName),
-			log.NewField("range", diag.Range),
-			log.NewField("offset", diag.Offset),
+			log.NewField("diagnostic", diag),
+			// log.NewField("file", diag.FileName),
+			// log.NewField("range", diag.Range),
+			// log.NewField("offset", diag.Offset),
 		}
 		if diag.Severity == parsetypes.DiagnosticSeverityWarning {
 			l.Warnw(diag.Err.Error(), fields...)
