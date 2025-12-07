@@ -66,6 +66,7 @@ type exprEnvironment struct {
 	Consts  *valueProxy       `expr:"consts"`
 	Project ProjectInfo       `expr:"project"`
 	Env     map[string]string `expr:"env"`
+	Matrix  map[string]any    `expr:"matrix"`
 }
 
 func newExprEnvironment(s *Scope) *exprEnvironment {
@@ -76,6 +77,7 @@ func newExprEnvironment(s *Scope) *exprEnvironment {
 	return &exprEnvironment{
 		Inputs:  newValueProxy(s, inputsLookupFunc),
 		Consts:  newValueProxy(s, constsLookupFunc),
+		Matrix:  s.MatrixValues,
 		Project: s.Globals.Project,
 		Env:     s.Globals.Env,
 	}

@@ -25,11 +25,23 @@ type Globals struct {
 // Scope holds all variables and inputs related to a workflow.
 // Each scope references a parent and form a prototype chain.
 type Scope struct {
-	Root    *Scope
-	Parent  *Scope
+	// Root points to a root scope.
+	Root *Scope
+
+	// Parent points to a parent scope.
+	Parent *Scope
+
+	// Globals is global execution information (environment variables, project, etc).
 	Globals Globals
-	Inputs  map[string]any
-	Consts  map[string]any
+
+	// Inputs is job parameter values.
+	Inputs map[string]any
+
+	// Consts is constant values declared in a workflow.
+	Consts map[string]any
+
+	// MatrixValues is values populated by job matrix execution strategy.
+	MatrixValues map[string]any
 }
 
 // ValueByName is a stub for expr.EvalContext compatibility.
