@@ -67,6 +67,7 @@ func Eprintf(p ColorPrinter, format string, args ...any) {
 type UsageColorPalette struct {
 	NoColor bool
 	Heading ColorPrinter
+	Note    ColorPrinter
 	Reset   ColorPrinter
 }
 
@@ -87,6 +88,7 @@ func NewUsageColorPalette(noColor bool) UsageColorPalette {
 		return UsageColorPalette{
 			NoColor: noColor,
 			Heading: nopColor{},
+			Note:    nopColor{},
 			Reset:   nopColor{},
 		}
 	}
@@ -94,6 +96,7 @@ func NewUsageColorPalette(noColor bool) UsageColorPalette {
 	return UsageColorPalette{
 		NoColor: noColor,
 		Heading: colorHeading,
+		Note:    colorNoteMarker,
 		Reset:   colorReset,
 	}
 }

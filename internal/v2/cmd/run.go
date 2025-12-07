@@ -19,8 +19,6 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
-var errTaskNameRequired = errors.New(`task name required. Use "gilbert list" to show available tasks`)
-
 type runContext struct {
 	jobFile   manifest.JobFile
 	rootScope *scope.Scope
@@ -59,11 +57,17 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 			// This handler will be executed when task doesn't exist or workflow file has errors.
 			return handleTaskNotFound(opts, args)
 		},
-		PersistentPreRunE: func(_ *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			// PreRunE is executed before cobra performs flag validation checks.
+			// Use this to test basic sanity checks.
 			if len(args) == 0 {
+				// Disallow calling "run" without task name.
 				return errTaskNameRequired
 			}
 
+			return handleTaskNotFound(opts, args)
+		},
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			if opts.Workflow == nil {
 				return nil
 			}
@@ -294,15 +298,12 @@ func handleTaskNotFound(opts RunOpts, args []string) error {
 	}
 
 	if opts.Workflow == nil {
-		return fmt.Errorf(
-			`no %s file was found in a working directory. Run "gilbert init" to create one`,
-			cmdutil.DefaultWorkflowFilename,
-		)
+		return errWorkflowNotFound
 	}
 
 	if opts.Workflow.HasErrors {
-		return fmt.Errorf("workflow file %q contains errors", opts.Workflow.File.Path)
+		return newErrWorkflowFileHasErrors(opts.Workflow.File.Path)
 	}
 
-	return fmt.Errorf("task %q doesn't exist", args[0])
+	return newErrTaskNotFound(args[0])
 }

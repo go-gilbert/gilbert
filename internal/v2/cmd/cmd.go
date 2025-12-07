@@ -31,16 +31,27 @@ func Main(args []string) int {
 	// Remove command name to avoid error when binary name doesn't match command.
 	cmd.SetArgs(args[1:])
 	err = cmd.ExecuteContext(ctx)
-	exitCode := handleCmdError(logger, err)
+	exitCode := handleCmdError(runOpts, logger, err)
 	return exitCode
 }
 
-func handleCmdError(logger *log.Logger, err error) int {
+func handleCmdError(opts RunOpts, logger *log.Logger, err error) int {
 	if err == nil || errors.Is(err, context.Canceled) {
 		return 0
 	}
 
 	logger.Error(err)
+	if opts.GlobalDefaults.JSON {
+		return 1
+	}
+
+	note := &ErrorWithNote{}
+	if errors.As(err, &note) {
+		pal := cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor)
+		cmdutil.Print(pal.Note, "\nnote: ")
+		cmdutil.Println(pal.Reset, note.Note)
+	}
+
 	return 1
 }
 
