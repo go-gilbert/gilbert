@@ -119,7 +119,6 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 	}
 
 	runCtx.rootScope = &scope.Scope{
-		Role:   scope.RoleRoot,
 		Consts: opts.Workflow.File.Consts,
 		Inputs: make(map[string]any),
 		Globals: scope.Globals{
@@ -206,7 +205,7 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 	for name, task := range runCtx.jobFile.Tasks {
 		sampleTask = name
 		shortDoc, longDoc := getTaskDescription(name, task)
-		taskScope := runCtx.rootScope.Fork(scope.RoleTask)
+		taskScope := runCtx.rootScope.Fork()
 		cmd := &cobra.Command{
 			GroupID: "tasks",
 			Use:     name + " [flags]",
