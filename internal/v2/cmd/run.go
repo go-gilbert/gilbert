@@ -19,6 +19,8 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
+var errTaskNameRequired = errors.New(`task name required. Use "gilbert list" to show available tasks`)
+
 type runContext struct {
 	jobFile   manifest.JobFile
 	rootScope *scope.Scope
@@ -57,7 +59,11 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 			// This handler will be executed when task doesn't exist or workflow file has errors.
 			return handleTaskNotFound(opts, args)
 		},
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(_ *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return errTaskNameRequired
+			}
+
 			if opts.Workflow == nil {
 				return nil
 			}
@@ -280,7 +286,7 @@ func getTaskDescription(name string, t *manifest.JobGroup) (string, string) {
 
 func handleTaskNotFound(opts RunOpts, args []string) error {
 	if len(args) == 0 {
-		return errors.New("task name is required")
+		return errTaskNameRequired
 	}
 
 	if opts.WorkflowLoadError != nil {

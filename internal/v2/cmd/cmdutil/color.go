@@ -3,13 +3,16 @@ package cmdutil
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/fatih/color"
+
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
+	colorDimmed     = color.RGB(66, 66, 66).Add(color.ResetBold)
 	colorDiagError  = color.New(color.FgHiRed, color.Bold)
 	colorDiagWarn   = color.New(color.FgYellow, color.Bold)
 	colorDiagMsg    = color.New(color.FgHiWhite, color.Bold)
@@ -22,9 +25,9 @@ var (
 )
 
 type ColorPrinter interface {
-	Fprintf(w io.Writer, format string, a ...interface{}) (int, error)
-	Fprint(w io.Writer, a ...interface{}) (int, error)
-	Fprintln(w io.Writer, a ...interface{}) (int, error)
+	Fprintf(w io.Writer, format string, a ...any) (int, error)
+	Fprint(w io.Writer, a ...any) (int, error)
+	Fprintln(w io.Writer, a ...any) (int, error)
 }
 
 type nopColor struct{}
@@ -39,6 +42,26 @@ func (_ nopColor) Fprint(w io.Writer, a ...any) (int, error) {
 
 func (_ nopColor) Fprintln(w io.Writer, a ...any) (int, error) {
 	return fmt.Fprintln(w, a...)
+}
+
+func Print(p ColorPrinter, args ...any) {
+	_, _ = p.Fprint(os.Stdout, args...)
+}
+
+func Printf(p ColorPrinter, format string, args ...any) {
+	_, _ = p.Fprintf(os.Stdout, format, args...)
+}
+
+func Println(p ColorPrinter, args ...any) {
+	_, _ = p.Fprintln(os.Stdout, args...)
+}
+
+func Eprintln(p ColorPrinter, args ...any) {
+	_, _ = p.Fprintln(os.Stderr, args...)
+}
+
+func Eprintf(p ColorPrinter, format string, args ...any) {
+	_, _ = p.Fprintf(os.Stderr, format, args...)
 }
 
 type UsageColorPalette struct {
@@ -122,5 +145,24 @@ func newDiagColorPalette(noColor bool) diagColorPalette {
 		errMarker:  colorErrMarker,
 		warnMarker: colorWarnMarker,
 		reset:      colorReset,
+	}
+}
+
+type TaskListColorPalette struct {
+	SectionTitle ColorPrinter
+	Reset        ColorPrinter
+}
+
+func NewTaskListColorPalette(noColor bool) TaskListColorPalette {
+	if noColor {
+		return TaskListColorPalette{
+			SectionTitle: nopColor{},
+			Reset:        nopColor{},
+		}
+	}
+
+	return TaskListColorPalette{
+		SectionTitle: colorHeading,
+		Reset:        colorReset,
 	}
 }

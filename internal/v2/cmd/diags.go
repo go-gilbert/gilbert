@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -63,7 +64,7 @@ func newCmdList(opts RunOpts) *cobra.Command {
 			if opts.GlobalDefaults.JSON {
 				renderListJSON(opts.Logger, opts.Workflow.File)
 			} else {
-				renderListText(opts.Workflow.File)
+				renderListText(opts.GlobalDefaults.NoColor, opts.Workflow.File)
 			}
 
 			return nil
@@ -80,11 +81,42 @@ func renderListJSON(l *log.Logger, jf manifest.JobFile) {
 	}
 }
 
-func renderListText(jf manifest.JobFile) {
-	fmt.Printf("List of tasks defined in %q:\n", jf.Path)
+func renderListText(noColor bool, jf manifest.JobFile) {
+	pal := cmdutil.NewTaskListColorPalette(noColor)
+	cmdutil.Println(pal.SectionTitle, "AVAILABLE TASKS")
+	cmdutil.Print(pal.Reset)
+
+	maxNameLen := 15
 	for name := range jf.Tasks {
-		fmt.Println("-", name)
+		maxNameLen = max(maxNameLen, len(name))
+	}
+	padding := strings.Repeat(" ", maxNameLen)
+
+	for name, t := range jf.Tasks {
+		if len(t.Doc) == 0 {
+			fmt.Printf("  %s\n", name)
+			continue
+		}
+
+		lineWrote := false
+		fmt.Printf("  %s%s  ", name, padding[len(name):])
+		for _, line := range t.Doc {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+
+			// TODO
+			if !lineWrote {
+				fmt.Println(line)
+				lineWrote = true
+				continue
+			}
+
+			fmt.Printf("  %s  %s\n", padding, line)
+		}
 	}
 
-	fmt.Println("\nUse \"gilbert run <name> --help\" to show information about a task and required parameters.")
+	cmdutil.Println(pal.Reset)
+	fmt.Println(`Use "gilbert run [name] --help" to show information about a task and required parameters.`)
 }
