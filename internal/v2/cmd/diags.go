@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -87,12 +88,20 @@ func renderListText(noColor bool, jf manifest.JobFile) {
 	cmdutil.Print(pal.Reset)
 
 	maxNameLen := 15
-	for name := range jf.Tasks {
+	tasks := make([]*manifest.JobGroup, 0, len(jf.Tasks))
+	for name, t := range jf.Tasks {
 		maxNameLen = max(maxNameLen, len(name))
+		tasks = append(tasks, t)
 	}
 	padding := strings.Repeat(" ", maxNameLen)
 
-	for name, t := range jf.Tasks {
+	// Sort tasks by name to keep output order stable.
+	slices.SortFunc(tasks, func(a, b *manifest.JobGroup) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	for _, t := range tasks {
+		name := t.Name
 		if len(t.Doc) == 0 {
 			fmt.Printf("  %s\n", name)
 			continue
