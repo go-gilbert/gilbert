@@ -80,10 +80,10 @@ func (m *MockValueResolver) EXPECT() *MockValueResolverMockRecorder {
 }
 
 // Values mocks base method.
-func (m *MockValueResolver) Values() (map[string]any, error) {
+func (m *MockValueResolver) Values() (any, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Values")
-	ret0, _ := ret[0].(map[string]any)
+	ret0, _ := ret[0].(any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

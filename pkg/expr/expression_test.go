@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-gilbert/gilbert/pkg/expr/exprmock"
-	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/go-gilbert/gilbert/pkg/expr/exprmock"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type Record = map[string]any
