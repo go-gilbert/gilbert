@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -27,6 +28,7 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "gilbert <command> <subcommand> [flags]",
 		Short:         "Gilbert task runner",
+		Version:       fmt.Sprintf("%s %s/%s", "snapshot", runtime.GOOS, runtime.GOARCH),
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Example: heredoc.Doc(`
