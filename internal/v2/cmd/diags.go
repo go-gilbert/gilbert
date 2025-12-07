@@ -83,7 +83,7 @@ func renderListJSON(l *log.Logger, jf manifest.JobFile) {
 func renderListText(jf manifest.JobFile) {
 	fmt.Printf("List of tasks defined in %q:\n", jf.Path)
 	for name := range jf.Tasks {
-		fmt.Println("- ", name)
+		fmt.Println("-", name)
 	}
 
 	fmt.Println("\nUse \"gilbert run <name> --help\" to show information about a task and required parameters.")
