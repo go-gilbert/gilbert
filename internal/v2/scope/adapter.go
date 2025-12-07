@@ -54,7 +54,7 @@ func (runner CommandRunner) EvalCommand(ctx context.Context, cmdline string) (re
 	return data, nil
 }
 
-// NewEvalContext builds eval context for expanding dynamic expressions.
+// NewEvalParams builds eval context for expanding dynamic expressions.
 func NewEvalParams(s *Scope) expr.EvalParams {
 	return expr.EvalParams{
 		CommandProcessor: NewCommandRunner(s),
