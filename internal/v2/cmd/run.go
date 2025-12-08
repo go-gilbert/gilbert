@@ -228,7 +228,7 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 				HiddenDefaultCmd:    true,
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
-				return startTaskRunner(cmd.Context(), taskRunConfig{
+				return startTaskRunner(cmd, taskRunConfig{
 					taskName:     name,
 					logger:       fp.logger,
 					jobFile:      &runCtx.jobFile,

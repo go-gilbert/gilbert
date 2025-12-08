@@ -10,6 +10,7 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
+	"github.com/go-gilbert/gilbert/internal/v2/ui"
 	"github.com/go-gilbert/gilbert/pkg/expr"
 )
 
@@ -19,15 +20,15 @@ type Config struct {
 	Logger              *log.Logger
 	JobFile             *manifest.JobFile
 	RootScope           *scope.Scope
+	Shell               *ui.Shell
 	CmdProcessorFactory CommandProcessorFactory
-
-	// TODO: pass hud for TUI
 }
 
 type Runner struct {
 	logger         log.Logger
 	jobFile        *manifest.JobFile
 	rootScope      *scope.Scope
+	shell          *ui.Shell
 	cmdProcBuilder CommandProcessorFactory
 }
 
@@ -37,6 +38,7 @@ func NewRunner(cfg Config) *Runner {
 		jobFile:        cfg.JobFile,
 		rootScope:      cfg.RootScope,
 		cmdProcBuilder: cfg.CmdProcessorFactory,
+		shell:          cfg.Shell,
 	}
 }
 
@@ -53,11 +55,12 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 		return fmt.Errorf("task %q not found", name)
 	}
 
+	r.shell.Reporter.OnTaskStart(name)
 	for _, j := range t.Jobs {
 		r.runJob(ctx, j, s)
 	}
 
-	dumpJSON("task", t)
+	// dumpJSON("task", t)
 
 	return fmt.Errorf("not implemented")
 }

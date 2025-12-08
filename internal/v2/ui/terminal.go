@@ -38,7 +38,7 @@ type TerminalReporter struct {
 }
 
 func (r *TerminalReporter) OnTaskStart(taskName string) {
-	// TODO
+	r.Printf(r.Palette.TextHeading, ":: Running task %q\n", taskName)
 }
 
 func (r *TerminalReporter) Print(p theme.Color, args ...any) {
@@ -47,10 +47,12 @@ func (r *TerminalReporter) Print(p theme.Color, args ...any) {
 
 func (r *TerminalReporter) Printf(p theme.Color, format string, args ...any) {
 	_, _ = p.Fprintf(r.Stdout, format, args...)
+	_, _ = r.Palette.Reset.Fprint(r.Stdout)
 }
 
 func (r *TerminalReporter) Println(p theme.Color, args ...any) {
-	_, _ = p.Fprintln(r.Stdout, args...)
+	_, _ = p.Fprint(r.Stdout, args...)
+	_, _ = r.Palette.Reset.Fprintln(r.Stdout)
 }
 
 func (r *TerminalReporter) Eprintln(p theme.Color, args ...any) {
