@@ -16,6 +16,14 @@ type JobHandlerRef struct {
 	Name string
 }
 
+func (ref JobHandlerRef) String() string {
+	if ref.Namespace == "" {
+		return ref.Name
+	}
+
+	return ref.Namespace + "/" + ref.Name
+}
+
 // SplitActionName splits string representation of action name and namespace.
 //
 // For example:

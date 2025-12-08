@@ -57,7 +57,9 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 
 	r.shell.Reporter.OnTaskStart(name)
 	for _, j := range t.Jobs {
-		r.runJob(ctx, j, s)
+		if err := r.runJob(ctx, j, s); err != nil {
+			return err
+		}
 	}
 
 	// dumpJSON("task", t)
@@ -66,7 +68,26 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 }
 
 func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
-	// TODO
+	if len(j.Strategy.Matrix) != 0 {
+		return r.runJobMatrix(ctx, j, taskScope)
+	}
+
+	return nil
+}
+
+func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
+	// Resolve matrix values
+	ep := expr.EvalParams{
+		CommandProcessor: r.cmdProcBuilder(taskScope),
+		Env:              taskScope,
+	}
+	mat, diags := unboxMatrix(ctx, ep, j.Strategy.Matrix)
+	r.shell.Reporter.PrintDiagnostics(diags)
+	if diags.HasError() {
+		return fmt.Errorf("failed to resolve matrix values for step %q", j.Handler)
+	}
+
+	dumpJSON("mat", mat)
 	return nil
 }
 
