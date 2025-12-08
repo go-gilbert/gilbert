@@ -163,8 +163,8 @@ func (s AnySpec) Expand(ctx context.Context, opts expr.EvalParams) (any, error) 
 		return s.ObjectSpec.Expand(ctx, opts)
 	}
 
-	if s.ObjectSpec != nil {
-		return s.ObjectSpec.Expand(ctx, opts)
+	if s.ArraySpec != nil {
+		return s.ArraySpec.Expand(ctx, opts)
 	}
 
 	return nil, nil
