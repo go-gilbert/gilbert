@@ -59,8 +59,8 @@ tasks:
             arch: [amd64, 386, arm64]
         with:
           package: .
-          os: ${matrix.os}
-          arch: ${matrix.arch}
+          os: ${{matrix.os}}
+          arch: ${{matrix.arch}}
           cgo: false
           tags:
             - '${{inputs.release ? "release" : "debug"}}'
