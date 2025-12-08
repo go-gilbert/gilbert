@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/goccy/go-yaml/ast"
+
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
-	"github.com/goccy/go-yaml/ast"
 )
 
 type lazyArrayVisitor struct{}
@@ -29,7 +30,7 @@ func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOp
 		}
 
 		return &manifest.LazyValue{
-			Value:    v,
+			Value:    v.Optimize(),
 			Location: &v.BindingSpec.Location,
 		}, nil
 	case *ast.SequenceNode:
@@ -40,7 +41,7 @@ func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOp
 
 		rng, offset := yamltree.GetNodeRange(node)
 		return &manifest.LazyValue{
-			Value: v,
+			Value: v.Optimize(),
 			Location: &manifest.ReferenceLocation{
 				FileName: opts.FileName,
 				Range:    rng,
