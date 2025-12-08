@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
@@ -46,6 +48,27 @@ func NewTerminalReporter(stdio log.IOStreams, palette theme.Palette) *TerminalRe
 
 func (r *TerminalReporter) OnTaskStart(taskName string) {
 	r.Printf(r.palette.TextHeading, ":: Running task %q\n", taskName)
+}
+
+func (r *TerminalReporter) OnJobStart(jobName string, matKeys []string, matValues []any) {
+	b := &bytes.Buffer{}
+	r.palette.NoteMarker.Fprint(b, "-> ")
+	r.palette.Reset.Fprint(b, jobName)
+	if len(matKeys) > 0 {
+		b.WriteString(" (")
+		for i, k := range matKeys {
+			if i != 0 {
+				b.WriteByte(' ')
+			}
+
+			b.WriteString(k)
+			fmt.Fprintf(b, "=%v", matValues[i])
+		}
+		b.WriteString(")")
+	}
+
+	b.WriteRune('\n')
+	r.stdout.Write(b.Bytes())
 }
 
 func (r *TerminalReporter) PrintDiagnostics(diags parsetypes.Diagnostics) {

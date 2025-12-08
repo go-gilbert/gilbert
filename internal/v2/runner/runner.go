@@ -81,12 +81,16 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 		CommandProcessor: r.cmdProcBuilder(taskScope),
 		Env:              taskScope,
 	}
+
 	mat, diags := unboxMatrix(ctx, ep, j.Strategy.Matrix)
 	r.shell.Reporter.PrintDiagnostics(diags)
 	if diags.HasError() {
 		return fmt.Errorf("failed to resolve matrix values for step %q", j.Handler)
 	}
 
+	// do catersian product
+	r.shell.Reporter.OnJobStart("go/build", []string{"os", "arch"}, []any{"darwin", "aarch64"})
+	r.shell.Reporter.OnJobStart("go/build", []string{"os", "arch"}, []any{"linux", "amd64"})
 	dumpJSON("mat", mat)
 	return nil
 }

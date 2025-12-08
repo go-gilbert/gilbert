@@ -33,6 +33,23 @@ func NewLogReporter(l *log.Logger) *LogReporter {
 	}
 }
 
+func (l *LogReporter) OnJobStart(jobName string, matKeys []string, matValues []any) {
+	fields := []log.Field{
+		log.NewField("job", jobName),
+	}
+
+	if len(matKeys) > 0 {
+		m := make(map[string]any, len(matKeys))
+		for i, k := range matKeys {
+			m[k] = matValues[i]
+		}
+
+		fields = append(fields, log.NewField("matrix", m))
+	}
+
+	l.log.Infow("starting job", fields...)
+}
+
 func (l *LogReporter) OnTaskStart(taskName string) {
 	l.log.Infof("starting task %q", taskName)
 }

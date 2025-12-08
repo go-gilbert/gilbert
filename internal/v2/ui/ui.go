@@ -13,6 +13,9 @@ type Reporter interface {
 	// OnTaskStart reports task execution start event.
 	OnTaskStart(taskName string)
 
+	// OnJobStart reports task step execution start event.
+	OnJobStart(stageName string, matKeys []string, matValues []any)
+
 	// PrintDiagnostics renders diagnostics.
 	PrintDiagnostics(diags parsetypes.Diagnostics)
 }
