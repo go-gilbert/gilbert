@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
@@ -20,18 +21,25 @@ func NewHeadlessShell(l *log.Logger) *Shell {
 }
 
 type LogReporter struct {
-	log log.Logger
+	log          log.Logger
+	diagRenderer *JSONDiagnosticRenderer
 }
 
 // NewLogReporter returns a dummy [Reporter] that writes messages to a log.
 func NewLogReporter(l *log.Logger) *LogReporter {
 	return &LogReporter{
-		log: l.Named("ui"),
+		log:          l.Named("ui"),
+		diagRenderer: NewJSONDiagnosticRenderer(l),
 	}
 }
 
 func (l *LogReporter) OnTaskStart(taskName string) {
 	l.log.Infof("starting task %q", taskName)
+}
+
+func (l *LogReporter) PrintDiagnostics(diags parsetypes.Diagnostics) {
+	l.diagRenderer.RenderDiagnostics(diags)
+	l.diagRenderer.Reset()
 }
 
 var errInputDisabled = errors.New("user input is disabled")

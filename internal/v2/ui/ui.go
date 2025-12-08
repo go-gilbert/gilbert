@@ -1,6 +1,8 @@
 // Package ui implements user interface functionality.
 package ui
 
+import "github.com/go-gilbert/gilbert/pkg/parsetypes"
+
 type Shell struct {
 	Reporter Reporter
 	Input    Input
@@ -10,6 +12,9 @@ type Shell struct {
 type Reporter interface {
 	// OnTaskStart reports task execution start event.
 	OnTaskStart(taskName string)
+
+	// PrintDiagnostics renders diagnostics.
+	PrintDiagnostics(diags parsetypes.Diagnostics)
 }
 
 // Input interface provides functionality for prompting user input.

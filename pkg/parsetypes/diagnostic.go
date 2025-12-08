@@ -96,6 +96,16 @@ func HasErrorDiagnostics(diags Diagnostics) bool {
 	return diags.HasError()
 }
 
+// IsDiagnosticsError checks whether error is diagnostics and returns them.
+func IsDiagnosticsError(err error) (Diagnostics, bool) {
+	var diags Diagnostics
+	if errors.As(err, &diags) {
+		return diags, true
+	}
+
+	return nil, false
+}
+
 // DiagnosticFromError checks if the error is a Diagnostic and returns it if so.
 func DiagnosticFromError(err error) (*Diagnostic, bool) {
 	if err == nil {

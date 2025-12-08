@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
@@ -18,11 +19,7 @@ func NewTerminalShell(streams log.IOStreams, noColor bool) *Shell {
 	palette := theme.NewPalette(noColor)
 
 	return &Shell{
-		Reporter: &TerminalReporter{
-			Stdout:  streams.Stdout,
-			Stderr:  streams.Stderr,
-			Palette: palette,
-		},
+		Reporter: NewTerminalReporter(streams, palette),
 		Input: &TerminalInput{
 			Stdin:   streams.Stdin,
 			Stdout:  streams.Stdout,
@@ -32,35 +29,50 @@ func NewTerminalShell(streams log.IOStreams, noColor bool) *Shell {
 }
 
 type TerminalReporter struct {
-	Stdout  io.Writer
-	Stderr  io.Writer
-	Palette theme.Palette
+	stdout       io.Writer
+	stderr       io.Writer
+	palette      theme.Palette
+	diagRenderer *TerminalDiagnosticRenderer
+}
+
+func NewTerminalReporter(stdio log.IOStreams, palette theme.Palette) *TerminalReporter {
+	return &TerminalReporter{
+		diagRenderer: NewTerminalDiagnosticsRenderer(stdio.Stderr, palette),
+		stdout:       stdio.Stdout,
+		stderr:       stdio.Stderr,
+		palette:      palette,
+	}
 }
 
 func (r *TerminalReporter) OnTaskStart(taskName string) {
-	r.Printf(r.Palette.TextHeading, ":: Running task %q\n", taskName)
+	r.Printf(r.palette.TextHeading, ":: Running task %q\n", taskName)
+}
+
+func (r *TerminalReporter) PrintDiagnostics(diags parsetypes.Diagnostics) {
+	r.diagRenderer.RenderDiagnostics(diags)
+	r.diagRenderer.Reset()
 }
 
 func (r *TerminalReporter) Print(p theme.Color, args ...any) {
-	_, _ = p.Fprint(r.Stdout, args...)
+	_, _ = p.Fprint(r.stdout, args...)
 }
 
 func (r *TerminalReporter) Printf(p theme.Color, format string, args ...any) {
-	_, _ = p.Fprintf(r.Stdout, format, args...)
-	_, _ = r.Palette.Reset.Fprint(r.Stdout)
+	_, _ = p.Fprintf(r.stdout, format, args...)
+	_, _ = r.palette.Reset.Fprint(r.stdout)
 }
 
 func (r *TerminalReporter) Println(p theme.Color, args ...any) {
-	_, _ = p.Fprint(r.Stdout, args...)
-	_, _ = r.Palette.Reset.Fprintln(r.Stdout)
+	_, _ = p.Fprint(r.stdout, args...)
+	_, _ = r.palette.Reset.Fprintln(r.stdout)
 }
 
 func (r *TerminalReporter) Eprintln(p theme.Color, args ...any) {
-	_, _ = p.Fprintln(r.Stderr, args...)
+	_, _ = p.Fprintln(r.stderr, args...)
 }
 
 func (r *TerminalReporter) Eprintf(p theme.Color, format string, args ...any) {
-	_, _ = p.Fprintf(r.Stderr, format, args...)
+	_, _ = p.Fprintf(r.stderr, format, args...)
 }
 
 type TerminalInput struct {
