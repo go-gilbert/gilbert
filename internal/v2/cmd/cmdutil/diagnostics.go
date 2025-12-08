@@ -13,6 +13,7 @@ import (
 	"github.com/valyala/bytebufferpool"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
+	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -104,18 +105,20 @@ func (p filePool) iterDiagLines(diag *parsetypes.Diagnostic, lineCount int) (ite
 }
 
 type DiagnosticsRenderer struct {
-	logger *log.Logger
-	dst    io.Writer
-	opts   BootstrapOpts
-	fp     filePool
+	logger  *log.Logger
+	dst     io.Writer
+	opts    BootstrapOpts
+	fp      filePool
+	palette theme.Palette
 }
 
 func NewDiagnosticsRenderer(logger *log.Logger, opts BootstrapOpts) *DiagnosticsRenderer {
 	return &DiagnosticsRenderer{
-		logger: logger,
-		opts:   opts,
-		fp:     make(filePool, 3),
-		dst:    os.Stderr,
+		logger:  logger,
+		opts:    opts,
+		fp:      make(filePool, 3),
+		dst:     os.Stderr,
+		palette: theme.NewPalette(opts.NoColor),
 	}
 }
 
@@ -140,37 +143,37 @@ func (r *DiagnosticsRenderer) RenderDiagnostics(diags parsetypes.Diagnostics) {
 		return
 	}
 
-	palette := newDiagColorPalette(r.opts.NoColor)
+	// palette := newDiagColorPalette(r.opts.NoColor)
 	for _, diag := range diags {
-		r.renderDiagnostic(palette, diag)
+		r.renderDiagnostic(diag)
 	}
 }
 
-func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *parsetypes.Diagnostic) {
+func (r *DiagnosticsRenderer) renderDiagnostic(diag *parsetypes.Diagnostic) {
 	// TODO: multiline support
 	buff := bytebufferpool.Get()
 	defer func() {
-		palette.reset.Fprintln(buff)
+		r.palette.Reset.Fprintln(buff)
 		_, _ = r.dst.Write(buff.Bytes())
 		bytebufferpool.Put(buff)
 	}()
 
 	switch diag.Severity {
 	case parsetypes.DiagnosticSeverityError:
-		palette.diagError.Fprint(buff, "error: ")
+		r.palette.DiagError.Fprint(buff, "error: ")
 	case parsetypes.DiagnosticSeverityWarning:
-		palette.diagWarn.Fprint(buff, "warning: ")
+		r.palette.DiagWarn.Fprint(buff, "warning: ")
 	default:
-		palette.diagWarn.Fprint(buff, "note: ")
+		r.palette.DiagWarn.Fprint(buff, "note: ")
 	}
 
 	// Severity
-	palette.diagMsg.Fprintln(buff, diag.Err.Error())
+	r.palette.DiagMsg.Fprintln(buff, diag.Err.Error())
 
 	// Error message & filename
 	lineNumber := strconv.Itoa(max(diag.Range.Start.Line, diag.Range.End.Line))
-	palette.gutter.Fprint(buff, getPad(len(lineNumber)), "--> ")
-	palette.reset.Fprintf(buff, "%s:%s\n", diag.FileName, diag.Range.Start)
+	r.palette.Gutter.Fprint(buff, getPad(len(lineNumber)), "--> ")
+	r.palette.Reset.Fprintf(buff, "%s:%s\n", diag.FileName, diag.Range.Start)
 
 	if diag.Range.IsEmpty() {
 		return
@@ -178,32 +181,23 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 
 	// Source text
 	lines, err := r.fp.iterDiagLines(diag, sourceLinesCount)
-	// line, err := fp.getDiagLine(diag)
 	if err != nil {
 		return
 	}
 
 	startChar := max(0, diag.Range.Start.Column-1)
 	highlightLen := diag.Range.End.Column - diag.Range.Start.Column + 1
-	//fmt.Printf(
-	//	"%d:%d pad=%d\n",
-	//	diag.Range.Start.Column,
-	//	diag.Range.End.Column,
-	//	diag.Range.End.Column-diag.Range.Start.Column+1,
-	//)
 
-	// palette.gutter.Fprintf(os.Stderr, "%s |#", lineNumber)
-	// palette.reset.Fprintln(os.Stderr, string(line))
 	errLine := diag.Range.Start.Line
 	for lineNo, line := range lines {
 		if lineNo != errLine {
-			palette.gutter.Fprintf(buff, "%d | ", lineNo)
-			palette.reset.Fprintln(buff, bytesToString(line))
+			r.palette.Gutter.Fprintf(buff, "%d | ", lineNo)
+			r.palette.Reset.Fprintln(buff, bytesToString(line))
 			continue
 		}
 
-		palette.gutter.Fprintf(buff, "%s | ", lineNumber)
-		palette.reset.Fprintln(buff, bytesToString(line))
+		r.palette.Gutter.Fprintf(buff, "%s | ", lineNumber)
+		r.palette.Reset.Fprintln(buff, bytesToString(line))
 
 		// Draw highlight & annotation
 		msg := diag.Note
@@ -211,13 +205,12 @@ func (r *DiagnosticsRenderer) renderDiagnostic(palette diagColorPalette, diag *p
 			msg = tryGetErrorReason(diag.Err)
 		}
 
-		noteColor := palette.getHighlightColor(diag.Severity)
+		noteColor := r.palette.GetHighlightColor(diag.Severity)
 
-		// palette.gutter.Fprint(os.Stderr, getPad(len(lineNumber)), " |#")
-		palette.gutter.Fprint(buff, getPad(len(lineNumber)), " | ")
-		palette.reset.Fprint(buff, getPad(startChar))
+		r.palette.Gutter.Fprint(buff, getPad(len(lineNumber)), " | ")
+		r.palette.Reset.Fprint(buff, getPad(startChar))
 		noteColor.Fprint(buff, strings.Repeat("^", highlightLen), " ", msg)
-		palette.reset.Fprintln(buff)
+		r.palette.Reset.Fprintln(buff)
 	}
 }
 
@@ -226,9 +219,6 @@ func renderDiagnosticsJSON(logger *log.Logger, diags parsetypes.Diagnostics) {
 	for _, diag := range diags {
 		fields := []log.Field{
 			log.NewField("diagnostic", diag),
-			// log.NewField("file", diag.FileName),
-			// log.NewField("range", diag.Range),
-			// log.NewField("offset", diag.Offset),
 		}
 		if diag.Severity == parsetypes.DiagnosticSeverityWarning {
 			l.Warnw(diag.Err.Error(), fields...)

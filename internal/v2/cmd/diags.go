@@ -11,6 +11,7 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
+	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -82,9 +83,9 @@ func renderListJSON(l *log.Logger, jf manifest.JobFile) {
 }
 
 func renderListText(noColor bool, jf manifest.JobFile) {
-	pal := cmdutil.NewTaskListColorPalette(noColor)
-	cmdutil.Println(pal.SectionTitle, "AVAILABLE TASKS")
-	cmdutil.Print(pal.Reset)
+	pal := theme.NewPalette(noColor)
+	theme.Println(pal.TextHeading, "AVAILABLE TASKS")
+	theme.Print(pal.Reset)
 
 	maxNameLen := 15
 	tasks := make([]*manifest.JobGroup, 0, len(jf.Tasks))
@@ -125,6 +126,6 @@ func renderListText(noColor bool, jf manifest.JobFile) {
 		}
 	}
 
-	cmdutil.Println(pal.Reset)
+	theme.Println(pal.Reset)
 	fmt.Println(`Use "gilbert run [name] --help" to show information about a task and required parameters.`)
 }

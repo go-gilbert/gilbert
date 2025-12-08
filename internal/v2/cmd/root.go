@@ -42,12 +42,12 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 			"platform":    runtime.GOOS + "/" + runtime.GOARCH,
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			opts.Logger.Infof("%#v", opts)
 			return nil
 		},
 	}
 
-	cmd.SetUsageFunc(help.NewGeneralUsageFunc(cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor)))
+	// cmd.SetUsageFunc(help.NewGeneralUsageFunc(cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor)))
+	cmd.SetUsageFunc(help.NewGeneralUsageFunc(opts.GlobalDefaults.NoColor))
 
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
 	fset := buildGlobalsFlagSet(&opts.GlobalDefaults)

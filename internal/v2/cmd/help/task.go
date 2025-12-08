@@ -4,35 +4,45 @@ import (
 	_ "embed"
 	"text/template"
 
-	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 )
 
 //go:embed resources/task.usage.gohtml
 var taskUsageTpl []byte
 
 type TaskUsageInfo struct {
-	Palette       cmdutil.UsageColorPalette
+	NoColor       bool
 	Cmd           *cobra.Command
 	WorkflowFlags *pflag.FlagSet
 	TaskFlags     *pflag.FlagSet
 	GlobalFlags   *pflag.FlagSet
 }
 
-func (i *TaskUsageInfo) Heading(str string) string {
-	return i.Palette.RenderHeading(str)
+type taskUsageData struct {
+	TaskUsageInfo
+	palette theme.Palette
 }
 
-func (i *TaskUsageInfo) HasTaskFlags() bool {
+func (i *taskUsageData) Heading(str string) string {
+	if i.palette.NoColor {
+		return str
+	}
+
+	return renderHeading(str, &i.palette)
+}
+
+func (i *taskUsageData) HasTaskFlags() bool {
 	return isFlagSetNotEmpty(i.TaskFlags)
 }
 
-func (i *TaskUsageInfo) HasWorkflowFlags() bool {
+func (i *taskUsageData) HasWorkflowFlags() bool {
 	return isFlagSetNotEmpty(i.WorkflowFlags)
 }
 
-func (i *TaskUsageInfo) HasGlobalFlags() bool {
+func (i *taskUsageData) HasGlobalFlags() bool {
 	return isFlagSetNotEmpty(i.GlobalFlags)
 }
 
@@ -45,7 +55,12 @@ func NewTaskUsageFunc(info TaskUsageInfo) UsageFunc {
 		}
 
 		info.Cmd = cmd
-		return tpl.Execute(cmd.OutOrStderr(), &info)
+		d := &taskUsageData{
+			TaskUsageInfo: info,
+			palette:       theme.NewPalette(info.NoColor),
+		}
+
+		return tpl.Execute(cmd.OutOrStderr(), d)
 	}
 }
 

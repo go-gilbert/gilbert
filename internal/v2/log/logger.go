@@ -2,8 +2,21 @@ package log
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
+
+var DefaultIOStreams = IOStreams{
+	Stdin:  os.Stdin,
+	Stdout: os.Stdout,
+	Stderr: os.Stderr,
+}
+
+type IOStreams struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+}
 
 type Field struct {
 	Key   string `json:"key"`

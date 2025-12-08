@@ -32,14 +32,15 @@ type BootstrapOpts struct {
 	NoCache  bool
 	NoColor  bool
 	JSON     bool
+	IO       log.IOStreams
 }
 
 func (opts BootstrapOpts) BuildLogWriter() log.Writer {
 	if opts.JSON {
-		return log.NewJSONWriter()
+		return log.NewJSONWriter(opts.IO)
 	}
 
-	return log.NewConsoleWriter(opts.NoColor)
+	return log.NewConsoleWriter(opts.IO, opts.NoColor)
 }
 
 func (opts BootstrapOpts) SetupWorkDir() (string, error) {
@@ -66,6 +67,7 @@ func (opts BootstrapOpts) SetupWorkDir() (string, error) {
 }
 
 func (opts BootstrapOpts) WithDefaults() BootstrapOpts {
+	opts.IO = log.DefaultIOStreams
 	if opts.LogLevel == log.LevelUnknown {
 		opts.LogLevel = log.LevelInfo
 	}

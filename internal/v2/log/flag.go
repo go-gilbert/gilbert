@@ -93,11 +93,11 @@ func (l FlagFormat) Set(s string) error {
 	var writer Writer
 	switch s {
 	case FormatJSON:
-		writer = NewJSONWriter()
+		writer = NewJSONWriter(DefaultIOStreams)
 	case FormatConsole:
-		writer = NewConsoleWriter(false)
+		writer = NewConsoleWriter(DefaultIOStreams, false)
 	case FormatNoColor:
-		writer = NewConsoleWriter(true)
+		writer = NewConsoleWriter(DefaultIOStreams, true)
 	default:
 		return errInvalidFlagFormatErr
 	}

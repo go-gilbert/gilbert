@@ -2,6 +2,7 @@ package log
 
 import (
 	"encoding/json"
+	"io"
 	"sync"
 	"time"
 )
@@ -19,19 +20,24 @@ type jsonLine struct {
 }
 
 type JSONWriter struct {
-	lock sync.Mutex
+	lock   sync.Mutex
+	stdout io.Writer
+	stderr io.Writer
 }
 
 // NewJSONWriter returns a writer that writes log messages in JSON format.
-func NewJSONWriter() *JSONWriter {
-	return &JSONWriter{}
+func NewJSONWriter(streams IOStreams) *JSONWriter {
+	return &JSONWriter{
+		stdout: streams.Stdout,
+		stderr: streams.Stderr,
+	}
 }
 
 func (w *JSONWriter) Write(level Level, tag, message string, fields []Field) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
-	dst := writerForLevel(level)
+	dst := writerForLevel(level, w.stdout, w.stderr)
 	line := jsonLine{
 		At:      time.Now(),
 		Level:   level,

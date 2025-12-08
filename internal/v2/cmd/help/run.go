@@ -5,40 +5,51 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 )
 
 //go:embed resources/run.usage.gohtml
 var runUsageTpl []byte
 
 type RunUsageInfo struct {
-	Palette       cmdutil.UsageColorPalette
+	NoColor       bool
 	Cmd           *cobra.Command
 	WorkflowFlags *pflag.FlagSet
 	CommandFlags  *pflag.FlagSet
 	GlobalFlags   *pflag.FlagSet
 }
 
-func (i *RunUsageInfo) Heading(str string) string {
-	return i.Palette.RenderHeading(str)
+type runUsageData struct {
+	RunUsageInfo
+
+	palette theme.Palette
 }
 
-func (i *RunUsageInfo) GroupHeading(str string) string {
+func (i *runUsageData) Heading(str string) string {
+	if i.NoColor {
+		return str
+	}
+
+	return renderHeading(str, &i.palette)
+}
+
+func (i *runUsageData) GroupHeading(str string) string {
 	str = strings.ToUpper(strings.TrimSuffix(str, ":"))
-	return i.Palette.RenderHeading(str)
+	return i.Heading(str)
 }
 
-func (i *RunUsageInfo) HasCommandFlags() bool {
+func (i *runUsageData) HasCommandFlags() bool {
 	return isFlagSetNotEmpty(i.CommandFlags)
 }
 
-func (i *RunUsageInfo) HasWorkflowFlags() bool {
+func (i *runUsageData) HasWorkflowFlags() bool {
 	return isFlagSetNotEmpty(i.WorkflowFlags)
 }
 
-func (i *RunUsageInfo) HasGlobalFlags() bool {
+func (i *runUsageData) HasGlobalFlags() bool {
 	return isFlagSetNotEmpty(i.GlobalFlags)
 }
 
@@ -50,6 +61,10 @@ func NewRunUsageFunc(info *RunUsageInfo) UsageFunc {
 		}
 
 		info.Cmd = cmd
-		return tpl.Execute(cmd.OutOrStderr(), &info)
+		d := &runUsageData{
+			RunUsageInfo: *info,
+			palette:      theme.NewPalette(info.NoColor),
+		}
+		return tpl.Execute(cmd.OutOrStderr(), d)
 	}
 }

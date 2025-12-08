@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/fatih/color"
 )
@@ -22,17 +21,21 @@ var _ Writer = (*ConsoleWriter)(nil)
 type ConsoleWriter struct {
 	// NoColor disables ansi colors output.
 	NoColor bool
+	Stdout  io.Writer
+	Stderr  io.Writer
 }
 
 // NewConsoleWriter returns a new writer that writes log messages in human-friendly format.
-func NewConsoleWriter(noColor bool) ConsoleWriter {
+func NewConsoleWriter(streams IOStreams, noColor bool) ConsoleWriter {
 	return ConsoleWriter{
 		NoColor: noColor,
+		Stdout:  streams.Stdout,
+		Stderr:  streams.Stderr,
 	}
 }
 
 func (c ConsoleWriter) writeNoColor(level Level, prefix, message string, fields []Field) {
-	dst := writerForLevel(level)
+	dst := writerForLevel(level, c.Stdout, c.Stderr)
 	if prefix != "" {
 		_, _ = dst.Write([]byte(prefix))
 	}
@@ -80,7 +83,7 @@ func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 		prefixColor = textColor
 	}
 
-	dst := writerForLevel(level)
+	dst := writerForLevel(level, c.Stdout, c.Stderr)
 	if c.NoColor {
 		c.writeNoColor(level, prefix, message, fields)
 		return
@@ -102,11 +105,11 @@ func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 	noColor.Fprintln(dst)
 }
 
-func writerForLevel(level Level) io.Writer {
+func writerForLevel(level Level, stdout, stderr io.Writer) io.Writer {
 	switch level {
 	case LevelFatal, LevelError, LevelWarning, LevelDebug:
-		return os.Stderr
+		return stderr
 	default:
-		return os.Stdout
+		return stdout
 	}
 }

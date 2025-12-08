@@ -114,7 +114,7 @@ func newCmdRun(ctx context.Context, opts RunOpts, globalFlags *pflag.FlagSet) *c
 	})
 
 	runHelp := &help.RunUsageInfo{
-		Palette:     cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor),
+		NoColor:     opts.GlobalDefaults.NoColor,
 		GlobalFlags: globalFlags,
 	}
 
@@ -228,9 +228,13 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 				HiddenDefaultCmd:    true,
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
-				cmd.Println("test!", name)
-				cmd.InheritedFlags().FlagUsages()
-				return nil
+				return startTaskRunner(cmd.Context(), taskRunConfig{
+					taskName:     name,
+					logger:       fp.logger,
+					jobFile:      &runCtx.jobFile,
+					scope:        taskScope,
+					bootstapOpts: fp.defaults,
+				})
 			},
 		}
 
@@ -259,7 +263,7 @@ func addTaskCommands(ctx context.Context, dst *cobra.Command, fp taskFlagMountPa
 
 		// TODO: gen usage
 		usageFunc := help.NewTaskUsageFunc(help.TaskUsageInfo{
-			Palette:       cmdutil.NewUsageColorPalette(fp.defaults.NoColor),
+			NoColor:       fp.defaults.NoColor,
 			GlobalFlags:   fp.globalFlags,
 			WorkflowFlags: fp.workflowFlags,
 			TaskFlags:     fset,

@@ -11,13 +11,15 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest/loader/yamlloader"
+	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 )
 
-func Main(args []string) int {
+func Main(s log.IOStreams, args []string) int {
 	ctx, cancelFn := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancelFn()
 
 	opts := cmdutil.BootstrapArgsFromFlags(args)
+	opts.IO = s
 
 	logger := log.NewLogger("", opts.LogLevel, opts.BuildLogWriter())
 	runOpts, err := buildRunOpts(ctx, logger, opts)
@@ -27,6 +29,9 @@ func Main(args []string) int {
 	}
 
 	cmd := newCmdRoot(ctx, runOpts)
+	cmd.SetIn(s.Stdin)
+	cmd.SetOut(s.Stderr)
+	cmd.SetErr(s.Stderr)
 
 	// Remove command name to avoid error when binary name doesn't match command.
 	cmd.SetArgs(args[1:])
@@ -47,9 +52,9 @@ func handleCmdError(opts RunOpts, logger *log.Logger, err error) int {
 
 	note := &ErrorWithNote{}
 	if errors.As(err, &note) {
-		pal := cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor)
-		cmdutil.Print(pal.Note, "\nnote: ")
-		cmdutil.Println(pal.Reset, note.Note)
+		pal := theme.NewPalette(opts.GlobalDefaults.NoColor)
+		theme.Print(pal.NoteMarker, "\nnote: ")
+		theme.Println(pal.Reset, note.Note)
 	}
 
 	return 1
