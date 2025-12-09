@@ -7,20 +7,21 @@ import (
 	"io"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
+	"github.com/go-gilbert/gilbert/internal/v2/runner"
 	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
-	_ Reporter = (*TerminalReporter)(nil)
-	_ Input    = (*TerminalInput)(nil)
+	_ runner.Reporter = (*TerminalReporter)(nil)
+	_ runner.Input    = (*TerminalInput)(nil)
 )
 
 // NewTerminalShell constructs a new terminal shell.
-func NewTerminalShell(streams log.IOStreams, noColor bool) *Shell {
+func NewTerminalShell(streams log.IOStreams, noColor bool) *runner.Shell {
 	palette := theme.NewPalette(noColor)
 
-	return &Shell{
+	return &runner.Shell{
 		Reporter: NewTerminalReporter(streams, palette),
 		Input: &TerminalInput{
 			Stdin:   streams.Stdin,
@@ -50,19 +51,19 @@ func (r *TerminalReporter) OnTaskStart(taskName string) {
 	r.Printf(r.palette.TextHeading, ":: Running task %q\n", taskName)
 }
 
-func (r *TerminalReporter) OnJobStart(jobName string, matKeys []string, matValues []any) {
+func (r *TerminalReporter) OnJobStart(e runner.JobStartEvent) {
 	b := &bytes.Buffer{}
 	r.palette.NoteMarker.Fprint(b, "-> ")
-	r.palette.Reset.Fprint(b, jobName)
-	if len(matKeys) > 0 {
+	r.palette.Reset.Fprint(b, e.JobName)
+	if len(e.MatrixKeys) > 0 {
 		b.WriteString(" (")
-		for i, k := range matKeys {
+		for i, k := range e.MatrixKeys {
 			if i != 0 {
 				b.WriteByte(' ')
 			}
 
 			b.WriteString(k)
-			fmt.Fprintf(b, "=%v", matValues[i])
+			fmt.Fprintf(b, "=%v", e.MatrixValues[i])
 		}
 		b.WriteString(")")
 	}

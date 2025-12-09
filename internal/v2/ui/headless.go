@@ -4,17 +4,18 @@ import (
 	"errors"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
+	"github.com/go-gilbert/gilbert/internal/v2/runner"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
-	_ Reporter = (*LogReporter)(nil)
-	_ Input    = (*NoOpInput)(nil)
+	_ runner.Reporter = (*LogReporter)(nil)
+	_ runner.Input    = (*NoOpInput)(nil)
 )
 
 // NewHeadlessShell constructs a new headless shell.
-func NewHeadlessShell(l *log.Logger) *Shell {
-	return &Shell{
+func NewHeadlessShell(l *log.Logger) *runner.Shell {
+	return &runner.Shell{
 		Reporter: NewLogReporter(l),
 		Input:    &NoOpInput{},
 	}
@@ -33,15 +34,15 @@ func NewLogReporter(l *log.Logger) *LogReporter {
 	}
 }
 
-func (l *LogReporter) OnJobStart(jobName string, matKeys []string, matValues []any) {
+func (l *LogReporter) OnJobStart(e runner.JobStartEvent) {
 	fields := []log.Field{
-		log.NewField("job", jobName),
+		log.NewField("job", e.JobName),
 	}
 
-	if len(matKeys) > 0 {
-		m := make(map[string]any, len(matKeys))
-		for i, k := range matKeys {
-			m[k] = matValues[i]
+	if len(e.MatrixValues) > 0 {
+		m := make(map[string]any, len(e.MatrixValues))
+		for i, k := range e.MatrixKeys {
+			m[k] = e.MatrixValues[i]
 		}
 
 		fields = append(fields, log.NewField("matrix", m))

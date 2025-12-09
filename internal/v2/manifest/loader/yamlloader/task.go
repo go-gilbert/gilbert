@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/goccy/go-yaml/ast"
+
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
-	"github.com/goccy/go-yaml/ast"
 )
 
 var nestedJobSchema *ObjectVisitor[manifest.Job]
@@ -163,7 +164,7 @@ var jobSchema = Struct(
 		return nil
 	})
 
-func setJobTarget(ctx context.Context, j *manifest.Job, targetType manifest.JobKind, name string) error {
+func setJobTarget(_ context.Context, j *manifest.Job, targetType manifest.JobKind, name string) error {
 	if j.Kind != manifest.JobKindUnknown {
 		return errors.New(`only one of "action" or "mixin" fields can be set`)
 	}
@@ -190,14 +191,23 @@ func setJobTarget(ctx context.Context, j *manifest.Job, targetType manifest.JobK
 	return fmt.Errorf("unknown job kind: %v", targetType)
 }
 
-var strategySchema = Struct(
-	Field(
-		"matrix", Map(lazyArrayVisitor{}),
-		func(_ context.Context, dst *manifest.ExecStrategy, v map[string]*manifest.LazyValue) error {
-			dst.Matrix = v
-			return nil
-		},
-	),
+var (
+	matrixSchema = OrderedMap(lazyArrayVisitor{}, func(k string, v *manifest.LazyValue) manifest.MatrixParam {
+		return manifest.MatrixParam{
+			Key:     k,
+			Values: v,
+		}
+	})
+
+	strategySchema = Struct(
+		Field(
+			"matrix", matrixSchema,
+			func(_ context.Context, dst *manifest.ExecStrategy, v []manifest.MatrixParam) error {
+				dst.Matrix = v
+				return nil
+			},
+		),
+	)
 )
 
 func buildRefLocation(ctx context.Context, n ast.Node) (*manifest.ReferenceLocation, error) {

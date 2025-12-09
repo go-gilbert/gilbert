@@ -16,13 +16,27 @@ type (
 	Matrix     = map[string][]any
 )
 
-func unboxMatrix(ctx context.Context, ep expr.EvalParams, mat LazyMatrix) (Matrix, parsetypes.Diagnostics) {
+type ExecutionMatrix struct {
+	Labels []string
+	Values [][]any
+}
+
+type matrixParam struct {
+	key      string
+	variants []any
+}
+
+func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest.MatrixParam) ([]matrixParam, parsetypes.Diagnostics) {
 	var diags parsetypes.Diagnostics
-	out := make(map[string][]any)
-	for k, lval := range mat {
+	out := make([]matrixParam, 0, len(mat))
+	for _, mp := range mat {
+		lval := mp.Values
 		if lval.Value.ArraySpec != nil && lval.Value.ArraySpec.Literal() {
 			// micro-op when got literal value
-			out[k] = lval.Value.ArraySpec.LiteralItems
+			out = append(out, matrixParam{
+				key:      mp.Key,
+				variants: lval.Value.ArraySpec.LiteralItems,
+			})
 			continue
 		}
 
@@ -40,7 +54,7 @@ func unboxMatrix(ctx context.Context, ep expr.EvalParams, mat LazyMatrix) (Matri
 				Range:    lval.Location.Range,
 				Offset:   lval.Location.Offset,
 				Note:     err.Error(),
-				Err:      fmt.Errorf("failed to resolve values for matrix parameter %q", k),
+				Err:      fmt.Errorf("failed to resolve values for matrix parameter %q", mp.Key),
 			})
 			continue
 		}
@@ -54,12 +68,15 @@ func unboxMatrix(ctx context.Context, ep expr.EvalParams, mat LazyMatrix) (Matri
 				Range:    lval.Location.Range,
 				Offset:   lval.Location.Offset,
 				Note:     err.Error(),
-				Err:      fmt.Errorf("invalid value type for matrix parameter %q", k),
+				Err:      fmt.Errorf("invalid value type for matrix parameter %q", mp.Key),
 			})
 			continue
 		}
 
-		out[k] = vals
+		out = append(out, matrixParam{
+			key:      mp.Key,
+			variants: vals,
+		})
 	}
 
 	return out, diags

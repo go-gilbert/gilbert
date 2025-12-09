@@ -10,7 +10,6 @@ import (
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
-	"github.com/go-gilbert/gilbert/internal/v2/ui"
 	"github.com/go-gilbert/gilbert/pkg/expr"
 )
 
@@ -20,7 +19,7 @@ type Config struct {
 	Logger              *log.Logger
 	JobFile             *manifest.JobFile
 	RootScope           *scope.Scope
-	Shell               *ui.Shell
+	Shell               *Shell
 	CmdProcessorFactory CommandProcessorFactory
 }
 
@@ -28,7 +27,7 @@ type Runner struct {
 	logger         log.Logger
 	jobFile        *manifest.JobFile
 	rootScope      *scope.Scope
-	shell          *ui.Shell
+	shell          *Shell
 	cmdProcBuilder CommandProcessorFactory
 }
 
@@ -82,16 +81,16 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 		Env:              taskScope,
 	}
 
-	mat, diags := unboxMatrix(ctx, ep, j.Strategy.Matrix)
+	matParams, diags := resolveMatrixValues(ctx, ep, j.Strategy.Matrix)
 	r.shell.Reporter.PrintDiagnostics(diags)
 	if diags.HasError() {
 		return fmt.Errorf("failed to resolve matrix values for step %q", j.Handler)
 	}
 
 	// do catersian product
-	r.shell.Reporter.OnJobStart("go/build", []string{"os", "arch"}, []any{"darwin", "aarch64"})
-	r.shell.Reporter.OnJobStart("go/build", []string{"os", "arch"}, []any{"linux", "amd64"})
-	dumpJSON("mat", mat)
+	r.shell.Reporter.OnJobStart(JobStartEvent{JobName: "go/build", MatrixKeys: []string{"os", "arch"}, MatrixValues: []any{"darwin", "aarch64"}})
+	r.shell.Reporter.OnJobStart(JobStartEvent{JobName: "go/build", MatrixKeys: []string{"os", "arch"}, MatrixValues: []any{"linux", "amd64"}})
+	dumpJSON("mat", matParams)
 	return nil
 }
 
