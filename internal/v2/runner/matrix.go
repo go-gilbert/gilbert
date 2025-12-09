@@ -11,11 +11,6 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
-type (
-	LazyMatrix = map[string]*manifest.LazyValue
-	Matrix     = map[string][]any
-)
-
 type ExecutionMatrix struct {
 	Labels []string
 	Values [][]any
@@ -27,13 +22,34 @@ type matrixParam struct {
 }
 
 func innerJoinMatrix(mps []matrixParam) ([]string, [][]any) {
-	count := len(mps)
-	keys := make([]string, count)
-	for i := range mps {
-		keys[i] = mps[i].key
+	keys := make([]string, len(mps))
+	totalRows := 1
+	for i, v := range mps {
+		keys[i] = v.key
+		totalRows *= len(v.variants)
 	}
 
-	rows := make([][]any, 0, count*count)
+	// Do catersian product of all possible combination of matrix values
+	rows := make([][]any, totalRows)
+	repeat := totalRows
+	for i, mp := range mps {
+		vars := mp.variants
+		repeat /= len(vars)
+
+		row := 0
+		for row < totalRows {
+			for _, v := range vars {
+				for k := 0; k < repeat; k++ {
+					if rows[row] == nil {
+						rows[row] = make([]any, len(mps))
+					}
+					rows[row][i] = v
+					row++
+				}
+			}
+		}
+	}
+
 	return keys, rows
 }
 
