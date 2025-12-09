@@ -22,8 +22,19 @@ type ExecutionMatrix struct {
 }
 
 type matrixParam struct {
-	Key      string
-	Variants []any
+	key      string
+	variants []any
+}
+
+func innerJoinMatrix(mps []matrixParam) ([]string, [][]any) {
+	count := len(mps)
+	keys := make([]string, count)
+	for i := range mps {
+		keys[i] = mps[i].key
+	}
+
+	rows := make([][]any, 0, count*count)
+	return keys, rows
 }
 
 func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest.MatrixParam) ([]matrixParam, parsetypes.Diagnostics) {
@@ -34,8 +45,8 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 		if lval.Value.ArraySpec != nil && lval.Value.ArraySpec.Literal() {
 			// micro-op when got literal value
 			out = append(out, matrixParam{
-				Key:      mp.Key,
-				Variants: lval.Value.ArraySpec.LiteralItems,
+				key:      mp.Key,
+				variants: lval.Value.ArraySpec.LiteralItems,
 			})
 			continue
 		}
@@ -74,8 +85,8 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 		}
 
 		out = append(out, matrixParam{
-			Key:      mp.Key,
-			Variants: vals,
+			key:      mp.Key,
+			variants: vals,
 		})
 	}
 
