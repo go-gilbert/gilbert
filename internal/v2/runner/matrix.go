@@ -22,8 +22,8 @@ type ExecutionMatrix struct {
 }
 
 type matrixParam struct {
-	key      string
-	variants []any
+	Key      string
+	Variants []any
 }
 
 func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest.MatrixParam) ([]matrixParam, parsetypes.Diagnostics) {
@@ -34,8 +34,8 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 		if lval.Value.ArraySpec != nil && lval.Value.ArraySpec.Literal() {
 			// micro-op when got literal value
 			out = append(out, matrixParam{
-				key:      mp.Key,
-				variants: lval.Value.ArraySpec.LiteralItems,
+				Key:      mp.Key,
+				Variants: lval.Value.ArraySpec.LiteralItems,
 			})
 			continue
 		}
@@ -74,8 +74,8 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 		}
 
 		out = append(out, matrixParam{
-			key:      mp.Key,
-			variants: vals,
+			Key:      mp.Key,
+			Variants: vals,
 		})
 	}
 
