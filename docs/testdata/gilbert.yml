@@ -50,20 +50,20 @@ tasks:
         default: $(git describe --tags --abbrev=0)
     steps:
       - action: go/build
-        # if: ${{!(matrix.os == "darwin" && matrix.arch == "386")}}
-        delay: 5s
+        if: ${{inputs.version != "invalid"}}
+        delay: 1s
         timeout: 30s
         strategy:
           max-parallel: 2
           continue-on-error: false
+          matrix:
+            os: [windows, linux, darwin]
+            arch: [amd64, 386, arm64]
           exclude:
             - os: darwin
               arch: 386
             - arch: amd64
               os: darwin
-          matrix:
-            os: [windows, linux, darwin]
-            arch: [amd64, 386, arm64]
         with:
           package: .
           os: ${{matrix.os}}
@@ -82,6 +82,7 @@ tasks:
         default: "dev.env"
     steps:
       - action: fs/watch
+        delay: 1s
         async: true
         with:
           path: "./..."

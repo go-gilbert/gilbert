@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/pkg/expr"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type CommandProcessorFactory = func(*scope.Scope) expr.CommandProcessor
@@ -67,9 +69,39 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 }
 
 func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
+	ep := expr.EvalParams{
+		CommandProcessor: r.cmdProcBuilder(taskScope),
+		Env:              taskScope,
+	}
+
+	ok, diag := shouldRunJob(ctx, ep, &j)
+	if diag != nil {
+		r.shell.Reporter.PrintDiagnostics(parsetypes.Diagnostics{diag})
+		return fmt.Errorf("cannot check job condition: %w", diag.Err)
+	}
+
+	if !ok {
+		r.logger.Debugw("job skipped", log.NewField("job", j.Handler))
+		return nil
+	}
+
 	if len(j.Strategy.Matrix) != 0 {
 		return r.runJobMatrix(ctx, j, taskScope)
 	}
+
+	if j.Delay != 0 {
+		r.logger.Debugw(
+			"wait for job delay to finish",
+			log.NewField("job", j.Handler),
+			log.NewField("delay", j.Delay),
+		)
+
+		time.Sleep(j.Delay)
+	}
+
+	r.shell.Reporter.OnJobStart(JobStartEvent{
+		JobName: j.Handler.String(),
+	})
 
 	return nil
 }
