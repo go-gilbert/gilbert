@@ -145,16 +145,16 @@ func AnyToList(v any) ([]any, error) {
 	}
 
 	r := reflect.ValueOf(v)
-	switch r.Kind() {
+	switch k := r.Kind(); k {
 	case reflect.Slice, reflect.Array:
 		break
 	default:
-		return nil, fmt.Errorf("value of %T is not a list", v)
+		return nil, fmt.Errorf("expected a list, but got %s %#v", k, v)
 	}
 
 	count := r.Len()
 	dst := make([]any, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		dst[i] = r.Index(i).Interface()
 	}
 
@@ -167,16 +167,16 @@ func IterAny(v any) (iter.Seq2[int, any], int, error) {
 	}
 
 	r := reflect.ValueOf(v)
-	switch r.Kind() {
+	switch k := r.Kind(); k {
 	case reflect.Slice, reflect.Array:
 		break
 	default:
-		return nil, 0, fmt.Errorf("value of %T is not a list", v)
+		return nil, 0, fmt.Errorf("expected a list, but got %s %#v", k, v)
 	}
 
 	count := r.Len()
 	return func(yield func(int, any) bool) {
-		for i := 0; i < count; i++ {
+		for i := range count {
 			v := r.Index(i).Interface()
 			yield(i, v)
 		}

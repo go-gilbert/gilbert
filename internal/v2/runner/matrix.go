@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"iter"
-	"reflect"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/expr"
@@ -232,7 +231,11 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 
 		// Stage 2: type check and transform into a slice
 		// Slice item type is checked later and only if used in exluce rules.
-		vals, err := anyToArray(anyVal)
+		vals, err := parsetypes.AnyToList(anyVal)
+		if err == nil && len(vals) == 0 {
+			err = errors.New("matrix values list cannot be empty")
+		}
+
 		if err != nil {
 			diags = append(diags, &parsetypes.Diagnostic{
 				FileName: lval.Location.FileName,
@@ -259,41 +262,4 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 	}
 
 	return out, diags
-}
-
-func anyToArray(a any) (out []any, err error) {
-	defer func() {
-		// reflect is kinda panicky
-		if r := recover(); r != nil {
-			err = fmt.Errorf("%v", r)
-		}
-	}()
-
-	if v, ok := a.([]any); ok {
-		return v, nil
-	}
-
-	if a == nil {
-		return nil, fmt.Errorf("expected a list, but got %v", a)
-	}
-
-	ref := reflect.ValueOf(a)
-	switch k := ref.Kind(); k {
-	case reflect.Slice, reflect.Array:
-		break
-	default:
-		return nil, fmt.Errorf("expected a list, but got %s %#v", k, a)
-	}
-
-	arrLen := ref.Len()
-	if arrLen == 0 {
-		return nil, errors.New("matrix values list cannot be empty")
-	}
-
-	out = make([]any, arrLen)
-	for i := range arrLen {
-		out[i] = ref.Index(i)
-	}
-
-	return out, nil
 }
