@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/goccy/go-yaml/ast"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
 )
 
@@ -194,20 +197,73 @@ func setJobTarget(_ context.Context, j *manifest.Job, targetType manifest.JobKin
 var (
 	matrixSchema = OrderedMap(lazyArrayVisitor{}, func(k string, v *manifest.LazyValue) manifest.MatrixParam {
 		return manifest.MatrixParam{
-			Key:     k,
+			Key:    k,
 			Values: v,
 		}
 	})
 
 	strategySchema = Struct(
+		Field("max-parallel", UInt[uint](), func(_ context.Context, dst *manifest.ExecStrategy, v uint) error {
+			if v == 0 {
+				// TODO: throw warning instead of error
+				return errors.New("value should be greater than zero")
+			}
+
+			dst.MaxParallel = int(v)
+			return nil
+		}),
+		Field("continue-on-error", Bool(), func(_ context.Context, dst *manifest.ExecStrategy, v bool) error {
+			dst.ContinueOnError = v
+			return nil
+		}),
 		Field(
 			"matrix", matrixSchema,
 			func(_ context.Context, dst *manifest.ExecStrategy, v []manifest.MatrixParam) error {
-				dst.Matrix = v
+				if len(v) == 0 {
+					return errors.New("empty matrix")
+				}
+
+				dst.SetMatrixParams(v)
 				return nil
 			},
-		),
-	)
+		).Required(),
+		Field(
+			"exclude",
+			List(Map(AnyScalar())),
+			func(_ context.Context, dst *manifest.ExecStrategy, v []manifest.MatrixParamAndValues) error {
+				dst.Exclude = v
+				return nil
+			}).Validation(func(ctx context.Context, es *manifest.ExecStrategy) error {
+			if len(es.Exclude) == 0 {
+				return parsetypes.Warningf(`redundant "exclude" field`)
+			}
+
+			if len(es.MatrixKeys) == 0 {
+				return errors.New(`missing "matrix" field`)
+			}
+
+			// find keys which are in
+			badKeys := map[string]struct{}{}
+			for _, e := range es.Exclude {
+				for k := range e {
+					if _, ok := es.MatrixKeys[k]; !ok {
+						badKeys[k] = struct{}{}
+					}
+				}
+			}
+
+			if len(badKeys) == 0 {
+				return nil
+			}
+
+			return parsetypes.Warningf(
+				`"exclude" block contains parameters not present in "matrix"`,
+			).WithNote("redundant keys: %q", slices.Collect(maps.Keys(badKeys)))
+		}),
+	).Constructor(func(_ context.Context, es *manifest.ExecStrategy) error {
+		es.MaxParallel = 1
+		return nil
+	})
 )
 
 func buildRefLocation(ctx context.Context, n ast.Node) (*manifest.ReferenceLocation, error) {

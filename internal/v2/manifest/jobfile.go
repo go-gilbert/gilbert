@@ -36,13 +36,47 @@ type MatrixParam struct {
 	Values *LazyValue
 }
 
+type MatrixParamAndValues = map[string]any
+
 // ExecStrategy defines matrix strategy for job execution.
 //
 // Matrix strategy lets to use variables in a single job definition to
 // automatically create multiple job runs that are based on the combinations of the variables.
 type ExecStrategy struct {
+	// MaxParallel limits a number of concurrent jobs.
+	//
+	// Default: 1
+	MaxParallel int
+
+	// ContinueOnError determines whether matrix should continue running even if job fails.
+	ContinueOnError bool
+
 	// Matrix is ordered set of job configurations.
 	Matrix []MatrixParam
+
+	// MatrixKeys is set of field names used in [MatrixKeys].
+	// Used to speed up key lookup and validation.
+	//
+	// Populated automatically by a parser from [MatrixKeys].
+	MatrixKeys map[string]struct{}
+
+	// Exclude is a list of configurations to exclude from running.
+	//
+	// Excluded configuration only has to be a partial match for it to be excluded.
+	Exclude []MatrixParamAndValues
+}
+
+// SetMatrixParams sets [Matrix] and [MatrixKeys] values.
+//
+// Use this method instead of changing fields manually.
+func (es *ExecStrategy) SetMatrixParams(params []MatrixParam) {
+	m := make(map[string]struct{}, len(params))
+	for _, v := range params {
+		m[v.Key] = struct{}{}
+	}
+
+	es.Matrix = params
+	es.MatrixKeys = m
 }
 
 type Job struct {
@@ -68,6 +102,8 @@ type Job struct {
 	Timeout time.Duration
 
 	// Condition is expression to check whether job should be executed.
+	//
+	// When execution strategy is defined, block is applied to a whole job block.
 	Condition *LazyValue
 
 	// Args contains arguments passed to action or mixin.
