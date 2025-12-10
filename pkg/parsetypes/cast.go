@@ -44,12 +44,12 @@ func AnyToString(v any) (string, error) {
 }
 
 func AnyToBool(v any) (bool, error) {
+	if v == nil {
+		return false, nil
+	}
+
 	// TODO: allow only 0 or 1 for bool.
 	switch t := v.(type) {
-	case string:
-		return strconv.ParseBool(t)
-	case []byte:
-		return strconv.ParseBool(string(t))
 	case bool:
 		return t, nil
 	case int:
@@ -76,6 +76,10 @@ func AnyToBool(v any) (bool, error) {
 		return t != 0, nil
 	case float64:
 		return t != 0, nil
+	case string:
+		return strconv.ParseBool(t)
+	case []byte:
+		return strconv.ParseBool(string(t))
 	default:
 		return false, fmt.Errorf("value of type %T cannot be converted to bool", t)
 	}
