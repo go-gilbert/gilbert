@@ -87,8 +87,24 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 		return fmt.Errorf("failed to resolve matrix values for step %q", j.Handler)
 	}
 
-	// do catersian product
+	diags = validateMatrixExcludeRules(&j.Strategy, matParams)
+	r.shell.Reporter.PrintDiagnostics(diags)
+	if diags.HasError() {
+		return fmt.Errorf(`invalid rule in "exclude" section`)
+	}
+
+	// do catersian product and run each job
 	for labels, values := range innerJoinMatrix(matParams) {
+		if testMatrixExcluded(&j.Strategy, values) {
+			r.logger.Debugw(
+				"matrix config skipped",
+				log.NewField("job", j.Handler),
+				log.NewField("keys", labels),
+				log.NewField("vals", values),
+			)
+			continue
+		}
+
 		r.shell.Reporter.OnJobStart(JobStartEvent{
 			JobName:      j.Handler.String(),
 			MatrixKeys:   labels,

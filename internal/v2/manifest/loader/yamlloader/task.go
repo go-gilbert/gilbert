@@ -202,6 +202,25 @@ var (
 		}
 	})
 
+	matRuleSchema = Map(Transform(AnyScalar(), func(ctx context.Context, n ast.Node, v any) (*manifest.MatrixMatchValue, error) {
+		if !parsetypes.IsScalar(v) {
+			return nil, parsetypes.NewAnnotatedError(
+				errors.New("exclude rule value should be a primitive"),
+				"value is not comparable",
+			)
+		}
+
+		loc, err := buildRefLocation(ctx, n)
+		if err != nil {
+			return nil, err
+		}
+
+		return &manifest.MatrixMatchValue{
+			Location: loc,
+			Value:    v,
+		}, nil
+	}))
+
 	strategySchema = Struct(
 		Field("max-parallel", UInt[uint](), func(_ context.Context, dst *manifest.ExecStrategy, v uint) error {
 			if v == 0 {
@@ -229,8 +248,8 @@ var (
 		).Required(),
 		Field(
 			"exclude",
-			List(Map(AnyScalar())),
-			func(_ context.Context, dst *manifest.ExecStrategy, v []manifest.MatrixParamAndValues) error {
+			List(matRuleSchema),
+			func(_ context.Context, dst *manifest.ExecStrategy, v []manifest.MatrixMatchRule) error {
 				dst.Exclude = v
 				return nil
 			}).Validation(func(ctx context.Context, es *manifest.ExecStrategy) error {

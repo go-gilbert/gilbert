@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/goccy/go-yaml/ast"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type visitorFunc[T any] struct {

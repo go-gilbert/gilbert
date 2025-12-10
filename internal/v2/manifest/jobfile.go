@@ -36,7 +36,12 @@ type MatrixParam struct {
 	Values *LazyValue
 }
 
-type MatrixParamAndValues = map[string]any
+type MatrixMatchRule = map[string]*MatrixMatchValue
+
+type MatrixMatchValue struct {
+	Location *ReferenceLocation
+	Value    any
+}
 
 // ExecStrategy defines matrix strategy for job execution.
 //
@@ -58,21 +63,21 @@ type ExecStrategy struct {
 	// Used to speed up key lookup and validation.
 	//
 	// Populated automatically by a parser from [MatrixKeys].
-	MatrixKeys map[string]struct{}
+	MatrixKeys map[string]int
 
 	// Exclude is a list of configurations to exclude from running.
 	//
 	// Excluded configuration only has to be a partial match for it to be excluded.
-	Exclude []MatrixParamAndValues
+	Exclude []MatrixMatchRule
 }
 
 // SetMatrixParams sets [Matrix] and [MatrixKeys] values.
 //
 // Use this method instead of changing fields manually.
 func (es *ExecStrategy) SetMatrixParams(params []MatrixParam) {
-	m := make(map[string]struct{}, len(params))
-	for _, v := range params {
-		m[v.Key] = struct{}{}
+	m := make(map[string]int, len(params))
+	for i, v := range params {
+		m[v.Key] = i
 	}
 
 	es.Matrix = params

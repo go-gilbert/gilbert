@@ -59,8 +59,8 @@ tasks:
           exclude:
             - os: darwin
               arch: 386
-            - os: darwin
-              arch: amd64
+            - arch: amd64
+              os: darwin
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]
