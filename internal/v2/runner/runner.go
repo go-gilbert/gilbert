@@ -88,9 +88,14 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 	}
 
 	// do catersian product
-	r.shell.Reporter.OnJobStart(JobStartEvent{JobName: "go/build", MatrixKeys: []string{"os", "arch"}, MatrixValues: []any{"darwin", "aarch64"}})
-	r.shell.Reporter.OnJobStart(JobStartEvent{JobName: "go/build", MatrixKeys: []string{"os", "arch"}, MatrixValues: []any{"linux", "amd64"}})
-	dumpJSON("mat", matParams)
+	for labels, values := range innerJoinMatrix(matParams) {
+		r.shell.Reporter.OnJobStart(JobStartEvent{
+			JobName:      j.Handler.String(),
+			MatrixKeys:   labels,
+			MatrixValues: values,
+		})
+	}
+
 	return nil
 }
 

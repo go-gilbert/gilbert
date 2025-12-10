@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"reflect"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
@@ -21,36 +22,31 @@ type matrixParam struct {
 	variants []any
 }
 
-func innerJoinMatrix(mps []matrixParam) ([]string, [][]any) {
-	keys := make([]string, len(mps))
-	totalRows := 1
-	for i, v := range mps {
-		keys[i] = v.key
-		totalRows *= len(v.variants)
-	}
-
+// innerJoinMatrix returns an iterator that iterates over a cartesian product of matrix values.
+func innerJoinMatrix(mps []matrixParam) iter.Seq2[[]string, []any] {
 	// Do catersian product of all possible combination of matrix values
-	rows := make([][]any, totalRows)
-	repeat := totalRows
-	for i, mp := range mps {
-		vars := mp.variants
-		repeat /= len(vars)
+	return func(yield func([]string, []any) bool) {
+		keys := make([]string, len(mps))
+		totalRows := 1
+		for i, v := range mps {
+			keys[i] = v.key
+			totalRows *= len(v.variants)
+		}
 
-		row := 0
-		for row < totalRows {
-			for _, v := range vars {
-				for k := 0; k < repeat; k++ {
-					if rows[row] == nil {
-						rows[row] = make([]any, len(mps))
-					}
-					rows[row][i] = v
-					row++
-				}
+		for i := range totalRows {
+			row := make([]any, len(mps))
+			idx := i
+			for j := len(mps) - 1; j >= 0; j-- {
+				varcount := len(mps[j].variants)
+				row[j] = mps[j].variants[idx%varcount]
+				idx /= varcount
+			}
+
+			if !yield(keys, row) {
+				return
 			}
 		}
 	}
-
-	return keys, rows
 }
 
 func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest.MatrixParam) ([]matrixParam, parsetypes.Diagnostics) {
@@ -60,9 +56,22 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 		lval := mp.Values
 		if lval.Value.ArraySpec != nil && lval.Value.ArraySpec.Literal() {
 			// micro-op when got literal value
+			litItems := lval.Value.ArraySpec.LiteralItems
+			if len(litItems) == 0 {
+				diags = append(diags, &parsetypes.Diagnostic{
+					FileName: lval.Location.FileName,
+					Severity: parsetypes.DiagnosticSeverityWarning,
+					Range:    lval.Location.Range,
+					Offset:   lval.Location.Offset,
+					Note:     "empty array specified",
+					Err:      fmt.Errorf("matrix parameter %q has no values and will be ignored", mp.Key),
+				})
+				continue
+			}
+
 			out = append(out, matrixParam{
 				key:      mp.Key,
-				variants: lval.Value.ArraySpec.LiteralItems,
+				variants: litItems,
 			})
 			continue
 		}
@@ -100,6 +109,24 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 			continue
 		}
 
+		// Sanify check - empty values
+		if len(vals) == 0 {
+			var note string
+			if !lval.Value.IsLiteral() {
+				note = "expression returned an empty value"
+			}
+
+			diags = append(diags, &parsetypes.Diagnostic{
+				FileName: lval.Location.FileName,
+				Severity: parsetypes.DiagnosticSeverityWarning,
+				Range:    lval.Location.Range,
+				Offset:   lval.Location.Offset,
+				Note:     note,
+				Err:      fmt.Errorf("matrix parameter %q has no values and will be ignored", mp.Key),
+			})
+			continue
+		}
+
 		out = append(out, matrixParam{
 			key:      mp.Key,
 			variants: vals,
@@ -122,7 +149,7 @@ func anyToArray(a any) (out []any, err error) {
 	}
 
 	if a == nil {
-		return nil, fmt.Errorf("matrix values should be a list, got %v", a)
+		return nil, fmt.Errorf("expected a list, but got %v", a)
 	}
 
 	ref := reflect.ValueOf(a)
@@ -130,7 +157,7 @@ func anyToArray(a any) (out []any, err error) {
 	case reflect.Slice, reflect.Array:
 		break
 	default:
-		return nil, fmt.Errorf("matrix values should be a list, got %s %#v", k, a)
+		return nil, fmt.Errorf("expected a list, but got %s %#v", k, a)
 	}
 
 	arrLen := ref.Len()
