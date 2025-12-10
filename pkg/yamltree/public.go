@@ -5,9 +5,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/goccy/go-yaml/ast"
 	"golang.org/x/exp/constraints"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type UnknownFieldAction uint8
@@ -137,6 +138,26 @@ func Map[T any](dec ValueVisitor[T]) *MapVisitor[T] {
 	return &MapVisitor[T]{
 		handler: dec,
 	}
+}
+
+// CollectMap returns a decoder that traverses YAML dict using a given collector.
+func CollectMap[TResult, TElem any](col MapCollector[TResult, TElem], dec ValueVisitor[TElem]) *MapIterator[TResult, TElem] {
+	return &MapIterator[TResult, TElem]{
+		valDecoder: dec,
+		collector:  col,
+	}
+}
+
+// OrderedMap returns a decoder that reads YAML dict as ordered list of map entries.
+func OrderedMap[TRecord any, TElem any](dec ValueVisitor[TElem], newRecord func(string, TElem) TRecord) *MapIterator[[]TRecord, TElem] {
+	return CollectMap(MapCollector[[]TRecord, TElem]{
+		MakeNew: func(elemCount int) []TRecord {
+			return make([]TRecord, 0, elemCount)
+		},
+		AppendValue: func(_ context.Context, dst []TRecord, k string, v TElem) ([]TRecord, error) {
+			return append(dst, newRecord(k, v)), nil
+		},
+	}, dec)
 }
 
 // Misc:

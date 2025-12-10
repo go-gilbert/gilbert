@@ -37,7 +37,7 @@ func startTaskRunner(cmd *cobra.Command, cfg taskRunConfig) error {
 	return err
 }
 
-func createShell(cmd *cobra.Command, l *log.Logger, opts *cmdutil.BootstrapOpts) *ui.Shell {
+func createShell(cmd *cobra.Command, l *log.Logger, opts *cmdutil.BootstrapOpts) *runner.Shell {
 	if opts.JSON {
 		return ui.NewHeadlessShell(l)
 	}

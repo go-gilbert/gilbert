@@ -27,8 +27,22 @@ type DocHeader struct {
 	Doc  []string
 }
 
+// MatrixParam defines a matrix strategy parameter and values.
+type MatrixParam struct {
+	// Key is parameter name.
+	Key string
+
+	// Values is lazy-evaluated thunk that provides an array of parameter values.
+	Values *LazyValue
+}
+
+// ExecStrategy defines matrix strategy for job execution.
+//
+// Matrix strategy lets to use variables in a single job definition to
+// automatically create multiple job runs that are based on the combinations of the variables.
 type ExecStrategy struct {
-	Matrix map[string]*LazyValue
+	// Matrix is ordered set of job configurations.
+	Matrix []MatrixParam
 }
 
 type Job struct {
