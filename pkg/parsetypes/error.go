@@ -72,9 +72,14 @@ func (err *WarningError) Note() string {
 	return err.note
 }
 
-// WithNote adds note to a diagnostic error.
-func (err *WarningError) WithNote(note string) *WarningError {
-	err.note = note
+// WithNote adds formatted note to a diagnostic error.
+func (err *WarningError) WithNote(format string, args ...any) *WarningError {
+	msg := format
+	if len(args) > 0 {
+		msg = fmt.Sprintf(format, args...)
+	}
+
+	err.note = msg
 	return err
 }
 
