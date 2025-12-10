@@ -1,6 +1,7 @@
 package parsetypes
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -51,24 +52,49 @@ func (err *AnnotatedError) Unwrap() error {
 
 type WarningError struct {
 	Err error
+
+	note string
 }
 
-func (err WarningError) Severity() DiagnosticSeverity {
+func (err *WarningError) Severity() DiagnosticSeverity {
 	return DiagnosticSeverityWarning
 }
 
-func (err WarningError) Error() string {
+func (err *WarningError) Error() string {
 	return err.Err.Error()
 }
 
-func (err WarningError) Unwrap() error {
+func (err *WarningError) Unwrap() error {
 	return err.Err
 }
 
+func (err *WarningError) Note() string {
+	return err.note
+}
+
+// WithNote adds note to a diagnostic error.
+func (err *WarningError) WithNote(note string) *WarningError {
+	err.note = note
+	return err
+}
+
 // WrapAsWarning marks error as warning to set a corresponding severity for diagnostic.
-func WrapAsWarning(err error) WarningError {
-	return WarningError{
+func WrapAsWarning(err error) *WarningError {
+	return &WarningError{
 		Err: err,
+	}
+}
+
+// Warningf returns a warning error with following message.
+func Warningf(format string, args ...any) *WarningError {
+	if len(args) == 0 {
+		return &WarningError{
+			Err: errors.New(format),
+		}
+	}
+
+	return &WarningError{
+		Err: fmt.Errorf(format, args...),
 	}
 }
 
@@ -81,4 +107,17 @@ func SeverityFromError(err error) DiagnosticSeverity {
 	}
 
 	return DiagnosticSeverityError
+}
+
+type ErrorWithNote interface {
+	Note() string
+}
+
+// NoteFromError returns diagnostic note from an error, if error implements [ErrorWithNote] interface.
+func NoteFromError(err error) string {
+	if v, ok := err.(ErrorWithNote); ok {
+		return v.Note()
+	}
+
+	return ""
 }

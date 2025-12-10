@@ -3,8 +3,9 @@ package yamltree
 import (
 	"strings"
 
-	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/goccy/go-yaml/ast"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 func NewErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parsetypes.Diagnostic {
@@ -18,6 +19,7 @@ func NewErrDiagnosticFromNode(fileName string, node ast.Node, err error) *parset
 	return &parsetypes.Diagnostic{
 		Err:      err,
 		Severity: parsetypes.SeverityFromError(err),
+		Note:     parsetypes.NoteFromError(err),
 		FileName: fileName,
 		Range:    rng,
 		Offset:   offset,
