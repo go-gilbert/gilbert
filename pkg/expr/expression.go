@@ -10,6 +10,7 @@ import (
 	"github.com/expr-lang/expr/conf"
 	"github.com/expr-lang/expr/file"
 	"github.com/expr-lang/expr/parser"
+
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
@@ -351,6 +352,7 @@ func (exp *ShellExpression) EvalText(ctx context.Context, p EvalParams) ([]byte,
 			Severity: parsetypes.DiagnosticSeverityError,
 			Range:    loc.Range,
 			Offset:   loc.Offset,
+			Note:     parsetypes.NoteFromError(err),
 			Err:      fmt.Errorf("shell expression error: %w", err),
 		}
 	}

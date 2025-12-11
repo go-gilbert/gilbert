@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-gilbert/gilbert/internal/support/shell"
 	"github.com/go-gilbert/gilbert/pkg/expr"
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 const commandEvalTimeout = 30 * time.Second
@@ -48,7 +49,7 @@ func (runner CommandRunner) EvalCommand(ctx context.Context, cmdline string) (re
 			return nil, fmt.Errorf("command %q exceeded execution timeout %s", cmdline, commandEvalTimeout)
 		}
 
-		return result, fmt.Errorf("%w (%s)", shell.FormatExitError(err), data)
+		return result, parsetypes.NewAnnotatedError(shell.FormatExitError(err), "%s", data)
 	}
 
 	return data, nil
