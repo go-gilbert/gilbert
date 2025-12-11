@@ -3,19 +3,19 @@ package ui
 import (
 	"errors"
 
+	"github.com/go-gilbert/gilbert/internal/v2/engine"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
-	"github.com/go-gilbert/gilbert/internal/v2/runner"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
-	_ runner.Reporter = (*LogReporter)(nil)
-	_ runner.Input    = (*NoOpInput)(nil)
+	_ engine.Reporter = (*LogReporter)(nil)
+	_ engine.Input    = (*NoOpInput)(nil)
 )
 
 // NewHeadlessShell constructs a new headless shell.
-func NewHeadlessShell(l *log.Logger) *runner.Shell {
-	return &runner.Shell{
+func NewHeadlessShell(l *log.Logger) *engine.Shell {
+	return &engine.Shell{
 		Reporter: NewLogReporter(l),
 		Input:    &NoOpInput{},
 	}
@@ -34,7 +34,7 @@ func NewLogReporter(l *log.Logger) *LogReporter {
 	}
 }
 
-func (l *LogReporter) OnJobStart(e runner.JobStartEvent) {
+func (l *LogReporter) OnJobStart(e engine.JobStartEvent) {
 	fields := []log.Field{
 		log.NewField("job", e.JobName),
 	}

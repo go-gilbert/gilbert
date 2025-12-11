@@ -6,22 +6,22 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/go-gilbert/gilbert/internal/v2/engine"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
-	"github.com/go-gilbert/gilbert/internal/v2/runner"
 	"github.com/go-gilbert/gilbert/internal/v2/ui/theme"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 var (
-	_ runner.Reporter = (*TerminalReporter)(nil)
-	_ runner.Input    = (*TerminalInput)(nil)
+	_ engine.Reporter = (*TerminalReporter)(nil)
+	_ engine.Input    = (*TerminalInput)(nil)
 )
 
 // NewTerminalShell constructs a new terminal shell.
-func NewTerminalShell(streams log.IOStreams, noColor bool) *runner.Shell {
+func NewTerminalShell(streams log.IOStreams, noColor bool) *engine.Shell {
 	palette := theme.NewPalette(noColor)
 
-	return &runner.Shell{
+	return &engine.Shell{
 		Reporter: NewTerminalReporter(streams, palette),
 		Input: &TerminalInput{
 			Stdin:   streams.Stdin,
@@ -51,7 +51,7 @@ func (r *TerminalReporter) OnTaskStart(taskName string) {
 	r.Printf(r.palette.TextHeading, ":: Running task %q\n", taskName)
 }
 
-func (r *TerminalReporter) OnJobStart(e runner.JobStartEvent) {
+func (r *TerminalReporter) OnJobStart(e engine.JobStartEvent) {
 	b := &bytes.Buffer{}
 	r.palette.NoteMarker.Fprint(b, "-> ")
 	r.palette.Reset.Fprint(b, e.JobName)

@@ -4,9 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
+	"github.com/go-gilbert/gilbert/internal/v2/engine"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
-	"github.com/go-gilbert/gilbert/internal/v2/runner"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/internal/v2/ui"
 	"github.com/go-gilbert/gilbert/pkg/expr"
@@ -23,7 +23,7 @@ type taskRunConfig struct {
 func startTaskRunner(cmd *cobra.Command, cfg taskRunConfig) error {
 	ctx := cmd.Context()
 
-	r := runner.NewRunner(runner.Config{
+	r := engine.NewRunner(engine.Config{
 		Logger:    cfg.logger,
 		JobFile:   cfg.jobFile,
 		RootScope: cfg.scope.Root,
@@ -37,7 +37,7 @@ func startTaskRunner(cmd *cobra.Command, cfg taskRunConfig) error {
 	return err
 }
 
-func createShell(cmd *cobra.Command, l *log.Logger, opts *cmdutil.BootstrapOpts) *runner.Shell {
+func createShell(cmd *cobra.Command, l *log.Logger, opts *cmdutil.BootstrapOpts) *engine.Shell {
 	if opts.JSON {
 		return ui.NewHeadlessShell(l)
 	}

@@ -1,4 +1,4 @@
-package runner
+package engine
 
 import "github.com/go-gilbert/gilbert/pkg/parsetypes"
 

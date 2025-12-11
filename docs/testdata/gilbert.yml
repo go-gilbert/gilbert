@@ -51,7 +51,6 @@ tasks:
     steps:
       - action: go/build
         if: ${{inputs.version != "invalid"}}
-        delay: 1s
         timeout: 30s
         strategy:
           max-parallel: 2
