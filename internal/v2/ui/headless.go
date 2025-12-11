@@ -39,13 +39,8 @@ func (l *LogReporter) OnJobStart(e runner.JobStartEvent) {
 		log.NewField("job", e.JobName),
 	}
 
-	if len(e.MatrixValues) > 0 {
-		m := make(map[string]any, len(e.MatrixValues))
-		for i, k := range e.MatrixKeys {
-			m[k] = e.MatrixValues[i]
-		}
-
-		fields = append(fields, log.NewField("matrix", m))
+	if len(e.MatrixParameters) > 0 {
+		fields = append(fields, log.NewField("matrix", e.MatrixParameters))
 	}
 
 	l.log.Infow("starting job", fields...)

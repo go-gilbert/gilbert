@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"strings"
 
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/expr"
@@ -262,4 +263,17 @@ func resolveMatrixValues(ctx context.Context, ep expr.EvalParams, mat []manifest
 	}
 
 	return out, diags
+}
+
+func formatMatParams(params map[string]any) string {
+	b := &strings.Builder{}
+	addPadding := false
+	for k, v := range params {
+		if addPadding {
+			b.WriteRune(' ')
+		}
+		fmt.Fprintf(b, "%s=%v", k, v)
+		addPadding = true
+	}
+	return b.String()
 }

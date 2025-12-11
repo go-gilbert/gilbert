@@ -89,20 +89,7 @@ func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Sc
 		return r.runJobMatrix(ctx, j, taskScope)
 	}
 
-	if j.Delay != 0 {
-		r.logger.Debugw(
-			"wait for job delay to finish",
-			log.NewField("job", j.Handler),
-			log.NewField("delay", j.Delay),
-		)
-
-		time.Sleep(j.Delay)
-	}
-
-	r.shell.Reporter.OnJobStart(JobStartEvent{
-		JobName: j.Handler.String(),
-	})
-
+	r.handleJob(ctx, j, taskScope)
 	return nil
 }
 
@@ -137,13 +124,33 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 			continue
 		}
 
-		r.shell.Reporter.OnJobStart(JobStartEvent{
-			JobName:      j.Handler.String(),
-			MatrixKeys:   labels,
-			MatrixValues: values,
-		})
+		jobScope := taskScope.Fork().WithMatrixValues(labels, values)
+		err := r.handleJob(ctx, j, jobScope)
+		if err != nil {
+			return fmt.Errorf("job %q (%s) returned an error: %w", j.Handler, formatMatParams(jobScope.MatrixValues), err)
+		}
 	}
 
+	return nil
+}
+
+func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
+	if j.Delay != 0 {
+		r.logger.Debugw(
+			"wait for job delay to finish",
+			log.NewField("job", j.Handler),
+			log.NewField("delay", j.Delay),
+		)
+
+		time.Sleep(j.Delay)
+	}
+
+	r.shell.Reporter.OnJobStart(JobStartEvent{
+		JobName:          j.Handler.String(),
+		MatrixParameters: jobScope.MatrixValues,
+	})
+
+	// return errors.New("handleJob: not implemented")
 	return nil
 }
 

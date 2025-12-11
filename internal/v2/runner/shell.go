@@ -8,9 +8,8 @@ type Shell struct {
 }
 
 type JobStartEvent struct {
-	JobName      string
-	MatrixKeys   []string
-	MatrixValues []any
+	JobName          string
+	MatrixParameters map[string]any
 }
 
 // Reporter reports application updates to user interface.

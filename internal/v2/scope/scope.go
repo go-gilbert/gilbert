@@ -59,14 +59,28 @@ func (s *Scope) Fork() *Scope {
 	}
 
 	newScope := &Scope{
-		Root:    root,
-		Parent:  s,
-		Globals: s.Globals,
-		Consts:  s.Consts,
-		Inputs:  map[string]any{}, // no need to copy as we've a reference to a parent.
+		Root:         root,
+		Parent:       s,
+		Globals:      s.Globals,
+		Consts:       s.Consts,
+		Inputs:       map[string]any{}, // no need to copy as we've a reference to a parent.
+		MatrixValues: s.MatrixValues,
 	}
 
 	return newScope
+}
+
+// WithMatrixValues sets job matrix values, overwriting existing value.
+func (s *Scope) WithMatrixValues(labels []string, values []any) *Scope {
+	m := make(map[string]any, len(labels))
+	for i, k := range labels {
+		if i < len(values) {
+			m[k] = values[i]
+		}
+	}
+
+	s.MatrixValues = m
+	return s
 }
 
 // Values exports scope values environment with visible variables for executing expressions.

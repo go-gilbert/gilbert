@@ -55,15 +55,15 @@ func (r *TerminalReporter) OnJobStart(e runner.JobStartEvent) {
 	b := &bytes.Buffer{}
 	r.palette.NoteMarker.Fprint(b, "-> ")
 	r.palette.Reset.Fprint(b, e.JobName)
-	if len(e.MatrixKeys) > 0 {
+	if len(e.MatrixParameters) > 0 {
 		b.WriteString(" (")
-		for i, k := range e.MatrixKeys {
-			if i != 0 {
-				b.WriteByte(' ')
+		addPadding := false
+		for k, v := range e.MatrixParameters {
+			if addPadding {
+				b.WriteRune(' ')
 			}
-
-			b.WriteString(k)
-			fmt.Fprintf(b, "=%v", e.MatrixValues[i])
+			fmt.Fprintf(b, "%s=%v", k, v)
+			addPadding = true
 		}
 		b.WriteString(")")
 	}
