@@ -1,4 +1,4 @@
-// Package runner implements task run engine.
+// Package engine implements task run engine and its core functionality.
 package engine
 
 import (
