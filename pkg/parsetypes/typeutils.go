@@ -29,17 +29,21 @@ func IsScalar(v any) bool {
 	}
 }
 
+var _ json.Marshaler = (*TypeStringifyer)(nil)
+
 type TypeStringifyer struct {
 	v any
 }
 
-// Spew returns a lazy-evaluated stringer that formats a value in human-readable JSON way.
-//
-// Method used to represent unknown values to user without leaking internal Go type representation.
-func Spew(v any) fmt.Stringer {
-	return &TypeStringifyer{
-		v: v,
+func (t *TypeStringifyer) MarshalJSON() ([]byte, error) {
+	b := &bytes.Buffer{}
+	err := json.NewEncoder(b).Encode(t.v)
+	if err != nil {
+		return nil, err
 	}
+
+	r := bytes.TrimSpace(b.Bytes())
+	return r, nil
 }
 
 func (t *TypeStringifyer) String() string {
@@ -52,6 +56,15 @@ func (t *TypeStringifyer) String() string {
 
 	r := bytes.TrimSpace(b.Bytes())
 	return BytesAsString(r)
+}
+
+// Spew returns a lazy-evaluated stringer that formats a value in human-readable JSON way.
+//
+// Method used to represent unknown values to user without leaking internal Go type representation.
+func Spew(v any) fmt.Stringer {
+	return &TypeStringifyer{
+		v: v,
+	}
 }
 
 // BytesAsString casts byte slice into a string without copy.
