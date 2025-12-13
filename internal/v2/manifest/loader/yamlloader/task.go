@@ -132,6 +132,7 @@ var jobSchema = Struct(
 		"with",
 		Map(lazyValueVisitor{}),
 		func(_ context.Context, dst *manifest.Job, v map[string]*manifest.LazyValue) error {
+			// fmt.Println("set with: ", dst.Handler, v)
 			dst.Args = v
 			return nil
 		},

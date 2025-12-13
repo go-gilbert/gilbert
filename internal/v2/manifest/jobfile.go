@@ -84,6 +84,8 @@ func (es *ExecStrategy) SetMatrixParams(params []MatrixParam) {
 	es.MatrixKeys = m
 }
 
+type JobArgs = map[string]*LazyValue
+
 type Job struct {
 	// Location contains information about where job is defined.
 	Location ReferenceLocation
@@ -112,7 +114,7 @@ type Job struct {
 	Condition *LazyValue
 
 	// Args contains arguments passed to action or mixin.
-	Args map[string]*LazyValue
+	Args JobArgs
 
 	// Hooks is key-value pair of event name and actions to be run on event.
 	Hooks map[string][]Job

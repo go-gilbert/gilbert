@@ -150,6 +150,12 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 		MatrixParameters: jobScope.MatrixValues,
 	})
 
+	r.logger.Infow(
+		"handleJob",
+		log.NewField("args", parsetypes.Spew(j.Args).String()),
+	)
+	// dumpJSON("args", j.Args["os"])
+
 	// return errors.New("handleJob: not implemented")
 	return nil
 }
