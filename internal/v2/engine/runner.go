@@ -3,7 +3,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -135,6 +134,23 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 }
 
 func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
+	if j.Kind != manifest.JobKindAction {
+		loc := j.Handler.Location
+		r.shell.Reporter.PrintDiagnostics(
+			parsetypes.Diagnostics{
+				&parsetypes.Diagnostic{
+					FileName: loc.FileName,
+					Severity: parsetypes.DiagnosticSeverityError,
+					Range:    loc.Range,
+					Offset:   loc.Offset,
+					Err:      fmt.Errorf("only action jobs are supported currently"),
+				},
+			},
+		)
+
+		return errors.New("only action jobs are supported currently")
+	}
+
 	if j.Delay != 0 {
 		r.logger.Debugw(
 			"wait for job delay to finish",
@@ -158,9 +174,4 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 
 	// return errors.New("handleJob: not implemented")
 	return nil
-}
-
-func dumpJSON(pfx string, v any) {
-	msg, _ := json.MarshalIndent(v, "", "  ")
-	fmt.Println("---", pfx, "---", ":\n", string(msg))
 }

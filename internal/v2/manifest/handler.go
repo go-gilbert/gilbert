@@ -9,6 +9,9 @@ import (
 const namespaceDelimiter = "/"
 
 type JobHandlerRef struct {
+	// Location points to location in the document where job handler is defined.
+	Location *ReferenceLocation
+
 	// Namespace is import name of a plugin.
 	Namespace string
 

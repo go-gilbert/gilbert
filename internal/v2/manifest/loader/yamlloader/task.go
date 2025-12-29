@@ -54,13 +54,13 @@ var jobSchema = Struct(
 		func(ctx context.Context, dst *manifest.Job, val string) error {
 			return setJobTarget(ctx, dst, manifest.JobKindAction, val)
 		},
-	),
+	).CheckNode(setJobTargetValueLoc),
 	Field(
 		"mixin", String(),
 		func(ctx context.Context, dst *manifest.Job, val string) error {
 			return setJobTarget(ctx, dst, manifest.JobKindMixin, val)
 		},
-	),
+	).CheckNode(setJobTargetValueLoc),
 	Field(
 		"async", Bool(),
 		func(_ context.Context, dst *manifest.Job, v bool) error {
@@ -168,6 +168,15 @@ var jobSchema = Struct(
 		return nil
 	})
 
+func setJobTargetValueLoc(ctx context.Context, n *ast.MappingValueNode, j *manifest.Job) {
+	loc, err := buildRefLocation(ctx, n.Value)
+	if err != nil {
+		return
+	}
+
+	j.Handler.Location = loc
+}
+
 func setJobTarget(_ context.Context, j *manifest.Job, targetType manifest.JobKind, name string) error {
 	if j.Kind != manifest.JobKindUnknown {
 		return errors.New(`only one of "action" or "mixin" fields can be set`)
@@ -181,6 +190,7 @@ func setJobTarget(_ context.Context, j *manifest.Job, targetType manifest.JobKin
 			return err
 		}
 
+		h.Location = j.Handler.Location
 		j.Handler = h
 		return nil
 	case manifest.JobKindMixin, manifest.JobKindTask:
