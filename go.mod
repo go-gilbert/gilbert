@@ -9,7 +9,7 @@ require (
 	github.com/axw/gocov v0.0.0-20170322000131-3a69a0d2a4ef
 	github.com/expr-lang/expr v1.16.9
 	github.com/fatih/color v1.18.0
-	github.com/go-viper/mapstructure/v2 v2.2.1
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/goccy/go-yaml v1.15.15
 	github.com/google/go-github/v25 v25.0.2
 	github.com/hashicorp/go-set/v3 v3.0.0
