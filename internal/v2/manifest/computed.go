@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -193,7 +194,7 @@ func (s ObjectSpec) Optimize() AnySpec {
 	hasBinding := false
 	for k, item := range s.Values {
 		opt := item.Optimize()
-		if opt.IsLiteral() {
+		if !opt.IsLiteral() {
 			hasBinding = true
 		}
 
@@ -208,6 +209,9 @@ func (s ObjectSpec) Optimize() AnySpec {
 
 	out := make(map[string]any, len(s.Values))
 	for k, v := range s.Values {
+		if v.LiteralSpec == nil {
+			fmt.Println("LiteralSpec is nil", v)
+		}
 		out[k] = v.LiteralSpec.Value
 	}
 
