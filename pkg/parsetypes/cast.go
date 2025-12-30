@@ -78,12 +78,22 @@ func AnyToBool(v any) (bool, error) {
 	case float64:
 		return t != 0, nil
 	case string:
-		return strconv.ParseBool(t)
+		return boolFromStr(t)
 	case []byte:
-		return strconv.ParseBool(string(t))
+		return boolFromStr(string(t))
 	default:
 		return false, fmt.Errorf("value of type %T cannot be converted to bool", t)
 	}
+}
+
+func boolFromStr(v string) (bool, error) {
+	r, err := strconv.ParseBool(v)
+	if err != nil {
+		// intercept Go's error and return human-readable error
+		err = fmt.Errorf("cannot parse string %q as boolean", v)
+	}
+
+	return r, err
 }
 
 func AnyToUint(v any) (uint, error) {
