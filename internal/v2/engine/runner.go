@@ -17,11 +17,12 @@ import (
 type CommandProcessorFactory = func(*scope.Scope) expr.CommandProcessor
 
 type Config struct {
-	Logger              *log.Logger
-	JobFile             *manifest.JobFile
-	RootScope           *scope.Scope
-	Shell               *Shell
-	CmdProcessorFactory CommandProcessorFactory
+	Logger                *log.Logger
+	JobFile               *manifest.JobFile
+	RootScope             *scope.Scope
+	Shell                 *Shell
+	CmdProcessorFactory   CommandProcessorFactory
+	ActionHandlerProvider ActionHandlerProvider
 }
 
 type Runner struct {
@@ -30,6 +31,7 @@ type Runner struct {
 	rootScope      *scope.Scope
 	shell          *Shell
 	cmdProcBuilder CommandProcessorFactory
+	actionHandlers ActionHandlerProvider
 }
 
 func NewRunner(cfg Config) *Runner {
@@ -39,6 +41,7 @@ func NewRunner(cfg Config) *Runner {
 		rootScope:      cfg.RootScope,
 		cmdProcBuilder: cfg.CmdProcessorFactory,
 		shell:          cfg.Shell,
+		actionHandlers: cfg.ActionHandlerProvider,
 	}
 }
 
@@ -149,6 +152,22 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 		)
 
 		return errors.New("only action jobs are supported currently")
+	}
+
+	hResult := r.actionHandlers.GetActionHandler(ctx, j.Handler, ActionParams{
+		Logger: &r.logger,
+		Shell:  r.shell,
+		Scope:  jobScope,
+		Args:   j.Args,
+		EvalParams: expr.EvalParams{
+			CommandProcessor: r.cmdProcBuilder(jobScope),
+			Env:              jobScope,
+		},
+		Outputs: []string{},
+	})
+	r.shell.Reporter.PrintDiagnostics(hResult.Diagnostics)
+	if hResult.Error != nil {
+		return hResult.Error
 	}
 
 	if j.Delay != 0 {

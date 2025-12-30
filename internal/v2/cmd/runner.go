@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/go-gilbert/gilbert/internal/v2/actions"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/engine"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
@@ -24,10 +25,11 @@ func startTaskRunner(cmd *cobra.Command, cfg taskRunConfig) error {
 	ctx := cmd.Context()
 
 	r := engine.NewRunner(engine.Config{
-		Logger:    cfg.logger,
-		JobFile:   cfg.jobFile,
-		RootScope: cfg.scope.Root,
-		Shell:     createShell(cmd, cfg.logger, &cfg.bootstapOpts),
+		Logger:                cfg.logger,
+		JobFile:               cfg.jobFile,
+		RootScope:             cfg.scope.Root,
+		ActionHandlerProvider: actions.Provider,
+		Shell:                 createShell(cmd, cfg.logger, &cfg.bootstapOpts),
 		CmdProcessorFactory: func(s *scope.Scope) expr.CommandProcessor {
 			return scope.NewCommandRunner(s)
 		},

@@ -68,8 +68,14 @@ tasks:
           os: ${{matrix.os}}
           arch: ${{matrix.arch}}
           cgo: false
+          buildvcs: false
           tags:
             - '${{inputs.release ? "release" : "debug"}}'
+          package_vars:
+            "github.com/go-gilbert/gilbert/internal/build.Version": "${{inputs.version}}"
+            "github.com/go-gilbert/gilbert/internal/build.Channel": "stable"
+          env:
+            foo: bar
 
   # Starts dev server.
   #
@@ -94,4 +100,4 @@ tasks:
               async: true
               with:
                 package: .
-                args: "-cfg=${inputs.configFile}"
+                args: "-cfg=${{ inputs.configFile }}"

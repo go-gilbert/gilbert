@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-viper/mapstructure/v2"
 
+	"github.com/go-gilbert/gilbert/internal/v2/engine"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -67,6 +68,43 @@ var (
 	}
 )
 
+// Dict map value into a dictionary with string keys.
+func Dict[T any](valType ValueConverter[T]) *AnyValueVisitor[map[string]T] {
+	return &AnyValueVisitor[map[string]T]{
+		parseFunc: func(vp VisitParams, v any) (map[string]T, error) {
+			r := reflect.ValueOf(v)
+			if k := r.Kind(); k != reflect.Map {
+				return nil, fmt.Errorf("invalid type: expected dict but got %s", k)
+			}
+
+			out := make(map[string]T)
+			iter := r.MapRange()
+			for iter.Next() {
+				rk := iter.Key()
+				if rk.Kind() != reflect.String {
+					return nil, fmt.Errorf("dict key type should be string, got %s", rk.Kind())
+				}
+
+				k := rk.String()
+				rv := iter.Value().Interface()
+				if rv == nil {
+					// Skip empty values. This is used to allow optional values in expressions.
+					continue
+				}
+
+				tval, err := valType.ConvertValue(vp, rv)
+				if err != nil {
+					return nil, fmt.Errorf("invalid value for key %q: %w", k, tval)
+				}
+
+				out[k] = tval
+			}
+
+			return out, nil
+		},
+	}
+}
+
 // MapStructure attempts to map value to a structure using mapstructure library.
 func MapStructure[T any](hooks ...mapstructure.DecodeHookFunc) *AnyValueVisitor[T] {
 	return &AnyValueVisitor[T]{
@@ -108,16 +146,21 @@ func List[T any](vis ValueConverter[T]) *AnyValueVisitor[[]T] {
 			}
 
 			c := ref.Len()
-			out := make([]T, c)
+			out := make([]T, 0, c)
 
 			for i := range c {
 				iface := ref.Index(i).Interface()
+				if iface == nil {
+					// Skip empty values. This is used to allow optional values in expressions.
+					continue
+				}
+
 				tval, err := vis.ConvertValue(vp, iface)
 				if err != nil {
 					return nil, fmt.Errorf("invalid value at index %d: %w", i, err)
 				}
 
-				out[i] = tval
+				out = append(out, tval)
 			}
 
 			return out, nil
@@ -137,16 +180,22 @@ func OneOrMany[T any](vis ValueConverter[T]) *AnyValueVisitor[[]T] {
 			switch ref.Kind() {
 			case reflect.Array, reflect.Slice:
 				c := ref.Len()
-				out := make([]T, c)
+				out := make([]T, 0, c)
 
 				for i := range c {
 					iface := ref.Index(i).Interface()
+
+					// Skip empty values. This is used to allow optional values in expressions.
+					if iface == nil {
+						continue
+					}
+
 					tval, err := vis.ConvertValue(vp, iface)
 					if err != nil {
 						return nil, fmt.Errorf("invalid value at index %d: %w", i, err)
 					}
 
-					out[i] = tval
+					out = append(out, tval)
 				}
 
 				return out, nil
@@ -192,13 +241,6 @@ func (vis AnyValueVisitor[T]) VisitValue(vp VisitParams, lz *manifest.LazyValue)
 	return val, diags
 }
 
-type StructFieldVisitor[TObj any, TProp any] struct {
-	name     string
-	required bool
-	visitor  ValueVisitor[TProp]
-	setValue func(vp VisitParams, dst *TObj, val TProp) error
-}
-
 func Field[TObj, TProp any](name string, visitor ValueVisitor[TProp], setValue func(vp VisitParams, dst *TObj, val TProp) error) *StructFieldVisitor[TObj, TProp] {
 	return &StructFieldVisitor[TObj, TProp]{
 		name:     name,
@@ -206,6 +248,43 @@ func Field[TObj, TProp any](name string, visitor ValueVisitor[TProp], setValue f
 		visitor:  visitor,
 		setValue: setValue,
 	}
+}
+
+func StringField[TObj any](name string, setValue func(dst *TObj, val string) error) *StructFieldVisitor[TObj, string] {
+	return &StructFieldVisitor[TObj, string]{
+		name:    name,
+		visitor: AnyString,
+		setValue: func(_ VisitParams, dst *TObj, v string) error {
+			return setValue(dst, v)
+		},
+	}
+}
+
+func BoolField[TObj any](name string, setValue func(dst *TObj, val bool) error) *StructFieldVisitor[TObj, bool] {
+	return &StructFieldVisitor[TObj, bool]{
+		name:    name,
+		visitor: AnyBool,
+		setValue: func(_ VisitParams, dst *TObj, v bool) error {
+			return setValue(dst, v)
+		},
+	}
+}
+
+func ListField[TObj, TProp any](name string, vdec ValueConverter[TProp], setValue func(dst *TObj, val []TProp) error) *StructFieldVisitor[TObj, []TProp] {
+	return &StructFieldVisitor[TObj, []TProp]{
+		name:    name,
+		visitor: OneOrMany(vdec),
+		setValue: func(_ VisitParams, dst *TObj, v []TProp) error {
+			return setValue(dst, v)
+		},
+	}
+}
+
+type StructFieldVisitor[TObj any, TProp any] struct {
+	name     string
+	required bool
+	visitor  ValueVisitor[TProp]
+	setValue func(vp VisitParams, dst *TObj, val TProp) error
 }
 
 func (vis *StructFieldVisitor[TObj, TProp]) Name() string {
@@ -288,7 +367,7 @@ func (sv *StructVisitor[T]) Constructor(fn func(*T)) *StructVisitor[T] {
 	return sv
 }
 
-func (sv *StructVisitor[T]) VisitMap(vp VisitParams, kv map[string]*manifest.LazyValue, dst *T) parsetypes.Diagnostics {
+func (sv *StructVisitor[T]) VisitMap(vp VisitParams, kv map[string]*manifest.LazyValue) (T, parsetypes.Diagnostics) {
 	var (
 		out   T
 		diags parsetypes.Diagnostics
@@ -314,11 +393,16 @@ func (sv *StructVisitor[T]) VisitMap(vp VisitParams, kv map[string]*manifest.Laz
 			continue
 		}
 
+		if v == nil {
+			// Skip empty
+			continue
+		}
+
 		delete(unvisitedFields, k)
 		fieldDiags := field.VisitLazyField(vp, v, &out)
 		diags = append(diags, fieldDiags...)
 		if fieldDiags.HasError() {
-			return diags
+			return out, diags
 		}
 	}
 
@@ -334,7 +418,17 @@ func (sv *StructVisitor[T]) VisitMap(vp VisitParams, kv map[string]*manifest.Laz
 		})
 	}
 
-	return diags
+	return out, diags
+}
+
+func MapArgsToStruct[T any](ctx context.Context, ap engine.ActionParams, schema *StructVisitor[T]) (T, parsetypes.Diagnostics) {
+	vp := VisitParams{
+		Context:        ctx,
+		ParentLocation: ap.Args.Location,
+		EvalParams:     ap.EvalParams,
+	}
+
+	return schema.VisitMap(vp, ap.Args.Values)
 }
 
 func expandVal(vp VisitParams, lzv *manifest.LazyValue) (any, parsetypes.Diagnostics) {
