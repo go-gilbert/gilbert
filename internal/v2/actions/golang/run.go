@@ -13,23 +13,23 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/executil"
 )
 
-var _ engine.ActionHandler = (*BuildActionHandler)(nil)
+var _ engine.ActionHandler = (*RunActionHandler)(nil)
 
-type BuildActionHandler struct {
+type RunActionHandler struct {
 	logger log.Logger
 	shell  *engine.Shell
 
 	globals scope.Globals
-	args    buildActionArgs
+	args    runActionArgs
 }
 
-func NewBuildActionHandler(ctx context.Context, ref manifest.JobHandlerRef, params engine.ActionParams) engine.HandlerResult {
-	args, diags := argschema.MapArgsToStruct(ctx, params, buildSchema)
+func NewRunActionHandler(ctx context.Context, ref manifest.JobHandlerRef, params engine.ActionParams) engine.HandlerResult {
+	args, diags := argschema.MapArgsToStruct(ctx, params, runSchema)
 	if diags.HasError() {
 		return engine.NewBadActionParamsResult(ref, diags)
 	}
 
-	h := &BuildActionHandler{
+	h := &RunActionHandler{
 		logger:  params.Logger,
 		shell:   params.Shell,
 		globals: params.Scope.Globals,
@@ -39,7 +39,7 @@ func NewBuildActionHandler(ctx context.Context, ref manifest.JobHandlerRef, para
 	return engine.NewHandlerResult(h, diags)
 }
 
-func (b *BuildActionHandler) HandleAction(ctx context.Context) error {
+func (b *RunActionHandler) HandleAction(ctx context.Context) error {
 	argv, err := b.args.commandArgs()
 	if err != nil {
 		return err
@@ -64,8 +64,6 @@ func (b *BuildActionHandler) HandleAction(ctx context.Context) error {
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start go command: %w", err)
 	}
-
-	b.logger.Infof("building %s", b.args.PackageName)
 
 	if err := cmd.Wait(); err != nil {
 		return executil.FormatExitError(err)

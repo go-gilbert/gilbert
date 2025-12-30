@@ -68,6 +68,54 @@ var (
 	}
 )
 
+type optionalVisitor[T any] struct {
+	vis ValueVisitor[T]
+}
+
+func (op optionalVisitor[T]) ConvertValue(vp VisitParams, rv any) (opt Option[T], err error) {
+	converter, ok := op.vis.(ValueConverter[T])
+	if !ok {
+		return opt, fmt.Errorf("cannot convert value into %T: not supported", opt)
+	}
+
+	if rv == nil {
+		return opt, nil
+	}
+
+	v, err := converter.ConvertValue(vp, rv)
+	if err != nil {
+		return opt, err
+	}
+
+	return Option[T]{
+		ok:  true,
+		val: v,
+	}, nil
+}
+
+func (op optionalVisitor[T]) VisitValue(vp VisitParams, lz *manifest.LazyValue) (opt Option[T], diags parsetypes.Diagnostics) {
+	if lz == nil {
+		return opt, nil
+	}
+
+	v, diags := op.vis.VisitValue(vp, lz)
+	if diags.HasError() {
+		return opt, diags
+	}
+
+	return Option[T]{
+		ok:  true,
+		val: v,
+	}, diags
+}
+
+// Optional returns visitor to read [Option] values.
+func Optional[T any](vis ValueVisitor[T]) ValueVisitor[Option[T]] {
+	return &optionalVisitor[T]{
+		vis: vis,
+	}
+}
+
 // Dict map value into a dictionary with string keys.
 func Dict[T any](valType ValueConverter[T]) *AnyValueVisitor[map[string]T] {
 	return &AnyValueVisitor[map[string]T]{
@@ -343,22 +391,47 @@ func (vp VisitParams) addDiagnostic(diags parsetypes.Diagnostics, err error) par
 	})
 }
 
+type EmbeddedStructVisitor[TParent, TEmbedded any] struct {
+	vis         *StructVisitor[TEmbedded]
+	getEmbedded func(parent *TParent) *TEmbedded
+}
+
+func (ev EmbeddedStructVisitor[TParent, TEmbedded]) ReadMap(vp VisitParams, unvisitedFields stringSet, parent *TParent, kv map[string]*manifest.LazyValue) parsetypes.Diagnostics {
+	embedded := ev.getEmbedded(parent)
+	return ev.vis.readMap(vp, unvisitedFields, embedded, kv)
+}
+
+// Embedded creates visitor for embedded structs.
+//
+// Visitor can be passed into [StructVisitor.Embedded].
+func Embedded[TParent, TEmbedded any](getter func(parent *TParent) *TEmbedded, fields ...FieldVisitor[TEmbedded]) *EmbeddedStructVisitor[TParent, TEmbedded] {
+	return &EmbeddedStructVisitor[TParent, TEmbedded]{
+		vis:         Struct(fields...),
+		getEmbedded: getter,
+	}
+}
+
+type EmbeddedVisitor[T any] interface {
+	ReadMap(vp VisitParams, unvisitedFields stringSet, parent *T, kv map[string]*manifest.LazyValue) parsetypes.Diagnostics
+}
+
+type stringSet = map[string]struct{}
+
 type StructVisitor[T any] struct {
 	fields      []FieldVisitor[T]
-	knownFields map[string]struct{}
+	embeds      []EmbeddedVisitor[T]
 	constructor func(*T)
 }
 
 func Struct[T any](fields ...FieldVisitor[T]) *StructVisitor[T] {
-	knownFields := map[string]struct{}{}
-	for _, f := range fields {
-		knownFields[f.Name()] = struct{}{}
-	}
-
 	return &StructVisitor[T]{
-		fields:      fields,
-		knownFields: knownFields,
+		fields: fields,
 	}
+}
+
+func (sv *StructVisitor[T]) Embedded(v EmbeddedVisitor[T]) *StructVisitor[T] {
+	sv.embeds = append(sv.embeds, v)
+	return sv
 }
 
 func (sv *StructVisitor[T]) Constructor(fn func(*T)) *StructVisitor[T] {
@@ -367,20 +440,38 @@ func (sv *StructVisitor[T]) Constructor(fn func(*T)) *StructVisitor[T] {
 }
 
 func (sv *StructVisitor[T]) VisitMap(vp VisitParams, kv map[string]*manifest.LazyValue) (T, parsetypes.Diagnostics) {
-	var (
-		out   T
-		diags parsetypes.Diagnostics
-	)
+	var out T
 
 	if sv.constructor != nil {
 		sv.constructor(&out)
 	}
 
-	unvisitedFields := make(map[string]struct{}, len(kv))
+	unvisitedFields := make(stringSet, len(kv))
 	for k := range kv {
 		unvisitedFields[k] = struct{}{}
 	}
 
+	diags := sv.readMap(vp, unvisitedFields, &out, kv)
+	for _, vis := range sv.embeds {
+		diags = append(diags, vis.ReadMap(vp, unvisitedFields, &out, kv)...)
+	}
+
+	for prop := range unvisitedFields {
+		loc := kv[prop].Location
+		diags = append(diags, &parsetypes.Diagnostic{
+			FileName: loc.FileName,
+			Severity: parsetypes.DiagnosticSeverityWarning,
+			Range:    loc.Range,
+			Offset:   loc.Offset,
+			Err:      fmt.Errorf("unknown field %q", prop),
+			Note:     "remove unknown property",
+		})
+	}
+
+	return out, diags
+}
+
+func (sv *StructVisitor[T]) readMap(vp VisitParams, unvisitedFields stringSet, dst *T, kv map[string]*manifest.LazyValue) (diags parsetypes.Diagnostics) {
 	for _, field := range sv.fields {
 		k := field.Name()
 		v, ok := kv[k]
@@ -398,26 +489,14 @@ func (sv *StructVisitor[T]) VisitMap(vp VisitParams, kv map[string]*manifest.Laz
 		}
 
 		delete(unvisitedFields, k)
-		fieldDiags := field.VisitLazyField(vp, v, &out)
+		fieldDiags := field.VisitLazyField(vp, v, dst)
 		diags = append(diags, fieldDiags...)
 		if fieldDiags.HasError() {
-			return out, diags
+			return diags
 		}
 	}
 
-	for prop := range unvisitedFields {
-		loc := kv[prop].Location
-		diags = append(diags, &parsetypes.Diagnostic{
-			FileName: loc.FileName,
-			Severity: parsetypes.DiagnosticSeverityWarning,
-			Range:    loc.Range,
-			Offset:   loc.Offset,
-			Err:      fmt.Errorf("unknown field %q", prop),
-			Note:     "remove unknown property",
-		})
-	}
-
-	return out, diags
+	return diags
 }
 
 func MapArgsToStruct[T any](ctx context.Context, ap engine.ActionParams, schema *StructVisitor[T]) (T, parsetypes.Diagnostics) {

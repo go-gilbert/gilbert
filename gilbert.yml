@@ -1,0 +1,39 @@
+version: 2
+
+const:
+  pkgdir: ./cmd/gilbert2
+
+inputs:
+  debug:
+    type: bool
+
+tasks:
+  # Build the application
+  build:
+    inputs:
+      # App version
+      version:
+        type: string
+        default: snapshot
+    steps:
+      - action: go/build
+        timeout: 30s
+        strategy:
+          max-parallel: 2
+          continue-on-error: false
+          matrix:
+            os: [windows, linux, darwin]
+            arch: [amd64, 386, arm64]
+          exclude:
+            - os: darwin
+              arch: 386
+            - arch: amd64
+              os: darwin
+        with:
+          package: "${{consts.pkgdir}}"
+          os: ${{matrix.os}}
+          arch: ${{matrix.arch}}
+          buildvcs: false
+          output: "${{project.workDir}}/build/${{matrix.os}}-${{matrix.arch}}/"
+          package_vars:
+            "github.com/go-gilbert/gilbert/internal/v2/buildinfo.Version": "${{inputs.version}}"
