@@ -132,11 +132,18 @@ var jobSchema = Struct(
 		"with",
 		Map(lazyValueVisitor{}),
 		func(_ context.Context, dst *manifest.Job, v map[string]*manifest.LazyValue) error {
-			// fmt.Println("set with: ", dst.Handler, v)
-			dst.Args = v
+			// CheckNode is executed after SetValue.
+			dst.Args.Values = v
 			return nil
 		},
-	),
+	).CheckNode(func(ctx context.Context, n *ast.MappingValueNode, j *manifest.Job) {
+		loc, err := buildRefLocation(ctx, n)
+		if err != nil {
+			return
+		}
+
+		j.Args.Location = loc
+	}),
 	Field(
 		"on",
 		Map(

@@ -84,7 +84,10 @@ func (es *ExecStrategy) SetMatrixParams(params []MatrixParam) {
 	es.MatrixKeys = m
 }
 
-type JobArgs = map[string]*LazyValue
+type JobArgs struct {
+	Location *ReferenceLocation
+	Values   map[string]*LazyValue
+}
 
 type Job struct {
 	// Location contains information about where job is defined.
