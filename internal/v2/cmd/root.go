@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/go-gilbert/gilbert/internal/v2/buildinfo"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/cmdutil"
 	"github.com/go-gilbert/gilbert/internal/v2/cmd/help"
 	"github.com/go-gilbert/gilbert/internal/v2/log"
@@ -37,12 +38,8 @@ func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
 			$ gilbert run foobar
 		`),
 		Annotations: map[string]string{
-			// TODO: fill version from build info.
-			"versionInfo": "snapshot",
-			"platform":    runtime.GOOS + "/" + runtime.GOARCH,
-		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return nil
+			"versionInfo": buildinfo.Version,
+			"platform":    buildinfo.Platform,
 		},
 	}
 

@@ -1,4 +1,9 @@
 // Package buildinfo provides build version and metadata.
 package buildinfo
 
-var Version = "snapshot"
+import "runtime"
+
+var (
+	Version  = "snapshot"
+	Platform = runtime.GOOS + "/" + runtime.GOARCH
+)
