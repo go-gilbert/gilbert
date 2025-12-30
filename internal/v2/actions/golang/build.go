@@ -48,7 +48,11 @@ func (b *BuildActionHandler) HandleAction(ctx context.Context) error {
 	env := b.args.buildEnv(b.globals.Env)
 	cmd := exec.CommandContext(ctx, "go", argv...)
 	cmd.Env = env
+
 	cmd.Dir = b.globals.Project.WorkDir
+	if b.args.WorkDir != "" {
+		cmd.Dir = b.args.WorkDir
+	}
 
 	w := b.logger.IOWriter()
 	cmd.Stdout = w.Stdout
