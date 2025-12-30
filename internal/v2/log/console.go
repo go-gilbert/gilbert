@@ -18,6 +18,16 @@ var (
 
 var _ Writer = (*ConsoleWriter)(nil)
 
+// consoleIOWriter is io.Writer middleware to write process logs without color.
+type consoleIOWriter struct {
+	dst io.Writer
+}
+
+func (w consoleIOWriter) Write(p []byte) (int, error) {
+	// TODO: support colors and log tags.
+	return w.dst.Write(p)
+}
+
 type ConsoleWriter struct {
 	// NoColor disables ansi colors output.
 	NoColor bool
@@ -42,6 +52,13 @@ type noColorMsg struct {
 	fields  []Field
 }
 
+func (c ConsoleWriter) IOStreamWriters(tag string) IOStreamWriters {
+	return IOStreamWriters{
+		Stdout: consoleIOWriter{dst: c.Stdout},
+		Stderr: consoleIOWriter{dst: c.Stderr},
+	}
+}
+
 func (c ConsoleWriter) writeNoColor(msg noColorMsg) {
 	dst := writerForLevel(msg.level, c.Stdout, c.Stderr)
 	if msg.prefix != "" {
@@ -49,7 +66,7 @@ func (c ConsoleWriter) writeNoColor(msg noColorMsg) {
 	}
 
 	if msg.tag != "" {
-		_, _ = fmt.Fprintf(dst, "[%s]: ", msg.tag)
+		_, _ = fmt.Fprintf(dst, "[%s] ", msg.tag)
 	}
 
 	_, _ = dst.Write([]byte(msg.message))

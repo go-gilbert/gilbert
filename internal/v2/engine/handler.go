@@ -12,7 +12,7 @@ import (
 )
 
 type ActionParams struct {
-	Logger *log.Logger
+	Logger log.Logger
 	Shell  *Shell
 
 	// Scope is job execution scope.

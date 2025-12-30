@@ -35,6 +35,14 @@ func NewField(key string, value any) Field {
 type Writer interface {
 	// Write logs a message with the given level and tag.
 	Write(level Level, tag, message string, fields []Field)
+
+	// IOStreamWriters returns decorated stdout/stderr writers to be used by child processes.
+	IOStreamWriters(tag string) IOStreamWriters
+}
+
+type IOStreamWriters struct {
+	Stdout io.Writer
+	Stderr io.Writer
 }
 
 // Logger represents a logging instance with a name, log level, and a writer.
@@ -62,6 +70,10 @@ func (l *Logger) SetWriter(w Writer) {
 func (l Logger) Named(name string) Logger {
 	l.name = name
 	return l
+}
+
+func (l Logger) IOWriter() IOStreamWriters {
+	return l.writer.IOStreamWriters(l.name)
 }
 
 func (l Logger) print(level Level, args ...any) {

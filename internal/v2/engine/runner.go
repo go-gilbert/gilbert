@@ -155,7 +155,7 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 	}
 
 	hResult := r.actionHandlers.GetActionHandler(ctx, j.Handler, ActionParams{
-		Logger: &r.logger,
+		Logger: r.logger.Named(j.Handler.String()),
 		Shell:  r.shell,
 		Scope:  jobScope,
 		Args:   j.Args,
