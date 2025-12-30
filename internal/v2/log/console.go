@@ -34,23 +34,35 @@ func NewConsoleWriter(streams IOStreams, noColor bool) ConsoleWriter {
 	}
 }
 
-func (c ConsoleWriter) writeNoColor(level Level, prefix, message string, fields []Field) {
-	dst := writerForLevel(level, c.Stdout, c.Stderr)
-	if prefix != "" {
-		_, _ = dst.Write([]byte(prefix))
+type noColorMsg struct {
+	level   Level
+	tag     string
+	prefix  string
+	message string
+	fields  []Field
+}
+
+func (c ConsoleWriter) writeNoColor(msg noColorMsg) {
+	dst := writerForLevel(msg.level, c.Stdout, c.Stderr)
+	if msg.prefix != "" {
+		_, _ = dst.Write([]byte(msg.prefix))
 	}
 
-	_, _ = dst.Write([]byte(message))
-	if len(fields) > 0 {
+	if msg.tag != "" {
+		_, _ = fmt.Fprintf(dst, "[%s]: ", msg.tag)
+	}
+
+	_, _ = dst.Write([]byte(msg.message))
+	if len(msg.fields) > 0 {
 		_, _ = dst.Write([]byte("\t"))
-		for _, f := range fields {
+		for _, f := range msg.fields {
 			_, _ = fmt.Fprintf(dst, " %s=%v", f.Key, f.Value)
 		}
 	}
 	_, _ = dst.Write([]byte("\n"))
 }
 
-func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
+func (c ConsoleWriter) Write(level Level, tag string, message string, fields []Field) {
 	var (
 		prefixColor *color.Color
 		textColor   *color.Color
@@ -75,7 +87,12 @@ func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 		prefix = "debug: "
 		textColor = dbgColor
 	default:
-		c.writeNoColor(level, "", message, fields)
+		c.writeNoColor(noColorMsg{
+			level:   level,
+			tag:     tag,
+			message: message,
+			fields:  fields,
+		})
 		return
 	}
 
@@ -85,12 +102,22 @@ func (c ConsoleWriter) Write(level Level, _, message string, fields []Field) {
 
 	dst := writerForLevel(level, c.Stdout, c.Stderr)
 	if c.NoColor {
-		c.writeNoColor(level, prefix, message, fields)
+		c.writeNoColor(noColorMsg{
+			level:   level,
+			tag:     tag,
+			prefix:  prefix,
+			message: message,
+			fields:  fields,
+		})
 		return
 	}
 
 	if prefix != "" {
 		prefixColor.Fprint(dst, prefix)
+	}
+
+	if tag != "" {
+		prefixColor.Fprintf(dst, "[%s] ", tag)
 	}
 
 	textColor.Fprint(dst, message)
