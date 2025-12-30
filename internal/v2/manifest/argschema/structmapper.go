@@ -244,7 +244,6 @@ func (vis AnyValueVisitor[T]) VisitValue(vp VisitParams, lz *manifest.LazyValue)
 func Field[TObj, TProp any](name string, visitor ValueVisitor[TProp], setValue func(vp VisitParams, dst *TObj, val TProp) error) *StructFieldVisitor[TObj, TProp] {
 	return &StructFieldVisitor[TObj, TProp]{
 		name:     name,
-		required: true,
 		visitor:  visitor,
 		setValue: setValue,
 	}
