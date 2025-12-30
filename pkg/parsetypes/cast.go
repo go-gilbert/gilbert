@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"time"
 )
 
 func AnyToString(v any) (string, error) {
@@ -85,6 +86,44 @@ func AnyToBool(v any) (bool, error) {
 	}
 }
 
+func AnyToUint(v any) (uint, error) {
+	u := 0
+	switch t := v.(type) {
+	case int:
+		u = int(t)
+	case int8:
+		u = int(t)
+	case int16:
+		u = int(t)
+	case int32:
+		u = int(t)
+	case int64:
+		u = int(t)
+	case uint:
+		return uint(t), nil
+	case uint8:
+		return uint(t), nil
+	case uint16:
+		return uint(t), nil
+	case uint32:
+		return uint(t), nil
+	case uint64:
+		return uint(t), nil
+	case float32:
+		u = int(t)
+	case float64:
+		u = int(t)
+	default:
+		return 0, fmt.Errorf("value of type %T cannot be converted to int", t)
+	}
+
+	if u < 0 {
+		return 0, fmt.Errorf("value %v should be equal or greater than zero", u)
+	}
+
+	return uint(u), nil
+}
+
 func AnyToInt(v any) (int64, error) {
 	switch t := v.(type) {
 	case int:
@@ -141,6 +180,55 @@ func AnyToFloat(v any) (float64, error) {
 	default:
 		return 0, fmt.Errorf("value of type %T cannot be converted to float", t)
 	}
+}
+
+func AnyToDuration(v any) (time.Duration, error) {
+	var u time.Duration
+	switch t := v.(type) {
+	case time.Duration:
+		return t, nil
+	case string:
+		dur, err := time.ParseDuration(t)
+		if err == nil {
+			return dur, nil
+		}
+
+		// Handle case when number is returned as string from expression
+		n, err := strconv.ParseUint(t, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("failed to parse string as time duration or number of miliseconds")
+		}
+
+		u = time.Duration(n)
+	case int:
+		u = time.Duration(t)
+	case int8:
+		u = time.Duration(t)
+	case int16:
+		u = time.Duration(t)
+	case int32:
+		u = time.Duration(t)
+	case int64:
+		u = time.Duration(t)
+	case uint:
+		u = time.Duration(t)
+	case uint8:
+		return time.Duration(t), nil
+	case uint16:
+		return time.Duration(t), nil
+	case uint32:
+		return time.Duration(t), nil
+	case uint64:
+		return time.Duration(t), nil
+	default:
+		return 0, fmt.Errorf("expected duration string or number of miliseconds, but got %T", t)
+	}
+
+	if u < 0 {
+		return 0, fmt.Errorf("number of miliseconds should be >= 0", u)
+	}
+
+	return u * time.Millisecond, nil
 }
 
 func AnyToList(v any) ([]any, error) {

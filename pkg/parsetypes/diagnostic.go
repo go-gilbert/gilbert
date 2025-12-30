@@ -103,6 +103,11 @@ func IsDiagnosticsError(err error) (Diagnostics, bool) {
 		return diags, true
 	}
 
+	diag := new(Diagnostic)
+	if errors.As(err, &diag) {
+		return Diagnostics{diag}, true
+	}
+
 	return nil, false
 }
 

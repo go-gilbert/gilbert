@@ -111,7 +111,7 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 		return fmt.Errorf(`invalid rule in "exclude" section`)
 	}
 
-	// do catersian product and run each job
+	// do Cartesian product and run each job
 	for labels, values := range innerJoinMatrix(matParams) {
 		if testMatrixExcluded(&j.Strategy, values) {
 			r.logger.Debugw(
