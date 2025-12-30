@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/token"
+
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
-	"github.com/goccy/go-yaml/ast"
-	"github.com/goccy/go-yaml/token"
 )
 
 type endPosition struct {
@@ -210,7 +211,7 @@ func lazyFromDictNode(opts *yamltree.TraverseOpts, node *ast.MappingNode) (sp ma
 		}
 
 		key := kn.Value
-		nodeSpec, tokEndPos, nodeDiags := lazyFromNode(opts, n)
+		nodeSpec, tokEndPos, nodeDiags := lazyFromNode(opts, n.Value)
 		diags = append(diags, nodeDiags...)
 		sp.ObjectSpec.Values[key] = nodeSpec
 		endPos = tokEndPos
