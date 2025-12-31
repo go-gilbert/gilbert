@@ -65,9 +65,7 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 		}
 	}
 
-	// dumpJSON("task", t)
-
-	return fmt.Errorf("not implemented")
+	return nil
 }
 
 func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
