@@ -43,10 +43,6 @@ func (args commonBuildArgs) appendCommonArgs(parentArgs []string) []string {
 		parentArgs = append(parentArgs, "-buildmode", args.BuildMode)
 	}
 
-	if args.WorkDir != "" {
-		parentArgs = append(parentArgs, "-C", args.WorkDir)
-	}
-
 	if len(args.BuildTags) > 0 {
 		parentArgs = append(parentArgs, "-tags", strings.Join(args.BuildTags, ","))
 	}
