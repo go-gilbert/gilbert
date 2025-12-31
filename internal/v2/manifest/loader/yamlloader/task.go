@@ -50,6 +50,7 @@ var jobGroupSchema = Struct(
 		"workDir",
 		String(),
 		func(_ context.Context, dst *manifest.JobGroup, v string) error {
+			// TODO: use LazyString
 			dst.WorkDir = v
 			return nil
 		},
@@ -86,6 +87,7 @@ var jobSchema = Struct(
 	Field(
 		"workDir", String(),
 		func(_ context.Context, dst *manifest.Job, v string) error {
+			// TODO: use LazyString
 			dst.WorkDir = v
 			return nil
 		},
