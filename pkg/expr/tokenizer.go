@@ -181,7 +181,8 @@ func (t *Tokenizer) Next() *Token {
 		return nil
 	}
 
-	if t.offset == endOffset {
+	//if t.offset == endOffset {
+	if t.offset == len(t.src) {
 		return nil
 	}
 
@@ -200,7 +201,8 @@ func (t *Tokenizer) Next() *Token {
 		Range:   parsetypes.NewRange(startPos, pos),
 	}
 
-	t.offset = endOffset
+	//t.offset = endOffset
+	t.offset = len(t.src)
 	t.setPrevToken(tok)
 	return tok
 }
@@ -213,7 +215,7 @@ func (t *Tokenizer) checkCloseToken(offset int, pos parsetypes.Position) (*Token
 	// TODO: support escapes?
 	tokTyp, tokStr := hasTokenClosePrefix(t.src[offset:])
 	if tokTyp == TokenTypeEmpty {
-		return nil, 0, nil
+		return nil, offset, nil
 	}
 
 	openTok := t.lastOpenExpr()

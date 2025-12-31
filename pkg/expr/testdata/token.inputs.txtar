@@ -51,4 +51,8 @@ start ${{2+$(nproc) / 1}} end
 $($())
 -- err-respect-doc-pos --
 ${{ foo ${{ bar }} baz}}
+-- edge-single-char-after --
+${{foo}}/
+-- edge-single-char-between --
+${{foo}}/${{bar}}
 -- end --
