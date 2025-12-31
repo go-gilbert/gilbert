@@ -30,7 +30,7 @@ func Main(s log.IOStreams, args []string) int {
 
 	cmd := newCmdRoot(ctx, runOpts)
 	cmd.SetIn(s.Stdin)
-	cmd.SetOut(s.Stderr)
+	cmd.SetOut(s.Stdout)
 	cmd.SetErr(s.Stderr)
 
 	// Remove command name to avoid error when binary name doesn't match command.
