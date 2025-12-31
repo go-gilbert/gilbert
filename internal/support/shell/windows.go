@@ -4,6 +4,7 @@
 package shell
 
 import (
+	"context"
 	"os/exec"
 )
 
