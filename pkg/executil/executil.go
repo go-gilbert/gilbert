@@ -8,7 +8,7 @@ func MergeEnv(a, b map[string]string) []string {
 		out = append(out, k+"="+v)
 	}
 
-	for k, v := range a {
+	for k, v := range b {
 		if _, ok := a[k]; ok {
 			continue
 		}

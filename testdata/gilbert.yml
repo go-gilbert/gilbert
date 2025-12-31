@@ -1,0 +1,64 @@
+version: 2
+
+const:
+  pkgdir: ./cmd/gilbert2
+
+inputs:
+  # Inputs are set of global input parameters.
+  # Inputs automatically bind to command-line flags, but can also be populated from environment.
+
+  # Is build a production release or not
+  release:
+    default: false
+    type: bool
+  # Some timeout value
+  timeout:
+    type: duration
+    default: 10s
+    binding:
+      env: JOB_TIMEOUT
+  timestamp:
+    type: date
+    optional: true
+    dateFormat: "2006-01-02 15:04:05"
+  # items:
+  #   type: list
+  #   items:
+  #     type: int
+
+tasks:
+  test:
+    steps:
+      - action: os/shell
+        with:
+          command: ping -c 3 1.1.1.1
+
+  # Build the application
+  build:
+    inputs:
+      # App version
+      version:
+        type: string
+        default: snapshot
+    steps:
+      - action: go/build
+        timeout: 30s
+        strategy:
+          max-parallel: 2
+          continue-on-error: false
+          matrix:
+            os: [windows, linux, darwin]
+            arch: [amd64, 386, arm64]
+          exclude:
+            - os: darwin
+              arch: 386
+            - arch: amd64
+              os: darwin
+        with:
+          package: "${{consts.pkgdir}}"
+          os: ${{matrix.os}}
+          arch: ${{matrix.arch}}
+          buildvcs: false
+          output: "${{project.workDir}}/build/${{matrix.os}}-${{matrix.arch}}/"
+          package_vars:
+            "github.com/go-gilbert/gilbert/internal/v2/buildinfo.Version": "${{inputs.version}}"
