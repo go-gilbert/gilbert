@@ -327,6 +327,16 @@ func ListField[TObj, TProp any](name string, vdec ValueConverter[TProp], setValu
 	}
 }
 
+func DictField[TObj, TVal any](name string, vdec ValueConverter[TVal], setValue func(dst *TObj, val map[string]TVal) error) *StructFieldVisitor[TObj, map[string]TVal] {
+	return &StructFieldVisitor[TObj, map[string]TVal]{
+		name:    name,
+		visitor: Dict(vdec),
+		setValue: func(_ VisitParams, dst *TObj, v map[string]TVal) error {
+			return setValue(dst, v)
+		},
+	}
+}
+
 type StructFieldVisitor[TObj any, TProp any] struct {
 	name     string
 	required bool

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-gilbert/gilbert/internal/v2/actions/golang"
+	"github.com/go-gilbert/gilbert/internal/v2/actions/os"
 	"github.com/go-gilbert/gilbert/internal/v2/engine"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 )
@@ -14,6 +15,7 @@ var (
 
 	namespaces = map[string]map[string]engine.ActionHandlerConstructor{
 		"go": golang.Actions,
+		"os": os.Actions,
 	}
 )
 

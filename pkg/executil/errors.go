@@ -6,6 +6,7 @@ import (
 	"syscall"
 )
 
+// FormatExitError formats process exit error and adds exit code information.
 func FormatExitError(err error) error {
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		// The program has exited with an exit code != 0

@@ -57,11 +57,11 @@ var commonFields = []FieldVisitor[commonBuildArgs]{
 		dst.AsmFlags = val
 		return nil
 	}),
-	Field("package_vars", Dict(AnyString), func(_ VisitParams, dst *commonBuildArgs, val map[string]string) error {
+	DictField("package_vars", AnyString, func(dst *commonBuildArgs, val map[string]string) error {
 		dst.PackageVars = val
 		return nil
 	}),
-	Field("env", Dict(AnyString), func(_ VisitParams, dst *commonBuildArgs, val map[string]string) error {
+	DictField("env", AnyString, func(dst *commonBuildArgs, val map[string]string) error {
 		dst.Env = val
 		return nil
 	}),
