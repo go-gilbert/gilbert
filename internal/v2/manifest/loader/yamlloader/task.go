@@ -50,7 +50,6 @@ var jobGroupSchema = Struct(
 		"workDir",
 		String(),
 		func(_ context.Context, dst *manifest.JobGroup, v string) error {
-			// TODO: use LazyString
 			dst.WorkDir = v
 			return nil
 		},
