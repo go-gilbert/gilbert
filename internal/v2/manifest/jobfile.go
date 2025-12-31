@@ -116,6 +116,9 @@ type Job struct {
 	// When execution strategy is defined, block is applied to a whole job block.
 	Condition *LazyValue
 
+	// WorkDir is custom working directory where job will be executed.
+	WorkDir string
+
 	// Args contains arguments passed to action or mixin.
 	Args JobArgs
 
@@ -133,6 +136,7 @@ type JobGroup struct {
 	Type     JobGroupType
 	Location *ReferenceLocation
 	Inputs   Inputs
+	WorkDir  string
 	Jobs     []Job
 }
 

@@ -46,6 +46,14 @@ var jobGroupSchema = Struct(
 			return nil
 		},
 	).Required(),
+	Field(
+		"workDir",
+		String(),
+		func(_ context.Context, dst *manifest.JobGroup, v string) error {
+			dst.WorkDir = v
+			return nil
+		},
+	),
 )
 
 var jobSchema = Struct(
@@ -72,6 +80,13 @@ var jobSchema = Struct(
 		"delay", Duration(),
 		func(_ context.Context, dst *manifest.Job, v time.Duration) error {
 			dst.Delay = v
+			return nil
+		},
+	),
+	Field(
+		"workDir", String(),
+		func(_ context.Context, dst *manifest.Job, v string) error {
+			dst.WorkDir = v
 			return nil
 		},
 	),
