@@ -28,7 +28,7 @@ type Config struct {
 }
 
 type Runner struct {
-	logger         log.Logger
+	logger         *log.Logger
 	jobFile        *manifest.JobFile
 	rootScope      *scope.Scope
 	shell          *Shell
@@ -38,7 +38,7 @@ type Runner struct {
 
 func NewRunner(cfg Config) *Runner {
 	return &Runner{
-		logger:         cfg.Logger.Named("runner"),
+		logger:         cfg.Logger,
 		jobFile:        cfg.JobFile,
 		rootScope:      cfg.RootScope,
 		cmdProcBuilder: cfg.CmdProcessorFactory,
@@ -133,8 +133,7 @@ func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Sc
 		return r.runJobMatrix(ctx, j, taskScope)
 	}
 
-	r.handleJob(ctx, j, taskScope)
-	return nil
+	return r.handleJob(ctx, j, taskScope)
 }
 
 func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
