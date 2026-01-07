@@ -30,8 +30,12 @@ tasks:
   test:
     steps:
       - action: os/shell
+        async: true
         with:
           command: ping -c 5 1.1.1.1
+      - action: os/shell
+        with:
+          command: echo 'start' && sleep 1 && echo 'test'
 
   # Build the application
   build:

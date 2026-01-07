@@ -77,12 +77,16 @@ func (g *asyncJobGroup) schedule(ctx context.Context, j manifest.Job) {
 	g.remainingCount.Add(1)
 	g.group.Go(func() error {
 		defer g.remainingCount.Add(-1)
-		if ctx.Err() != nil {
-			return nil
+		if err := ctx.Err(); err != nil {
+			return err
 		}
 
-		// TODO
-		return nil
+		err := g.runner.runJob(g.ctx, j, g.taskScope)
+		if err != nil && !errors.Is(err, context.Canceled) {
+			g.runner.logger.Error(err)
+		}
+
+		return err
 	})
 }
 
@@ -142,10 +146,10 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 			r.logger.Error(lastError)
 		}
 
-		r.logger.Infof("waiting for %d async jobs to finish", c)
+		r.logger.Named(name).Infof("waiting for %d async jobs to finish", c)
 	}
 
-	asyncErr := g.group.Wait()
+	asyncErr := g.wait()
 	if lastError != nil {
 		// Sync job errors are primary.
 		// Async errors are already logged.
