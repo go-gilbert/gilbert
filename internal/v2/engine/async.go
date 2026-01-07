@@ -46,7 +46,7 @@ func (g *asyncJobGroup) schedule(ctx context.Context, j manifest.Job, s *scope.S
 
 		err := g.runner.runJob(g.ctx, j, s)
 		if err != nil && !errors.Is(err, context.Canceled) {
-			g.runner.logger.Error(err)
+			g.runner.logger.Named(j.Handler.String()).Error(err)
 		}
 
 		if j.ContinueOnError {
