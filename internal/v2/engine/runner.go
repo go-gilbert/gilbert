@@ -5,7 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
+	"sync/atomic"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
@@ -23,6 +25,7 @@ type Config struct {
 	Shell                 *Shell
 	CmdProcessorFactory   CommandProcessorFactory
 	ActionHandlerProvider ActionHandlerProvider
+	MaxConcurrentJobs     int
 }
 
 type Runner struct {
@@ -45,6 +48,48 @@ func NewRunner(cfg Config) *Runner {
 	}
 }
 
+type asyncJobGroup struct {
+	runner         *Runner
+	group          *errgroup.Group
+	ctx            context.Context
+	taskScope      *scope.Scope
+	remainingCount atomic.Int32
+}
+
+func newAsyncJobGroup(r *Runner, taskScope *scope.Scope) *asyncJobGroup {
+	return &asyncJobGroup{
+		runner:    r,
+		taskScope: taskScope,
+	}
+}
+
+func (g *asyncJobGroup) isInitialized() bool {
+	// initialized only if at-least one async job was scheduled
+	return g.group != nil
+}
+
+func (g *asyncJobGroup) schedule(ctx context.Context, j manifest.Job) {
+	if g.group == nil {
+		// lazy init on demand
+		g.group, g.ctx = errgroup.WithContext(ctx)
+	}
+
+	g.remainingCount.Add(1)
+	g.group.Go(func() error {
+		defer g.remainingCount.Add(-1)
+		if ctx.Err() != nil {
+			return nil
+		}
+
+		// TODO
+		return nil
+	})
+}
+
+func (g *asyncJobGroup) wait() error {
+	return g.group.Wait()
+}
+
 // RunTaskWithScope starts a runner with a given task and scope.
 //
 // Note: passed scope should have the same root as used by runner.
@@ -59,13 +104,55 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 	}
 
 	r.shell.Reporter.OnTaskStart(name)
+
+	// vars for async jobs
+	taskCtx, cancelFn := context.WithCancel(ctx)
+	defer cancelFn()
+
+	var lastError error
+	g := newAsyncJobGroup(r, s)
 	for _, j := range t.Jobs {
-		if err := r.runJob(ctx, j, s); err != nil {
-			return err
+		if taskCtx.Err() != nil {
+			break
+		}
+
+		if j.Async {
+			g.schedule(ctx, j)
+			continue
+		}
+
+		err := r.runJob(taskCtx, j, s)
+		if err != nil {
+			// TODO: impl allow failure
+			// Remember failed error, terminate job context
+			cancelFn()
+			lastError = err
+			break
 		}
 	}
 
-	return nil
+	if !g.isInitialized() {
+		return lastError
+	}
+
+	// Wait for async jobs
+	if c := g.remainingCount.Load(); c > 0 {
+		if lastError != nil {
+			// Log failed sync tasks immediately
+			r.logger.Error(lastError)
+		}
+
+		r.logger.Infof("waiting for %d async jobs to finish", c)
+	}
+
+	asyncErr := g.group.Wait()
+	if lastError != nil {
+		// Sync job errors are primary.
+		// Async errors are already logged.
+		return lastError
+	}
+
+	return asyncErr
 }
 
 func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
@@ -134,6 +221,10 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 	return nil
 }
 
+func (r *Runner) scheduleAsyncJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) {
+	// TODO
+}
+
 func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
 	if j.Kind != manifest.JobKindAction {
 		loc := j.Handler.Location
@@ -174,8 +265,9 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 			log.NewField("job", j.Handler),
 			log.NewField("delay", j.Delay),
 		)
-
-		time.Sleep(j.Delay)
+	}
+	if err := j.WaitForDelay(ctx); err != nil {
+		return err
 	}
 
 	r.shell.Reporter.OnJobStart(JobStartEvent{
@@ -183,10 +275,13 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 		MatrixParameters: jobScope.MatrixValues,
 	})
 
+	runCtx, cancelFn := j.WrapContext(ctx)
+	defer cancelFn()
+
 	// r.logger.Infow(
 	// 	"handleJob",
 	// 	log.NewField("args", parsetypes.Spew(j.Args).String()),
 	// )
 
-	return hResult.Handler.HandleAction(ctx)
+	return hResult.Handler.HandleAction(runCtx)
 }

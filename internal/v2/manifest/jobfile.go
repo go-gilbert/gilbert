@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"context"
 	"time"
 )
 
@@ -124,6 +125,40 @@ type Job struct {
 
 	// Hooks is key-value pair of event name and actions to be run on event.
 	Hooks map[string][]Job
+}
+
+var nopCancelFn = func() {}
+
+// WrapContext wraps passed context with job-defined constraints (timeout, etc).
+//
+// Returns the passed context if a job doesn't have any constraints.
+func (j *Job) WrapContext(parentCtx context.Context) (context.Context, context.CancelFunc) {
+	if j.Timeout == 0 {
+		return parentCtx, nopCancelFn
+	}
+
+	return context.WithTimeout(parentCtx, j.Timeout)
+}
+
+// WaitForDelay delays thread execution if [Delay] is greater than zero.
+//
+// Returns an error and suspends sleep if passed context is canceled before delay elapsed.
+func (j *Job) WaitForDelay(ctx context.Context) error {
+	if j.Delay == 0 {
+		return ctx.Err()
+	}
+
+	ticker := time.NewTicker(j.Delay)
+	defer ticker.Stop()
+
+	select {
+	case <-ticker.C:
+		break
+	case <-ctx.Done():
+		break
+	}
+
+	return ctx.Err()
 }
 
 type JobGroups = map[string]*JobGroup
