@@ -272,17 +272,7 @@ var (
 			dst.MaxParallel = int(v)
 			return nil
 		}),
-		Field(
-			"continue-on-error", Bool(),
-			func(_ context.Context, dst *manifest.ExecStrategy, v bool) error {
-				dst.ContinueOnError = v
-				return nil
-			},
-		),
-		Field("continue-on-error", Bool(), func(_ context.Context, dst *manifest.ExecStrategy, v bool) error {
-			dst.ContinueOnError = v
-			return nil
-		}),
+		// TODO: fail-fast support?
 		Field(
 			"matrix", matrixSchema,
 			func(_ context.Context, dst *manifest.ExecStrategy, v []manifest.MatrixParam) error {

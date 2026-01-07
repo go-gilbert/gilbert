@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync/atomic"
 
 	"golang.org/x/sync/errgroup"
 
@@ -48,52 +47,6 @@ func NewRunner(cfg Config) *Runner {
 	}
 }
 
-type asyncJobGroup struct {
-	runner         *Runner
-	group          *errgroup.Group
-	ctx            context.Context
-	taskScope      *scope.Scope
-	remainingCount atomic.Int32
-}
-
-func newAsyncJobGroup(r *Runner, taskScope *scope.Scope) *asyncJobGroup {
-	return &asyncJobGroup{
-		runner:    r,
-		taskScope: taskScope,
-	}
-}
-
-func (g *asyncJobGroup) isInitialized() bool {
-	// initialized only if at-least one async job was scheduled
-	return g.group != nil
-}
-
-func (g *asyncJobGroup) schedule(ctx context.Context, j manifest.Job) {
-	if g.group == nil {
-		// lazy init on demand
-		g.group, g.ctx = errgroup.WithContext(ctx)
-	}
-
-	g.remainingCount.Add(1)
-	g.group.Go(func() error {
-		defer g.remainingCount.Add(-1)
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		err := g.runner.runJob(g.ctx, j, g.taskScope)
-		if err != nil && !errors.Is(err, context.Canceled) {
-			g.runner.logger.Error(err)
-		}
-
-		return err
-	})
-}
-
-func (g *asyncJobGroup) wait() error {
-	return g.group.Wait()
-}
-
 // RunTaskWithScope starts a runner with a given task and scope.
 //
 // Note: passed scope should have the same root as used by runner.
@@ -114,14 +67,14 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 	defer cancelFn()
 
 	var lastError error
-	g := newAsyncJobGroup(r, s)
+	g := newAsyncJobGroup(r)
 	for _, j := range t.Jobs {
 		if taskCtx.Err() != nil {
 			break
 		}
 
 		if j.Async {
-			g.schedule(ctx, j)
+			g.schedule(ctx, j, s)
 			continue
 		}
 
@@ -203,6 +156,11 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 		return fmt.Errorf(`invalid rule in "exclude" section`)
 	}
 
+	g, matCtx := errgroup.WithContext(ctx)
+	if j.Strategy.MaxParallel > 0 {
+		g.SetLimit(j.Strategy.MaxParallel)
+	}
+
 	// do Cartesian product and run each job
 	for labels, values := range innerJoinMatrix(matParams) {
 		if testMatrixExcluded(&j.Strategy, values) {
@@ -215,18 +173,33 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 			continue
 		}
 
+		// TODO: support fail-fast?
 		jobScope := taskScope.Fork().WithMatrixValues(labels, values)
-		err := r.handleJob(ctx, j, jobScope)
-		if err != nil {
-			return fmt.Errorf("job %q (%s) returned an error: %w", j.Handler, formatMatParams(jobScope.MatrixValues), err)
-		}
+		g.Go(func() error {
+			if matCtx.Err() != nil {
+				return nil
+			}
+
+			err := r.handleJob(matCtx, j, jobScope)
+			if err == nil {
+				return nil
+			}
+
+			err = fmt.Errorf("job %q (%s) returned an error: %w", j.Handler, formatMatParams(jobScope.MatrixValues), err)
+			if !j.ContinueOnError {
+				return err
+			}
+
+			// Don't log context canceled error
+			if !errors.Is(err, context.Canceled) {
+				r.logger.Error(err)
+			}
+
+			return nil
+		})
 	}
 
-	return nil
-}
-
-func (r *Runner) scheduleAsyncJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) {
-	// TODO
+	return g.Wait()
 }
 
 func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {

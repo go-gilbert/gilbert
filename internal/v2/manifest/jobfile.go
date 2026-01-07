@@ -54,9 +54,6 @@ type ExecStrategy struct {
 	// Default: 1
 	MaxParallel int
 
-	// ContinueOnError determines whether matrix should continue running even if job fails.
-	ContinueOnError bool
-
 	// Matrix is ordered set of job configurations.
 	Matrix []MatrixParam
 
