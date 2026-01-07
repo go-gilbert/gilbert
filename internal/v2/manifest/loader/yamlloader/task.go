@@ -99,6 +99,13 @@ var jobSchema = Struct(
 		},
 	),
 	Field(
+		"continue-on-error", Bool(),
+		func(_ context.Context, dst *manifest.Job, v bool) error {
+			dst.ContinueOnError = v
+			return nil
+		},
+	),
+	Field(
 		"if",
 		Transform(
 			String(), func(ctx context.Context, n ast.Node, val string) (*manifest.LazyValue, error) {
@@ -265,6 +272,13 @@ var (
 			dst.MaxParallel = int(v)
 			return nil
 		}),
+		Field(
+			"continue-on-error", Bool(),
+			func(_ context.Context, dst *manifest.ExecStrategy, v bool) error {
+				dst.ContinueOnError = v
+				return nil
+			},
+		),
 		Field("continue-on-error", Bool(), func(_ context.Context, dst *manifest.ExecStrategy, v bool) error {
 			dst.ContinueOnError = v
 			return nil

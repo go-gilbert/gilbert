@@ -103,6 +103,9 @@ type Job struct {
 	// Async tells whether runner should wait until job finishes before starting next job.
 	Async bool
 
+	// ContinueOnError defines whether task execution should continue if job failed.
+	ContinueOnError bool
+
 	// Strategy sets up matrix execution strategy.
 	Strategy ExecStrategy
 
