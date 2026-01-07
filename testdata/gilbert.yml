@@ -31,6 +31,7 @@ tasks:
     steps:
       - action: os/shell
         async: true
+        continue-on-error: true
         with:
           command: ping -c 5 1.1.1.1
       - action: os/shell
@@ -39,7 +40,7 @@ tasks:
 
   # Build the application
   build:
-    workDir: ..
+    working-directory: ..
     inputs:
       # App version
       version:
@@ -51,7 +52,7 @@ tasks:
         workDir: ..
         strategy:
           max-parallel: 2
-          continue-on-error: false
+          continue-on-error: true
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]

@@ -47,7 +47,7 @@ var jobGroupSchema = Struct(
 		},
 	).Required(),
 	Field(
-		"workDir",
+		"working-directory",
 		String(),
 		func(_ context.Context, dst *manifest.JobGroup, v string) error {
 			dst.WorkDir = v
@@ -84,7 +84,7 @@ var jobSchema = Struct(
 		},
 	),
 	Field(
-		"workDir", String(),
+		"working-directory", String(),
 		func(_ context.Context, dst *manifest.Job, v string) error {
 			// TODO: use LazyString
 			dst.WorkDir = v
