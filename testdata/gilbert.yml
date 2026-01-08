@@ -29,14 +29,18 @@ inputs:
 tasks:
   test:
     steps:
+      # - action: os/process
+      #   async: true
+      #   with:
+      #     path: /path/to/bad-command
       - action: os/shell
         async: true
-        continue-on-error: true
+        delay: 500ms
         with:
-          command: ping -c 5 1.1.1.1
+          command: do-foo-bar
       - action: os/shell
         with:
-          command: echo 'start' && sleep 1 && echo 'test'
+          command: echo 'main-start' && sleep 3 && echo 'main-end'
 
   # Build the application
   build:
@@ -49,10 +53,9 @@ tasks:
     steps:
       - action: go/build
         timeout: 30s
-        workDir: ..
+        working-directory: ..
         strategy:
           max-parallel: 2
-          continue-on-error: true
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]

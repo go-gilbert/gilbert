@@ -64,13 +64,34 @@ func (s *ShellActionHandler) HandleAction(ctx context.Context) error {
 		return fmt.Errorf("failed to start command %q: %w", s.args.Command, err)
 	}
 
-	if err := cmd.Wait(); err != nil {
-		if s.args.Silent {
-			s.logger.Warn("command error log is hidden as silence option is enabled")
-		}
+	// Terminate process as soon as context is canceled
+	result := make(chan error)
+	defer close(result)
 
-		return fmt.Errorf("command %q returned an error: %w", s.args.Command, err)
+	go func() {
+		select {
+		case result <- cmd.Wait():
+		case <-ctx.Done():
+		}
+	}()
+
+	select {
+	case err := <-result:
+		return s.handleError(err)
+	case <-ctx.Done():
+		executil.KillProcessGroup(cmd)
+		return ctx.Err()
+	}
+}
+
+func (s *ShellActionHandler) handleError(err error) error {
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	if s.args.Silent {
+		s.logger.Warn("command error log is hidden as silence option is enabled")
+	}
+
+	return fmt.Errorf("command %q returned an error: %w", s.args.Command, err)
 }

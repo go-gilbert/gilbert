@@ -67,14 +67,14 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 	defer cancelFn()
 
 	var lastError error
-	g := newAsyncJobGroup(r)
+	g := newAsyncJobGroup(r, cancelFn)
 	for _, j := range t.Jobs {
 		if taskCtx.Err() != nil {
 			break
 		}
 
 		if j.Async {
-			g.schedule(ctx, j, s)
+			g.schedule(taskCtx, j, s)
 			continue
 		}
 

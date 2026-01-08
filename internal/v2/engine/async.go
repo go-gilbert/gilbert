@@ -15,13 +15,15 @@ type asyncJobGroup struct {
 	runner         *Runner
 	group          *errgroup.Group
 	ctx            context.Context
+	cancelFn       context.CancelFunc
 	taskScope      *scope.Scope
 	remainingCount atomic.Int32
 }
 
-func newAsyncJobGroup(r *Runner) *asyncJobGroup {
+func newAsyncJobGroup(r *Runner, cancelFn context.CancelFunc) *asyncJobGroup {
 	return &asyncJobGroup{
-		runner: r,
+		runner:   r,
+		cancelFn: cancelFn,
 	}
 }
 
@@ -53,6 +55,7 @@ func (g *asyncJobGroup) schedule(ctx context.Context, j manifest.Job, s *scope.S
 			return nil
 		}
 
+		g.cancelFn()
 		return err
 	})
 }
