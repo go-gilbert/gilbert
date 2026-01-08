@@ -61,14 +61,17 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 	}
 
 	r.shell.Reporter.OnTaskStart(name)
+	return r.runJobGroup(ctx, t.Jobs, s)
+}
 
+func (r *Runner) runJobGroup(ctx context.Context, jobs []manifest.Job, s *scope.Scope) error {
 	// vars for async jobs
 	taskCtx, cancelFn := context.WithCancel(ctx)
 	defer cancelFn()
 
 	var lastError error
 	g := newAsyncJobGroup(r, cancelFn)
-	for _, j := range t.Jobs {
+	for _, j := range jobs {
 		if taskCtx.Err() != nil {
 			break
 		}
@@ -99,7 +102,7 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 			r.logger.Error(lastError)
 		}
 
-		r.logger.Named(name).Infof("waiting for %d async jobs to finish", c)
+		r.logger.Infof("waiting for %d async jobs to finish", c)
 	}
 
 	asyncErr := g.wait()
@@ -201,22 +204,33 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 	return g.Wait()
 }
 
-func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
-	if j.Kind != manifest.JobKindAction {
-		loc := j.Handler.Location
-		r.shell.Reporter.PrintDiagnostics(
-			parsetypes.Diagnostics{
-				&parsetypes.Diagnostic{
-					FileName: loc.FileName,
-					Severity: parsetypes.DiagnosticSeverityError,
-					Range:    loc.Range,
-					Offset:   loc.Offset,
-					Err:      fmt.Errorf("only action jobs are supported currently"),
-				},
-			},
-		)
+func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
+	name := j.Handler.Name
+	_, ok := r.jobFile.Mixins[name]
+	if !ok {
+		return fmt.Errorf("mixin %q doesn't exist", name)
+	}
 
-		return errors.New("only action jobs are supported currently")
+	// TODO: resolve mixin scope from parent
+	loc := j.Handler.Location
+	r.shell.Reporter.PrintDiagnostics(
+		parsetypes.Diagnostics{
+			&parsetypes.Diagnostic{
+				FileName: loc.FileName,
+				Severity: parsetypes.DiagnosticSeverityError,
+				Range:    loc.Range,
+				Offset:   loc.Offset,
+				Err:      fmt.Errorf("only action jobs are supported currently"),
+			},
+		},
+	)
+
+	return errors.New("only action jobs are supported currently")
+}
+
+func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
+	if j.Kind == manifest.JobKindMixin {
+		return r.handleMixin(ctx, j, jobScope)
 	}
 
 	hResult := r.actionHandlers.GetActionHandler(ctx, j.Handler, ActionParams{
@@ -253,11 +267,6 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 
 	runCtx, cancelFn := j.WrapContext(ctx)
 	defer cancelFn()
-
-	// r.logger.Infow(
-	// 	"handleJob",
-	// 	log.NewField("args", parsetypes.Spew(j.Args).String()),
-	// )
 
 	return hResult.Handler.HandleAction(runCtx)
 }
