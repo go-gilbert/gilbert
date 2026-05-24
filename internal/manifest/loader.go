@@ -1,7 +1,9 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -55,6 +57,13 @@ func LoadManifest(path string) (*Manifest, error) {
 
 // FromDirectory loads gilbert.yaml from specified directory
 func FromDirectory(dir string) (m *Manifest, err error) {
+	// Both .yaml and .yml are valid extensions.
 	location := filepath.Join(dir, FileName)
+	if _, err := os.Stat(location); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			location = filepath.Join(dir, "gilbert.yml")
+		}
+	}
+
 	return LoadManifest(location)
 }
