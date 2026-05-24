@@ -38,9 +38,9 @@ tasks:
   # Task to debug task runner
   test:
     steps:
-      - action: debug/signal
+      - action: debug/echo
         with:
-          signal: value
+          message: hello
 
   # Build builds application
   build:

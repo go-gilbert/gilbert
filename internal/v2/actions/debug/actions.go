@@ -7,4 +7,5 @@ import (
 
 var Actions = map[string]engine.ActionHandlerConstructor{
 	"signal": newSignalActionHandler,
+	"echo":   newEchoActionHandler,
 }
