@@ -42,6 +42,12 @@ type Scope struct {
 
 	// MatrixValues is values populated by job matrix execution strategy.
 	MatrixValues map[string]any
+
+	// EventData contains signal event data.
+	//
+	// Populated to jobs called by a signal.
+	// Contents of event data depends on event and sender.
+	EventData map[string]any
 }
 
 // ValueByName is a stub for expr.EvalContext compatibility.
@@ -65,6 +71,7 @@ func (s *Scope) Fork() *Scope {
 		Consts:       s.Consts,
 		Inputs:       map[string]any{}, // no need to copy as we've a reference to a parent.
 		MatrixValues: s.MatrixValues,
+		EventData:    s.EventData,
 	}
 
 	return newScope
