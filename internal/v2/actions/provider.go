@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 
+	"github.com/go-gilbert/gilbert/internal/v2/actions/debug"
 	"github.com/go-gilbert/gilbert/internal/v2/actions/golang"
 	"github.com/go-gilbert/gilbert/internal/v2/actions/os"
 	"github.com/go-gilbert/gilbert/internal/v2/engine"
@@ -14,8 +15,9 @@ var (
 	Provider engine.ActionHandlerProvider = ActionHandlerProvider{}
 
 	namespaces = map[string]map[string]engine.ActionHandlerConstructor{
-		"go": golang.Actions,
-		"os": os.Actions,
+		"go":    golang.Actions,
+		"os":    os.Actions,
+		"debug": debug.Actions,
 	}
 )
 

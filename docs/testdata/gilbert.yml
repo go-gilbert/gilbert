@@ -29,17 +29,18 @@ inputs:
     type: date
     optional: true
     dateFormat: "2006-01-02 15:04:05"
-  items:
-    type: list
-    items:
-      type: int
+  # items:
+  #   type: list
+  #   items:
+  #     type: int
 
 tasks:
+  # Task to debug task runner
   test:
     steps:
-      - action: githubMod/actionName
+      - action: debug/signal
         with:
-          key: value
+          signal: value
 
   # Build builds application
   build:
@@ -52,9 +53,9 @@ tasks:
       - action: go/build
         if: ${{inputs.version != "invalid"}}
         timeout: 30s
+        continue-on-error: false
         strategy:
           max-parallel: 2
-          continue-on-error: false
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]
