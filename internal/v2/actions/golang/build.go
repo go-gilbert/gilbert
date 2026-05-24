@@ -69,8 +69,6 @@ func (b *BuildActionHandler) HandleAction(ctx context.Context) error {
 		return fmt.Errorf("failed to start go command: %w", err)
 	}
 
-	b.logger.Infof("building %s", b.args.PackageName)
-
 	if err := cmd.Wait(); err != nil {
 		return executil.FormatExitError(err)
 	}

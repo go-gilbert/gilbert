@@ -18,9 +18,9 @@ tasks:
     steps:
       - action: go/build
         timeout: 30s
+        continue-on-error: false
         strategy:
           max-parallel: 2
-          continue-on-error: false
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]
