@@ -25,7 +25,13 @@ type ActionParams struct {
 	EvalParams expr.EvalParams
 
 	// Outputs is a set of output values that are expected to be returned to a job.
+	//
+	// Value acts as a hint for a job to avoid persisting unnecessary artifacts.
 	Outputs []string
+}
+
+type SignalEmitter interface {
+	EmitSignal(ctx context.Context, name string, data map[string]any) error
 }
 
 type HandlerResult struct {
@@ -78,5 +84,5 @@ type ActionHandlerProvider interface {
 }
 
 type ActionHandler interface {
-	HandleAction(ctx context.Context) error
+	HandleAction(ctx context.Context, emitter SignalEmitter) error
 }

@@ -50,6 +50,10 @@ func newSignalActionHandler(ctx context.Context, ref manifest.JobHandlerRef, par
 	return engine.NewHandlerResult(h, diags)
 }
 
-func (h *signalActionHandler) HandleAction(ctx context.Context) error {
-	return errors.New("signals are not implemented")
+func (h *signalActionHandler) HandleAction(ctx context.Context, emitter engine.SignalEmitter) error {
+	err := emitter.EmitSignal(ctx, h.args.signalName, map[string]any{
+		"message": "test signal",
+	})
+
+	return err
 }

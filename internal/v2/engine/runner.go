@@ -268,5 +268,42 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 	runCtx, cancelFn := j.WrapContext(ctx)
 	defer cancelFn()
 
-	return hResult.Handler.HandleAction(runCtx)
+	emitter := r.newSignalEmitter(j.Hooks)
+	return hResult.Handler.HandleAction(runCtx, emitter)
+}
+
+func (r *Runner) newSignalEmitter(hooks manifest.SignalHooks) SignalEmitter {
+	if len(hooks) == 0 {
+		return noopSignalEmitter{}
+	}
+
+	return &signalEmitter{
+		hooks: hooks,
+	}
+}
+
+type signalEmitter struct {
+	hooks manifest.SignalHooks
+}
+
+func (emitter *signalEmitter) EmitSignal(ctx context.Context, name string, data map[string]any) error {
+	if err := validateSignalIsAllowed(name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type noopSignalEmitter struct{}
+
+func (_ noopSignalEmitter) EmitSignal(ctx context.Context, name string, data map[string]any) error {
+	return validateSignalIsAllowed(name)
+}
+
+func validateSignalIsAllowed(name string) error {
+	if name == "error" {
+		return fmt.Errorf("sending of internal signal is not allowed: %q", name)
+	}
+
+	return nil
 }

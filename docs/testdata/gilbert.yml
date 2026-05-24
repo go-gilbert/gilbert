@@ -38,9 +38,18 @@ tasks:
   # Task to debug task runner
   test:
     steps:
-      - action: debug/echo
+      - action: debug/signal
         with:
-          message: hello
+          signal: mysignal
+        on:
+          mysignal:
+            - action: debug/echo
+              with:
+                message: "message: ${{msg}}"
+          error:
+            - action: debug/echo
+              with:
+                message: Error happened
 
   # Build builds application
   build:

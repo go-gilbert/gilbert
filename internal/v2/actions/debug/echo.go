@@ -45,7 +45,7 @@ func newEchoActionHandler(ctx context.Context, ref manifest.JobHandlerRef, param
 	return engine.NewHandlerResult(h, diags)
 }
 
-func (h *echoActionHandler) HandleAction(ctx context.Context) error {
+func (h *echoActionHandler) HandleAction(ctx context.Context, emitter engine.SignalEmitter) error {
 	h.logger.Info(h.args.message)
 	return nil
 }

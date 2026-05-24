@@ -39,7 +39,7 @@ func NewRunActionHandler(ctx context.Context, ref manifest.JobHandlerRef, params
 	return engine.NewHandlerResult(h, diags)
 }
 
-func (b *RunActionHandler) HandleAction(ctx context.Context) error {
+func (b *RunActionHandler) HandleAction(ctx context.Context, emitter engine.SignalEmitter) error {
 	argv, err := b.args.commandArgs()
 	if err != nil {
 		return err
