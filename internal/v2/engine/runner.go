@@ -213,6 +213,18 @@ func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scop
 		return fmt.Errorf("mixin %q doesn't exist", name)
 	}
 
+	// Scratch scope to evaluate expressions, but based on different workdir.
+
+	manifest.MapArgsToInputs(ctx, manifest.MapArgsParams{
+		Values:  j.Args,
+		Spec:    mixin.Inputs,
+		EnvVars: jobScope.Globals.Env,
+		EvalParams: expr.EvalParams{
+			CommandProcessor: r.cmdProcBuilder(jobScope),
+			Env:              jobScope,
+		},
+	})
+
 	// Build a new scope which doesn't reference parent variables.
 	// Change work dir if necessary.
 	s := jobScope.Root.Fork()

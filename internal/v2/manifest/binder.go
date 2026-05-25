@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
+	"time"
 
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
@@ -202,29 +204,153 @@ func mapLazyValue(ctx context.Context, val *LazyValue, opts valueMapOpts) (any, 
 		return nil, newDiagnostic(val.Location, err, opts.note)
 	}
 
+	return mapRawValue(raw, val.Location, opts)
+}
+
+func mapRawValue(raw any, loc *ReferenceLocation, opts valueMapOpts) (any, parsetypes.Diagnostics) {
 	if t, ok := raw.(string); ok {
 		out, err := opts.spec.ParseValue(t)
 		if err != nil {
-			return nil, newDiagnostic(val.Location, err, opts.note)
+			return nil, newDiagnostic(loc, err, opts.note)
 		}
 
 		return out, nil
 	}
 
-	if !opts.allowNil {
-		if raw == nil {
-			return nil, newDiagnostic(val.Location, errors.New("value cannot be nil"), opts.note)
+	if isNilValue(raw) {
+		if !opts.allowNil {
+			return nil, newDiagnostic(loc, errors.New("value cannot be nil"), opts.note)
 		}
 
-		// TODO: handle iface with nil value
+		if !opts.spec.Type.IsComplex() {
+			return NewZeroValue(opts.spec.Type), nil
+		}
+
+		return nil, nil
 	}
+
+	var (
+		out any
+		err error
+	)
 
 	switch opts.spec.Type {
-	// TODO: typecheck.
-	// NOTE: some scalar values can be casted between.
+	case ValueTypeString:
+		out, err = parsetypes.AnyToString(raw)
+	case ValueTypeBool:
+		out, err = parsetypes.AnyToBool(raw)
+	case ValueTypeInt:
+		out, err = parsetypes.AnyToInt(raw)
+	case ValueTypeFloat:
+		out, err = parsetypes.AnyToFloat(raw)
+	case ValueTypeDate:
+		out, err = anyToDate(raw, opts.spec.DateFormatOrDefault())
+	case ValueTypeDuration:
+		out, err = parsetypes.AnyToDuration(raw)
+	case ValueTypeList:
+		out, err = anyToTypedList(raw, loc, opts)
+	case ValueTypeDict:
+		out, err = anyToTypedDict(raw, loc, opts)
+	default:
+		err = fmt.Errorf("unsupported value type: %s", opts.spec.Type)
 	}
 
-	return nil, nil
+	if err != nil {
+		return nil, newDiagnostic(loc, err, opts.note)
+	}
+
+	return out, nil
+}
+
+func isNilValue(v any) bool {
+	if v == nil {
+		return true
+	}
+
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return rv.IsNil()
+	default:
+		return false
+	}
+}
+
+func anyToDate(v any, dateFormat string) (time.Time, error) {
+	switch t := v.(type) {
+	case time.Time:
+		return t, nil
+	case []byte:
+		return time.Parse(dateFormat, string(t))
+	default:
+		return time.Time{}, fmt.Errorf("value of type %T cannot be converted to date", v)
+	}
+}
+
+func anyToTypedList(v any, loc *ReferenceLocation, opts valueMapOpts) ([]any, error) {
+	list, err := parsetypes.AnyToList(v)
+	if err != nil || opts.spec.Items == nil {
+		return list, err
+	}
+
+	out := make([]any, len(list))
+	itemOpts := valueMapOpts{
+		ep:       opts.ep,
+		spec:     *opts.spec.Items,
+		note:     opts.note,
+		allowNil: true,
+	}
+
+	for i, item := range list {
+		val, diags := mapRawValue(item, loc, itemOpts)
+		if diags.HasError() {
+			return nil, fmt.Errorf("invalid value at index %d: %w", i, diags[0].Err)
+		}
+
+		out[i] = val
+	}
+
+	return out, nil
+}
+
+func anyToTypedDict(v any, loc *ReferenceLocation, opts valueMapOpts) (map[string]any, error) {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Map {
+		return nil, fmt.Errorf("expected a dict, but got %s %#v", rv.Kind(), v)
+	}
+
+	out := make(map[string]any, rv.Len())
+	iter := rv.MapRange()
+	for iter.Next() {
+		key := iter.Key()
+		if key.Kind() != reflect.String {
+			return nil, fmt.Errorf("dict key type should be string, got %s", key.Kind())
+		}
+
+		out[key.String()] = iter.Value().Interface()
+	}
+
+	if opts.spec.Items == nil {
+		return out, nil
+	}
+
+	itemOpts := valueMapOpts{
+		ep:       opts.ep,
+		spec:     *opts.spec.Items,
+		note:     opts.note,
+		allowNil: true,
+	}
+
+	for key, item := range out {
+		val, diags := mapRawValue(item, loc, itemOpts)
+		if diags.HasError() {
+			return nil, fmt.Errorf("invalid value for key %q: %w", key, diags[0].Err)
+		}
+
+		out[key] = val
+	}
+
+	return out, nil
 }
 
 func newDiagnostic(loc *ReferenceLocation, err error, note string) parsetypes.Diagnostics {
