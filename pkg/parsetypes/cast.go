@@ -242,6 +242,10 @@ func AnyToDuration(v any) (time.Duration, error) {
 }
 
 func AnyToList(v any) ([]any, error) {
+	if v == nil {
+		return nil, nil
+	}
+
 	if l, ok := v.([]any); ok {
 		return l, nil
 	}
