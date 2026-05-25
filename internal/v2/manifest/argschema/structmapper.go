@@ -142,7 +142,7 @@ func Dict[T any](valType ValueConverter[T]) *AnyValueVisitor[map[string]T] {
 
 				tval, err := valType.ConvertValue(vp, rv)
 				if err != nil {
-					return nil, fmt.Errorf("invalid value for key %q: %w", k, tval)
+					return nil, fmt.Errorf("invalid value for key %q: %v", k, tval)
 				}
 
 				out[k] = tval

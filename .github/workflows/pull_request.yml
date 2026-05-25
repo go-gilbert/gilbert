@@ -10,15 +10,15 @@ name: Check Pull Request
 on:
   pull_request:
     paths:
-      - '.github/**'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'pkg/**'
-      - 'go.mod'
-      - 'go.sum'
+      - ".github/**"
+      - "cmd/**"
+      - "internal/**"
+      - "pkg/**"
+      - "go.mod"
+      - "go.sum"
 env:
-  GOLANGCI_LINT_VERSION: "v1.61.0"
-  GO_VERSION: "^1.23.0"
+  GOLANGCI_LINT_VERSION: "v2.12"
+  GO_VERSION: "^1.26.0"
 jobs:
   lint:
     runs-on: ubuntu-latest

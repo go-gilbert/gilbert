@@ -1,6 +1,7 @@
 package parsetypes
 
 import (
+	"errors"
 	"fmt"
 	"iter"
 	"reflect"
@@ -235,7 +236,7 @@ func AnyToDuration(v any) (time.Duration, error) {
 	}
 
 	if u < 0 {
-		return 0, fmt.Errorf("number of miliseconds should be >= 0", u)
+		return 0, errors.New("number of miliseconds should be >= 0", u)
 	}
 
 	return u * time.Millisecond, nil
