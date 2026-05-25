@@ -12,6 +12,12 @@ type JobStartEvent struct {
 	MatrixParameters map[string]any
 }
 
+type SignalEvent struct {
+	SignalName string
+	Sender     string
+	Args       map[string]any
+}
+
 // Reporter reports application updates to user interface.
 type Reporter interface {
 	// OnTaskStart reports task execution start event.
@@ -19,6 +25,9 @@ type Reporter interface {
 
 	// OnJobStart reports task step execution start event.
 	OnJobStart(event JobStartEvent)
+
+	// OnSignal reports when action handler emits a signal.
+	OnSignal(event SignalEvent)
 
 	// PrintDiagnostics renders diagnostics.
 	PrintDiagnostics(diags parsetypes.Diagnostics)

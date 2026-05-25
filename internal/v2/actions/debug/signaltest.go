@@ -51,6 +51,10 @@ func newSignalActionHandler(ctx context.Context, ref manifest.JobHandlerRef, par
 }
 
 func (h *signalActionHandler) HandleAction(ctx context.Context, emitter engine.SignalEmitter) error {
+	if h.args.fail {
+		return errors.New("test error from action handler")
+	}
+
 	err := emitter.EmitSignal(ctx, h.args.signalName, map[string]any{
 		"message": "test signal",
 	})

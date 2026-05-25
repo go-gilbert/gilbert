@@ -30,7 +30,13 @@ type ActionParams struct {
 	Outputs []string
 }
 
+// ErrorSignal is a name of internal signal sent on job error.
+const ErrorSignal = "error"
+
 type SignalEmitter interface {
+	// EmitSignal calls jobs attached to a slot of a given job signal.
+	//
+	// Note: call of internal signals, such as [ErrorSignal] is forbidden.
 	EmitSignal(ctx context.Context, name string, data map[string]any) error
 }
 

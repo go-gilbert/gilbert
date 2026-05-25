@@ -47,10 +47,15 @@ tasks:
         type: string
         default: mysignal
 
+      # Throw error?
+      fail:
+        type: bool
+
     steps:
       - action: debug/signal
         with:
           signal: ${{inputs.signal}}
+          fail: ${{inputs.fail}}
         on:
           mysignal:
             - action: debug/echo

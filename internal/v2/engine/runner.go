@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -233,8 +234,9 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 		return r.handleMixin(ctx, j, jobScope)
 	}
 
+	jobName := j.Handler.String()
 	hResult := r.actionHandlers.GetActionHandler(ctx, j.Handler, ActionParams{
-		Logger: r.logger.Named(j.Handler.String()),
+		Logger: r.logger.Named(jobName),
 		Shell:  r.shell,
 		Scope:  jobScope,
 		Args:   j.Args,
@@ -261,23 +263,35 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 	}
 
 	r.shell.Reporter.OnJobStart(JobStartEvent{
-		JobName:          j.Handler.String(),
+		JobName:          jobName,
 		MatrixParameters: jobScope.MatrixValues,
 	})
 
 	runCtx, cancelFn := j.WrapContext(ctx)
 	defer cancelFn()
 
-	emitter := r.newSignalEmitter(jobScope, j.Hooks)
-	return hResult.Handler.HandleAction(runCtx, emitter)
+	emitter := r.newSignalEmitter(jobName, jobScope, j.Hooks)
+	err := hResult.Handler.HandleAction(runCtx, emitter)
+	emitter.callErrorHook(ctx, err)
+	return err
 }
 
-func (r *Runner) newSignalEmitter(parentScope *scope.Scope, hooks manifest.SignalHooks) SignalEmitter {
+// signalEmitterPrivate is a wrapper interface around public's SignalEmiiter.
+//
+// Contains private functionality restricted to runner internal use.
+type signalEmitterPrivate interface {
+	SignalEmitter
+
+	callErrorHook(ctx context.Context, err error)
+}
+
+func (r *Runner) newSignalEmitter(sender string, parentScope *scope.Scope, hooks manifest.SignalHooks) signalEmitterPrivate {
 	if len(hooks) == 0 {
 		return noopSignalEmitter{}
 	}
 
 	return &signalEmitter{
+		sender:      sender,
 		runner:      r,
 		hooks:       hooks,
 		parentScope: parentScope,
@@ -285,9 +299,36 @@ func (r *Runner) newSignalEmitter(parentScope *scope.Scope, hooks manifest.Signa
 }
 
 type signalEmitter struct {
+	sender      string
 	runner      *Runner
 	parentScope *scope.Scope
 	hooks       manifest.SignalHooks
+}
+
+const errSignalTimeout = 5 * time.Second
+
+func (em *signalEmitter) callErrorHook(ctx context.Context, err error) {
+	if err == nil {
+		return
+	}
+
+	// early check to avoid allocating arg map if not needed.
+	_, ok := em.hooks["error"]
+	if !ok {
+		em.runner.logger.Debug("no error handler hooks, skip")
+		return
+	}
+
+	if ctx.Err() != nil {
+		// if canceled - replace with deadline to allow cleanup hooks to run
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.WithoutCancel(ctx), errSignalTimeout)
+		defer cancel()
+	}
+
+	em.runHooks(ctx, "error", map[string]any{
+		"error": err.Error(),
+	})
 }
 
 func (em *signalEmitter) EmitSignal(ctx context.Context, name string, data map[string]any) error {
@@ -295,26 +336,38 @@ func (em *signalEmitter) EmitSignal(ctx context.Context, name string, data map[s
 		return err
 	}
 
+	em.runHooks(ctx, name, data)
+	return nil
+}
+
+func (em *signalEmitter) runHooks(ctx context.Context, name string, data map[string]any) {
 	jobs, ok := em.hooks[name]
 	if !ok {
 		em.runner.logger.Debugf("no hooks for signal %q, skip", name)
-		return nil
+		return
 	}
 
 	s := em.parentScope.Fork()
 	s.EventData = data
 
-	em.runner.logger.Debugw("call signal", log.NewField("name", name), log.NewField("data", data))
+	em.runner.shell.Reporter.OnSignal(SignalEvent{
+		SignalName: name,
+		Sender:     em.sender,
+		Args:       data,
+	})
+
 	err := em.runner.runJobGroup(ctx, jobs, s)
 	if err != nil {
 		// signal handlers are allowed to fail
 		em.runner.logger.Warnf("signal %q returned an error: %s", name, err)
 	}
-
-	return nil
 }
 
 type noopSignalEmitter struct{}
+
+func (_ noopSignalEmitter) callErrorHook(ctx context.Context, err error) {
+	// NOOP
+}
 
 func (_ noopSignalEmitter) EmitSignal(ctx context.Context, name string, data map[string]any) error {
 	return validateSignalIsAllowed(name)
