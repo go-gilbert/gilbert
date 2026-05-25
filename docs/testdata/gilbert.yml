@@ -37,19 +37,32 @@ inputs:
 tasks:
   # Task to debug task runner
   test:
+    inputs:
+      # Test message content
+      message:
+        type: string
+
+      # Signal name
+      signal:
+        type: string
+        default: mysignal
+
     steps:
       - action: debug/signal
         with:
-          signal: mysignal
+          signal: ${{inputs.signal}}
         on:
           mysignal:
             - action: debug/echo
               with:
-                message: "message: ${{msg}}"
+                message: "message: ${{inputs.message}}, data: ${{toJSON(event)}}"
           error:
             - action: debug/echo
               with:
                 message: Error happened
+      - action: debug/echo
+        with:
+          message: next
 
   # Build builds application
   build:

@@ -268,27 +268,47 @@ func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.
 	runCtx, cancelFn := j.WrapContext(ctx)
 	defer cancelFn()
 
-	emitter := r.newSignalEmitter(j.Hooks)
+	emitter := r.newSignalEmitter(jobScope, j.Hooks)
 	return hResult.Handler.HandleAction(runCtx, emitter)
 }
 
-func (r *Runner) newSignalEmitter(hooks manifest.SignalHooks) SignalEmitter {
+func (r *Runner) newSignalEmitter(parentScope *scope.Scope, hooks manifest.SignalHooks) SignalEmitter {
 	if len(hooks) == 0 {
 		return noopSignalEmitter{}
 	}
 
 	return &signalEmitter{
-		hooks: hooks,
+		runner:      r,
+		hooks:       hooks,
+		parentScope: parentScope,
 	}
 }
 
 type signalEmitter struct {
-	hooks manifest.SignalHooks
+	runner      *Runner
+	parentScope *scope.Scope
+	hooks       manifest.SignalHooks
 }
 
-func (emitter *signalEmitter) EmitSignal(ctx context.Context, name string, data map[string]any) error {
+func (em *signalEmitter) EmitSignal(ctx context.Context, name string, data map[string]any) error {
 	if err := validateSignalIsAllowed(name); err != nil {
 		return err
+	}
+
+	jobs, ok := em.hooks[name]
+	if !ok {
+		em.runner.logger.Debugf("no hooks for signal %q, skip", name)
+		return nil
+	}
+
+	s := em.parentScope.Fork()
+	s.EventData = data
+
+	em.runner.logger.Debugw("call signal", log.NewField("name", name), log.NewField("data", data))
+	err := em.runner.runJobGroup(ctx, jobs, s)
+	if err != nil {
+		// signal handlers are allowed to fail
+		em.runner.logger.Warnf("signal %q returned an error: %s", name, err)
 	}
 
 	return nil
