@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -207,12 +208,27 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 
 func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
 	name := j.Handler.Name
-	_, ok := r.jobFile.Mixins[name]
+	mixin, ok := r.jobFile.Mixins[name]
 	if !ok {
 		return fmt.Errorf("mixin %q doesn't exist", name)
 	}
 
-	// TODO: resolve mixin scope from parent
+	// Build a new scope which doesn't reference parent variables.
+	// Change work dir if necessary.
+	s := jobScope.Root.Fork()
+	if j.WorkDir != "" {
+		newWd := j.WorkDir
+		if !filepath.IsAbs(newWd) {
+			newWd = filepath.Join(jobScope.Globals.Project.WorkDir, newWd)
+		}
+
+		s.Globals.Project.WorkDir = filepath.Clean(newWd)
+	}
+
+	_ = s
+	_ = mixin
+	// TODO: map job args to scope
+
 	loc := j.Handler.Location
 	r.shell.Reporter.PrintDiagnostics(
 		parsetypes.Diagnostics{

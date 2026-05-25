@@ -34,7 +34,35 @@ inputs:
   #   items:
   #     type: int
 
+mixins:
+  hello:
+    inputs:
+      name:
+        type: string
+      greeting:
+        type: string
+        default: Hello
+    steps:
+      - action: debug/echo
+        with:
+          message: "${{inputs.greeting}}, ${{inputs.name}}!"
+      - action: debug/echo
+        delay: 300ms
+        with:
+          message: "Goodbye, ${{inputs.name}}"
+
 tasks:
+  test:mixin:
+    steps:
+      - mixin: hello
+        workDir: ..
+        with:
+          name: Bob
+          greeting: Howdy
+      - action: debug/echo
+        with:
+          message: "This is the end, ${{inputs.name}}"
+
   # Task to debug task runner
   test:
     inputs:
