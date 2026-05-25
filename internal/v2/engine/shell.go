@@ -14,7 +14,7 @@ type JobStartEvent struct {
 
 type SignalEvent struct {
 	SignalName string
-	Sender     string
+	JobName    string
 	Args       map[string]any
 }
 

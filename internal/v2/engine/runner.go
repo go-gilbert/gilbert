@@ -352,7 +352,7 @@ func (em *signalEmitter) runHooks(ctx context.Context, name string, data map[str
 
 	em.runner.shell.Reporter.OnSignal(SignalEvent{
 		SignalName: name,
-		Sender:     em.sender,
+		JobName:    em.sender,
 		Args:       data,
 	})
 

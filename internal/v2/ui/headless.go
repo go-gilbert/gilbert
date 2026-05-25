@@ -50,6 +50,16 @@ func (l *LogReporter) OnTaskStart(taskName string) {
 	l.log.Infof("starting task %q", taskName)
 }
 
+func (l *LogReporter) OnSignal(event engine.SignalEvent) {
+	fields := []log.Field{
+		log.NewField("job", event.JobName),
+		log.NewField("signal", event.SignalName),
+		log.NewField("args", event.Args),
+	}
+
+	l.log.Infow("job sent signal", fields...)
+}
+
 func (l *LogReporter) PrintDiagnostics(diags parsetypes.Diagnostics) {
 	l.diagRenderer.RenderDiagnostics(diags)
 	l.diagRenderer.Reset()
