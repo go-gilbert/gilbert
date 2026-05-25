@@ -17,7 +17,7 @@ import (
 var listTypeSchema = Struct(
 	Field("type",
 		Transform(String(), func(_ context.Context, _ ast.Node, v string) (manifest.ValueType, error) {
-			return manifest.ParseValueType(v)
+			return parseValueType(v)
 		}),
 		func(_ context.Context, dst *manifest.TypeSchema, val manifest.ValueType) error {
 			if val.IsComplex() {
@@ -54,7 +54,7 @@ var inputsSchema = Map(Pointer(inputDefinitionSchema)).
 var inputDefinitionSchema = Struct(
 	Field("type",
 		Transform(String(), func(_ context.Context, _ ast.Node, s string) (manifest.ValueType, error) {
-			return manifest.ParseValueType(s)
+			return parseValueType(s)
 		}),
 		func(_ context.Context, dst *manifest.InputDefinition, val manifest.ValueType) error {
 			dst.Schema.Type = val
@@ -325,6 +325,23 @@ func (v defaultValVisitor) VisitItem(ctx context.Context, opts *TraverseOpts, no
 	}
 
 	return v.readOtherNode(ctx, opts, &loc, node)
+}
+
+func parseValueType(value string) (manifest.ValueType, error) {
+	vt, err := manifest.ParseValueType(value)
+	// Add hints for common typos
+	if err != nil {
+		switch value {
+		case "array":
+			err = parsetypes.NewAnnotatedError(err, `did you mean: list ?`)
+		case "boolean":
+			err = parsetypes.NewAnnotatedError(err, `did you mean: bool ?`)
+		default:
+			err = parsetypes.NewAnnotatedError(err, "should be one of: string, int, bool, date, duration, float, list")
+		}
+	}
+
+	return vt, err
 }
 
 func intoAny[T any](_ context.Context, _ ast.Node, s T) (any, error) {
