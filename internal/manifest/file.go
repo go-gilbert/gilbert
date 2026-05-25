@@ -1,7 +1,7 @@
 package manifest
 
 const (
-	// FileName is default manifest filename
+	// FileName is default manifest filename.
 	FileName = "gilbert.yaml"
 )
 

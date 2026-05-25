@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/spf13/pflag"
+
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/internal/v2/scope"
 	"github.com/go-gilbert/gilbert/pkg/expr"
-	"github.com/spf13/pflag"
 )
 
 // inputFlagBinding is interface to implement binding from job file input into command-line flags.
@@ -83,7 +84,15 @@ func (b *InputFlagsBinder) BindInputsToFlagSet(ctx context.Context, fset *pflag.
 			requiredFlags = append(requiredFlags, flagName)
 		}
 
-		fset.Var(binding, flagName, flagDoc)
+		// Boolean flags need special treatment as they're not required to have a value.
+		// Replicate pflag.BoolVar behavior.
+		isBool := input.Schema.Type == manifest.ValueTypeBool
+		if isBool {
+			f := fset.VarPF(binding, flagName, "", flagDoc)
+			f.NoOptDefVal = "true"
+		} else {
+			fset.Var(binding, flagName, flagDoc)
+		}
 	}
 
 	return requiredFlags, nil

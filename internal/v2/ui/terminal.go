@@ -72,6 +72,14 @@ func (r *TerminalReporter) OnJobStart(e engine.JobStartEvent) {
 	r.stdout.Write(b.Bytes())
 }
 
+func (r *TerminalReporter) OnSignal(event engine.SignalEvent) {
+	if event.SignalName == engine.ErrorSignal {
+		r.Printf(r.palette.ErrMarker, "!! job %q sent signal %q\n", event.JobName, event.SignalName)
+	} else {
+		r.Printf(r.palette.NoteMarker, "!! job %q sent signal %q\n", event.JobName, event.SignalName)
+	}
+}
+
 func (r *TerminalReporter) PrintDiagnostics(diags parsetypes.Diagnostics) {
 	r.diagRenderer.RenderDiagnostics(diags)
 	r.diagRenderer.Reset()

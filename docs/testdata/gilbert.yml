@@ -29,17 +29,45 @@ inputs:
     type: date
     optional: true
     dateFormat: "2006-01-02 15:04:05"
-  items:
-    type: list
-    items:
-      type: int
+  # items:
+  #   type: list
+  #   items:
+  #     type: int
 
 tasks:
+  # Task to debug task runner
   test:
+    inputs:
+      # Test message content
+      message:
+        type: string
+
+      # Signal name
+      signal:
+        type: string
+        default: mysignal
+
+      # Throw error?
+      fail:
+        type: bool
+
     steps:
-      - action: githubMod/actionName
+      - action: debug/signal
         with:
-          key: value
+          signal: ${{inputs.signal}}
+          fail: ${{inputs.fail}}
+        on:
+          mysignal:
+            - action: debug/echo
+              with:
+                message: "message: ${{inputs.message}}, data: ${{toJSON(event)}}"
+          error:
+            - action: debug/echo
+              with:
+                message: Error happened
+      - action: debug/echo
+        with:
+          message: next
 
   # Build builds application
   build:
@@ -52,9 +80,9 @@ tasks:
       - action: go/build
         if: ${{inputs.version != "invalid"}}
         timeout: 30s
+        continue-on-error: false
         strategy:
           max-parallel: 2
-          continue-on-error: false
           matrix:
             os: [windows, linux, darwin]
             arch: [amd64, 386, arm64]

@@ -25,7 +25,19 @@ type ActionParams struct {
 	EvalParams expr.EvalParams
 
 	// Outputs is a set of output values that are expected to be returned to a job.
+	//
+	// Value acts as a hint for a job to avoid persisting unnecessary artifacts.
 	Outputs []string
+}
+
+// ErrorSignal is a name of internal signal sent on job error.
+const ErrorSignal = "error"
+
+type SignalEmitter interface {
+	// EmitSignal calls jobs attached to a slot of a given job signal.
+	//
+	// Note: call of internal signals, such as [ErrorSignal] is forbidden.
+	EmitSignal(ctx context.Context, name string, data map[string]any) error
 }
 
 type HandlerResult struct {
@@ -78,5 +90,5 @@ type ActionHandlerProvider interface {
 }
 
 type ActionHandler interface {
-	HandleAction(ctx context.Context) error
+	HandleAction(ctx context.Context, emitter SignalEmitter) error
 }

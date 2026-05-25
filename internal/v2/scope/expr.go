@@ -67,6 +67,7 @@ type exprEnvironment struct {
 	Project ProjectInfo       `expr:"project"`
 	Env     map[string]string `expr:"env"`
 	Matrix  map[string]any    `expr:"matrix"`
+	Event   map[string]any    `expr:"event"`
 }
 
 func newExprEnvironment(s *Scope) *exprEnvironment {
@@ -80,5 +81,6 @@ func newExprEnvironment(s *Scope) *exprEnvironment {
 		Matrix:  s.MatrixValues,
 		Project: s.Globals.Project,
 		Env:     s.Globals.Env,
+		Event:   s.EventData,
 	}
 }

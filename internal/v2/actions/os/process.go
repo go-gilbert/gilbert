@@ -36,7 +36,7 @@ func NewProcessActionHandler(ctx context.Context, ref manifest.JobHandlerRef, pa
 	return engine.NewHandlerResult(h, diags)
 }
 
-func (h *ProcessActionHandler) HandleAction(ctx context.Context) error {
+func (h *ProcessActionHandler) HandleAction(ctx context.Context, emitter engine.SignalEmitter) error {
 	cmd := exec.CommandContext(ctx, h.args.Path, h.args.Args...)
 	cmd.Env = executil.MergeEnv(h.args.Env, h.globals.Env)
 	cmd.Dir = h.globals.Project.WorkDir

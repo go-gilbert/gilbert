@@ -87,6 +87,8 @@ type JobArgs struct {
 	Values   map[string]*LazyValue
 }
 
+type SignalHooks = map[string][]Job
+
 type Job struct {
 	// Location contains information about where job is defined.
 	Location ReferenceLocation
@@ -124,7 +126,7 @@ type Job struct {
 	Args JobArgs
 
 	// Hooks is key-value pair of event name and actions to be run on event.
-	Hooks map[string][]Job
+	Hooks SignalHooks
 }
 
 var nopCancelFn = func() {}
