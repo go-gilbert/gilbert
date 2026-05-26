@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/go-gilbert/gilbert/internal/v2/cmd"
-	"github.com/go-gilbert/gilbert/internal/v2/log"
+	"github.com/go-gilbert/gilbert/internal/cmd"
+	"github.com/go-gilbert/gilbert/internal/log"
 )
 
 func main() {
