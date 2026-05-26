@@ -167,6 +167,8 @@ func AnyToInt(v any) (int64, error) {
 
 func AnyToFloat(v any) (float64, error) {
 	switch t := v.(type) {
+	case int:
+		return float64(t), nil
 	case int8:
 		return float64(t), nil
 	case int16:
@@ -174,6 +176,8 @@ func AnyToFloat(v any) (float64, error) {
 	case int32:
 		return float64(t), nil
 	case int64:
+		return float64(t), nil
+	case uint:
 		return float64(t), nil
 	case uint8:
 		return float64(t), nil
@@ -242,6 +246,10 @@ func AnyToDuration(v any) (time.Duration, error) {
 }
 
 func AnyToList(v any) ([]any, error) {
+	if v == nil {
+		return nil, nil
+	}
+
 	if l, ok := v.([]any); ok {
 		return l, nil
 	}

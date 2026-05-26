@@ -24,6 +24,10 @@ func newScalarInputFlagBinding(logger *log.Logger, def *manifest.InputDefinition
 	}
 }
 
+func (i *scalarInputFlagBinding) IsBoolFlag() bool {
+	return i.inputDef.Schema.Type == manifest.ValueTypeBool
+}
+
 func (i *scalarInputFlagBinding) checkType() error {
 	typeDef := i.inputDef.Schema
 	if !typeDef.Type.IsComplex() {
@@ -121,6 +125,7 @@ func (i *scalarInputFlagBinding) setValueFromInput(val string, isDefault bool) e
 }
 
 func (i *scalarInputFlagBinding) String() string {
+	typ := i.inputDef.Schema.Type
 	val, ok := i.flagCtx.dstScope.Inputs[i.inputDef.Name]
 	if !ok || val == nil {
 		return ""
@@ -128,7 +133,7 @@ func (i *scalarInputFlagBinding) String() string {
 
 	// TODO: make this in a proper way
 	var strVal string
-	switch i.inputDef.Schema.Type {
+	switch typ {
 	case manifest.ValueTypeDate:
 		if dt, ok := val.(time.Time); ok {
 			strVal = dt.Format(i.inputDef.Schema.DateFormatOrDefault())

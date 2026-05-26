@@ -1,5 +1,7 @@
 package scope
 
+import "path/filepath"
+
 const (
 	projectFieldsCount = 2
 	scopeFieldsCount   = 2
@@ -87,6 +89,21 @@ func (s *Scope) WithMatrixValues(labels []string, values []any) *Scope {
 	}
 
 	s.MatrixValues = m
+	return s
+}
+
+// WithWorkDir updates working directory of current scope.
+func (s *Scope) WithWorkDir(wd string) *Scope {
+	if wd == "" {
+		return s
+	}
+
+	newWd := wd
+	if !filepath.IsAbs(newWd) {
+		newWd = filepath.Join(s.Globals.Project.WorkDir, newWd)
+	}
+
+	s.Globals.Project.WorkDir = filepath.Clean(newWd)
 	return s
 }
 

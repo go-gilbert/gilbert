@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -13,6 +14,21 @@ const (
 	JobKindMixin
 	JobKindTask
 )
+
+func (k JobKind) String() string {
+	switch k {
+	case JobKindAction:
+		return "action"
+	case JobKindMixin:
+		return "mixin"
+	case JobKindTask:
+		return "task"
+	case JobKindUnknown:
+		return "<unknown>"
+	default:
+		return fmt.Sprintf("<unknown>(%d)", k)
+	}
+}
 
 type JobGroupType uint8
 

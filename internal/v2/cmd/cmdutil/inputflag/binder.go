@@ -18,6 +18,9 @@ import (
 type inputFlagBinding interface {
 	pflag.Value
 
+	// IsBoolFlag method implements pflag's boolean flag contract.
+	IsBoolFlag() bool
+
 	// getDoc returns flag documentation.
 	getDoc(isGlobal bool) string
 

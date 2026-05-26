@@ -61,7 +61,7 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 		return fmt.Errorf("task %q not found", name)
 	}
 
-	r.shell.Reporter.OnTaskStart(name)
+	r.shell.Reporter.OnTaskStart(TaskStartEvent{TaskName: name})
 	return r.runJobGroup(ctx, t.Jobs, s)
 }
 
@@ -205,33 +205,70 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 	return g.Wait()
 }
 
-func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
+// runSubtask starts mixin or task as a sub-task with its own separate scope.
+func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope.Scope, kind manifest.JobKind) error {
 	name := j.Handler.Name
-	_, ok := r.jobFile.Mixins[name]
-	if !ok {
-		return fmt.Errorf("mixin %q doesn't exist", name)
+
+	var (
+		group *manifest.JobGroup
+		ok    bool
+	)
+	switch kind {
+	case manifest.JobKindMixin:
+		group, ok = r.jobFile.Mixins[name]
+	case manifest.JobKindTask:
+		group, ok = r.jobFile.Tasks[name]
+	default:
+		panic("internal error: runSubtask: bad subtask kind: " + kind.String())
 	}
 
-	// TODO: resolve mixin scope from parent
-	loc := j.Handler.Location
-	r.shell.Reporter.PrintDiagnostics(
-		parsetypes.Diagnostics{
-			&parsetypes.Diagnostic{
-				FileName: loc.FileName,
-				Severity: parsetypes.DiagnosticSeverityError,
-				Range:    loc.Range,
-				Offset:   loc.Offset,
-				Err:      fmt.Errorf("only action jobs are supported currently"),
-			},
-		},
-	)
+	if !ok {
+		return fmt.Errorf("%s %q doesn't exist", kind, name)
+	}
 
-	return errors.New("only action jobs are supported currently")
+	// Scratch scope with different workdir to evaluate expressions.
+	exprScope := jobScope
+	if j.WorkDir != "" {
+		exprScope = jobScope.Fork().WithWorkDir(j.WorkDir)
+	}
+
+	inputs, diags := manifest.MapArgsToInputs(ctx, manifest.MapArgsParams{
+		Values:  j.Args,
+		Spec:    group.Inputs,
+		EnvVars: jobScope.Globals.Env,
+		EvalParams: expr.EvalParams{
+			CommandProcessor: r.cmdProcBuilder(exprScope),
+			Env:              exprScope,
+		},
+	})
+	r.shell.Reporter.PrintDiagnostics(diags)
+	if diags.HasError() {
+		return fmt.Errorf("invalid input parameters for %s %q", kind, name)
+	}
+
+	if kind == manifest.JobKindTask {
+		r.shell.Reporter.OnTaskStart(TaskStartEvent{
+			TaskName:  name,
+			IsSubTask: true,
+		})
+	}
+
+	// Build a new scope which doesn't reference parent variables.
+	// Change work dir if necessary.
+	s := jobScope.Root.Fork().WithWorkDir(j.WorkDir)
+	s.Inputs = inputs
+
+	err := r.runJobGroup(ctx, group.Jobs, s)
+	if err != nil {
+		return fmt.Errorf("%s %q returned error: %w", kind, name, err)
+	}
+
+	return nil
 }
 
 func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
-	if j.Kind == manifest.JobKindMixin {
-		return r.handleMixin(ctx, j, jobScope)
+	if j.Kind != manifest.JobKindAction {
+		return r.runSubtask(ctx, j, jobScope, j.Kind)
 	}
 
 	jobName := j.Handler.String()

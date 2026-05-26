@@ -47,8 +47,13 @@ func NewTerminalReporter(stdio log.IOStreams, palette theme.Palette) *TerminalRe
 	}
 }
 
-func (r *TerminalReporter) OnTaskStart(taskName string) {
-	r.Printf(r.palette.TextHeading, ":: Running task %q\n", taskName)
+func (r *TerminalReporter) OnTaskStart(event engine.TaskStartEvent) {
+	if event.IsSubTask {
+		r.Printf(r.palette.NoteMarker, ":: Running sub-task %q\n", event.TaskName)
+		return
+	}
+
+	r.Printf(r.palette.TextHeading, ":: Running task %q\n", event.TaskName)
 }
 
 func (r *TerminalReporter) OnJobStart(e engine.JobStartEvent) {

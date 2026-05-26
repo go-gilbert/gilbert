@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	"github.com/go-gilbert/gilbert/internal/v2/log"
 	"github.com/go-gilbert/gilbert/internal/v2/manifest"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
-	"github.com/spf13/pflag"
 )
 
 var (
@@ -28,6 +29,10 @@ func newListInputFlagBinding(logger *log.Logger, def *manifest.InputDefinition, 
 	return &listInputFlagBinding{
 		inputBindingBase: newInputBindingBase(logger, def, flagCtx),
 	}
+}
+
+func (b *listInputFlagBinding) IsBoolFlag() bool {
+	return false
 }
 
 func (b *listInputFlagBinding) checkItemDecoder() error {

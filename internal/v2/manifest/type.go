@@ -172,7 +172,7 @@ func (s TypeSchema) ParseValue(val string) (any, error) {
 func (s TypeSchema) String() string {
 	switch s.Type {
 	case ValueTypeBool:
-		return "boolean"
+		return "bool"
 	case ValueTypeInt:
 		return "int"
 	case ValueTypeFloat:
