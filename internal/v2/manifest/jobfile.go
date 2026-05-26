@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -22,8 +23,10 @@ func (k JobKind) String() string {
 		return "mixin"
 	case JobKindTask:
 		return "task"
-	default:
+	case JobKindUnknown:
 		return "<unknown>"
+	default:
+		return fmt.Sprintf("<unknown>(%d)", k)
 	}
 }
 

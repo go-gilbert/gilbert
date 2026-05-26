@@ -26,7 +26,7 @@ type TaskStartEvent struct {
 // Reporter reports application updates to user interface.
 type Reporter interface {
 	// OnTaskStart reports task execution start event.
-	OnTaskStart(taskName string)
+	OnTaskStart(event TaskStartEvent)
 
 	// OnJobStart reports task step execution start event.
 	OnJobStart(event JobStartEvent)

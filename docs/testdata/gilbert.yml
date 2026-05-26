@@ -57,9 +57,18 @@ tasks:
       message:
         type: string
     steps:
-      - action: debug/echo
+      - task: test:subtask:child
         with:
           message: "subtasks with message: ${{inputs.message}}"
+
+  test:subtask:child:
+    inputs:
+      msg:
+        type: string
+    steps:
+      - action: debug/echo
+        with:
+          message: "${{inputs.msg}}"
 
   test:mixin:
     steps:

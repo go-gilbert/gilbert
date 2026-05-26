@@ -46,8 +46,12 @@ func (l *LogReporter) OnJobStart(e engine.JobStartEvent) {
 	l.log.Infow("starting job", fields...)
 }
 
-func (l *LogReporter) OnTaskStart(taskName string) {
-	l.log.Infof("starting task %q", taskName)
+func (l *LogReporter) OnTaskStart(event engine.TaskStartEvent) {
+	l.log.Infow(
+		"starting task",
+		log.NewField("name", event.TaskName),
+		log.NewField("isSubTask", event.IsSubTask),
+	)
 }
 
 func (l *LogReporter) OnSignal(event engine.SignalEvent) {

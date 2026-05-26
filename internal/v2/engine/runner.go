@@ -61,7 +61,7 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 		return fmt.Errorf("task %q not found", name)
 	}
 
-	r.shell.Reporter.OnTaskStart(name)
+	r.shell.Reporter.OnTaskStart(TaskStartEvent{TaskName: name})
 	return r.runJobGroup(ctx, t.Jobs, s)
 }
 
@@ -205,6 +205,7 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 	return g.Wait()
 }
 
+// runSubtask starts mixin or task as a sub-task with its own separate scope.
 func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope.Scope, kind manifest.JobKind) error {
 	name := j.Handler.Name
 
@@ -218,7 +219,7 @@ func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope
 	case manifest.JobKindTask:
 		group, ok = r.jobFile.Tasks[name]
 	default:
-		return fmt.Errorf("internal error: runSubtask: bad subtask kind: %v", kind)
+		panic("internal error: runSubtask: bad subtask kind: " + kind.String())
 	}
 
 	if !ok {
@@ -243,6 +244,13 @@ func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope
 	r.shell.Reporter.PrintDiagnostics(diags)
 	if diags.HasError() {
 		return fmt.Errorf("invalid input parameters for %s %q", kind, name)
+	}
+
+	if kind == manifest.JobKindTask {
+		r.shell.Reporter.OnTaskStart(TaskStartEvent{
+			TaskName:  name,
+			IsSubTask: true,
+		})
 	}
 
 	// Build a new scope which doesn't reference parent variables.
