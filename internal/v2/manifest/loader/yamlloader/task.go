@@ -70,6 +70,12 @@ var jobSchema = Struct(
 		},
 	).CheckNode(setJobTargetValueLoc),
 	Field(
+		"task", String(),
+		func(ctx context.Context, dst *manifest.Job, val string) error {
+			return setJobTarget(ctx, dst, manifest.JobKindTask, val)
+		},
+	).CheckNode(setJobTargetValueLoc),
+	Field(
 		"async", Bool(),
 		func(_ context.Context, dst *manifest.Job, v bool) error {
 			dst.Async = v

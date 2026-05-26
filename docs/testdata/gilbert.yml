@@ -52,6 +52,15 @@ mixins:
           message: "Goodbye, ${{inputs.name}}"
 
 tasks:
+  test:subtask:
+    inputs:
+      message:
+        type: string
+    steps:
+      - action: debug/echo
+        with:
+          message: "subtasks with message: ${{inputs.message}}"
+
   test:mixin:
     steps:
       - mixin: hello
