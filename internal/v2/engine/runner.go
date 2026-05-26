@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -213,48 +212,37 @@ func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scop
 		return fmt.Errorf("mixin %q doesn't exist", name)
 	}
 
-	// Scratch scope to evaluate expressions, but based on different workdir.
+	// Scratch scope with different workdir to evaluate expressions.
+	exprScope := jobScope
+	if j.WorkDir != "" {
+		exprScope = jobScope.Fork().WithWorkDir(j.WorkDir)
+	}
 
-	manifest.MapArgsToInputs(ctx, manifest.MapArgsParams{
+	inputs, diags := manifest.MapArgsToInputs(ctx, manifest.MapArgsParams{
 		Values:  j.Args,
 		Spec:    mixin.Inputs,
 		EnvVars: jobScope.Globals.Env,
 		EvalParams: expr.EvalParams{
-			CommandProcessor: r.cmdProcBuilder(jobScope),
-			Env:              jobScope,
+			CommandProcessor: r.cmdProcBuilder(exprScope),
+			Env:              exprScope,
 		},
 	})
+	r.shell.Reporter.PrintDiagnostics(diags)
+	if diags.HasError() {
+		return fmt.Errorf("invalid input parameters for mixin %q", name)
+	}
 
 	// Build a new scope which doesn't reference parent variables.
 	// Change work dir if necessary.
-	s := jobScope.Root.Fork()
-	if j.WorkDir != "" {
-		newWd := j.WorkDir
-		if !filepath.IsAbs(newWd) {
-			newWd = filepath.Join(jobScope.Globals.Project.WorkDir, newWd)
-		}
+	s := jobScope.Root.Fork().WithWorkDir(j.WorkDir)
+	s.Inputs = inputs
 
-		s.Globals.Project.WorkDir = filepath.Clean(newWd)
+	err := r.runJobGroup(ctx, mixin.Jobs, s)
+	if err != nil {
+		return fmt.Errorf("mixin %q returned error: %w", name, err)
 	}
 
-	_ = s
-	_ = mixin
-	// TODO: map job args to scope
-
-	loc := j.Handler.Location
-	r.shell.Reporter.PrintDiagnostics(
-		parsetypes.Diagnostics{
-			&parsetypes.Diagnostic{
-				FileName: loc.FileName,
-				Severity: parsetypes.DiagnosticSeverityError,
-				Range:    loc.Range,
-				Offset:   loc.Offset,
-				Err:      fmt.Errorf("only action jobs are supported currently"),
-			},
-		},
-	)
-
-	return errors.New("only action jobs are supported currently")
+	return nil
 }
 
 func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {

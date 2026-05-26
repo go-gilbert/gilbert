@@ -55,7 +55,7 @@ tasks:
   test:mixin:
     steps:
       - mixin: hello
-        workDir: ..
+        working-directory: ..
         with:
           name: Bob
           greeting: Howdy
