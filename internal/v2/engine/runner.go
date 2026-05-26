@@ -205,11 +205,24 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 	return g.Wait()
 }
 
-func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
+func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope.Scope, kind manifest.JobKind) error {
 	name := j.Handler.Name
-	mixin, ok := r.jobFile.Mixins[name]
+
+	var (
+		group *manifest.JobGroup
+		ok    bool
+	)
+	switch kind {
+	case manifest.JobKindMixin:
+		group, ok = r.jobFile.Mixins[name]
+	case manifest.JobKindTask:
+		group, ok = r.jobFile.Tasks[name]
+	default:
+		return fmt.Errorf("internal error: runSubtask: bad subtask kind: %v", kind)
+	}
+
 	if !ok {
-		return fmt.Errorf("mixin %q doesn't exist", name)
+		return fmt.Errorf("%s %q doesn't exist", kind, name)
 	}
 
 	// Scratch scope with different workdir to evaluate expressions.
@@ -220,7 +233,7 @@ func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scop
 
 	inputs, diags := manifest.MapArgsToInputs(ctx, manifest.MapArgsParams{
 		Values:  j.Args,
-		Spec:    mixin.Inputs,
+		Spec:    group.Inputs,
 		EnvVars: jobScope.Globals.Env,
 		EvalParams: expr.EvalParams{
 			CommandProcessor: r.cmdProcBuilder(exprScope),
@@ -229,7 +242,7 @@ func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scop
 	})
 	r.shell.Reporter.PrintDiagnostics(diags)
 	if diags.HasError() {
-		return fmt.Errorf("invalid input parameters for mixin %q", name)
+		return fmt.Errorf("invalid input parameters for %s %q", kind, name)
 	}
 
 	// Build a new scope which doesn't reference parent variables.
@@ -237,17 +250,17 @@ func (r *Runner) handleMixin(ctx context.Context, j manifest.Job, jobScope *scop
 	s := jobScope.Root.Fork().WithWorkDir(j.WorkDir)
 	s.Inputs = inputs
 
-	err := r.runJobGroup(ctx, mixin.Jobs, s)
+	err := r.runJobGroup(ctx, group.Jobs, s)
 	if err != nil {
-		return fmt.Errorf("mixin %q returned error: %w", name, err)
+		return fmt.Errorf("%s %q returned error: %w", kind, name, err)
 	}
 
 	return nil
 }
 
 func (r *Runner) handleJob(ctx context.Context, j manifest.Job, jobScope *scope.Scope) error {
-	if j.Kind == manifest.JobKindMixin {
-		return r.handleMixin(ctx, j, jobScope)
+	if j.Kind != manifest.JobKindAction {
+		return r.runSubtask(ctx, j, jobScope, j.Kind)
 	}
 
 	jobName := j.Handler.String()

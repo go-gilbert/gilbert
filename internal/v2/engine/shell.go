@@ -18,6 +18,11 @@ type SignalEvent struct {
 	Args       map[string]any
 }
 
+type TaskStartEvent struct {
+	TaskName  string
+	IsSubTask bool
+}
+
 // Reporter reports application updates to user interface.
 type Reporter interface {
 	// OnTaskStart reports task execution start event.

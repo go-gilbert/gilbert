@@ -14,6 +14,19 @@ const (
 	JobKindTask
 )
 
+func (k JobKind) String() string {
+	switch k {
+	case JobKindAction:
+		return "action"
+	case JobKindMixin:
+		return "mixin"
+	case JobKindTask:
+		return "task"
+	default:
+		return "<unknown>"
+	}
+}
+
 type JobGroupType uint8
 
 const (
