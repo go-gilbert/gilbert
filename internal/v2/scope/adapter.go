@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/go-gilbert/gilbert/internal/support/shell"
+	"github.com/go-gilbert/gilbert/internal/legacy/support/shell"
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )

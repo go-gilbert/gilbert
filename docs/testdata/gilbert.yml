@@ -146,8 +146,8 @@ tasks:
           tags:
             - '${{inputs.release ? "release" : "debug"}}'
           package_vars:
-            "github.com/go-gilbert/gilbert/internal/build.Version": "${{inputs.version}}"
-            "github.com/go-gilbert/gilbert/internal/build.Channel": "stable"
+            "github.com/go-gilbert/gilbert/internal/legacy/build.Version": "${{inputs.version}}"
+            "github.com/go-gilbert/gilbert/internal/legacy/build.Channel": "stable"
           env:
             foo: bar
 
