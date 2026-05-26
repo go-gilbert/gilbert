@@ -72,4 +72,4 @@ tasks:
           workdir: "${{project.workDir}}/.."
           output: "./build/${{matrix.os}}-${{matrix.arch}}/"
           package_vars:
-            "github.com/go-gilbert/gilbert/internal/v2/buildinfo.Version": "${{inputs.version}}"
+            "github.com/go-gilbert/gilbert/internal/buildinfo.Version": "${{inputs.version}}"

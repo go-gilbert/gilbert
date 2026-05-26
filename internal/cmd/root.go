@@ -1,126 +1,93 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"os"
+	"runtime"
 
-	"github.com/fatih/color"
-	"github.com/go-gilbert/gilbert/internal/cmd/maintenance"
-	"github.com/go-gilbert/gilbert/internal/cmd/scaffold"
-	"github.com/go-gilbert/gilbert/internal/cmd/tasks"
+	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
+	"github.com/go-gilbert/gilbert/internal/buildinfo"
+	"github.com/go-gilbert/gilbert/internal/cmd/cmdutil"
+	"github.com/go-gilbert/gilbert/internal/cmd/help"
 	"github.com/go-gilbert/gilbert/internal/log"
-	"github.com/go-gilbert/gilbert/internal/scope"
-	"github.com/urfave/cli"
+	"github.com/go-gilbert/gilbert/internal/manifest/loader/yamlloader"
 )
 
-// FlagNoColor disables color output
-const FlagNoColor = "no-color"
-
-var (
-	// unfortunately, urfave/cmd ignores '--verbose' global flag :(
-	// so it should be defined implicitly in each task
-	verboseFlag = cli.BoolFlag{
-		Name:        "verbose",
-		Usage:       "shows debug information, useful for troubleshooting",
-		Destination: &scope.Debug,
-	}
-
-	noColorFlag = cli.BoolFlag{
-		Name:  FlagNoColor,
-		Usage: "disable color output in terminal",
-	}
-)
-
-type VersionInfo struct {
-	Version string
-	Commit  string
+type RunOpts struct {
+	GlobalDefaults    cmdutil.BootstrapOpts
+	WorkDir           string
+	Logger            *log.Logger
+	Workflow          *yamlloader.LoadResult
+	WorkflowLoadError error
 }
 
-func NewCmdRoot(ver VersionInfo) *cli.App {
-	app := cli.NewApp()
-	app.Name = "gilbert"
-	app.Usage = "Build automation tool for Go"
-	app.Version = ver.Version
-	app.HideVersion = true
-	app.Commands = []cli.Command{
-		{
-			Name:        "version",
-			Description: "shows application version",
-			Usage:       "Shows application version",
-			Action: func(_ *cli.Context) error {
-				fmt.Printf("Gilbert version %s (%s)\n", ver.Version, ver.Commit)
-				return nil
-			},
-		},
-		{
-			Name:        "run",
-			Description: "Runs a task declared in manifest file",
-			Usage:       "Runs a task declared in manifest file",
-			Action:      tasks.RunTask,
-			Before:      bootstrap,
-			Flags: []cli.Flag{
-				verboseFlag,
-				noColorFlag,
-				cli.StringSliceFlag{
-					Name: tasks.OverrideVarFlag,
-				},
-			},
-		},
-		{
-			Name:        "ls",
-			Description: "Lists all tasks defiled in gilbert.yaml",
-			Usage:       "Lists all tasks defiled in gilbert.yaml",
-			Action:      tasks.ListTasksAction,
-			Before:      bootstrap,
-			Flags: []cli.Flag{
-				verboseFlag,
-				cli.BoolFlag{
-					Name:  tasks.FlagJSON,
-					Usage: "Print output in JSON format",
-				},
-			},
-		},
-		{
-			Name:        "init",
-			Description: "Scaffolds a new gilbert.yaml file",
-			Usage:       "Scaffolds a new gilbert.yaml file",
-			Action:      scaffold.RunScaffoldManifest,
-			Before:      bootstrap,
-			Flags: []cli.Flag{
-				verboseFlag,
-			},
-		},
-		{
-			Name:        "clean",
-			Description: "Clean cached files and objects",
-			Usage:       "Clean cached files and objects",
-			Action:      maintenance.ClearCacheAction,
-			Before:      bootstrap,
-			Flags: []cli.Flag{
-				verboseFlag,
-				maintenance.ClearAllFlag,
-				maintenance.ClearPluginsFlag,
-			},
+func newCmdRoot(ctx context.Context, opts RunOpts) *cobra.Command {
+	printDebugRunOpts(opts)
+	cmd := &cobra.Command{
+		Use:           "gilbert <command> <subcommand> [flags]",
+		Short:         "Gilbert task runner",
+		Version:       fmt.Sprintf("%s %s/%s", buildinfo.Version, runtime.GOOS, runtime.GOARCH),
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		Example: heredoc.Doc(`
+			$ gilbert init
+			$ gilbert list
+			$ gilbert run foobar
+		`),
+		Annotations: map[string]string{
+			"versionInfo": buildinfo.Version,
+			"platform":    buildinfo.Platform,
 		},
 	}
 
-	return app
+	// cmd.SetUsageFunc(help.NewGeneralUsageFunc(cmdutil.NewUsageColorPalette(opts.GlobalDefaults.NoColor)))
+	cmd.SetUsageFunc(help.NewGeneralUsageFunc(opts.GlobalDefaults.NoColor))
+
+	cmd.PersistentFlags().Bool("help", false, "Show help for command")
+	fset := buildGlobalsFlagSet(&opts.GlobalDefaults)
+	cmd.PersistentFlags().AddFlagSet(fset)
+
+	cmd.AddCommand(newCmdRun(ctx, opts, fset))
+	cmd.AddCommand(newCmdDiagnostics(opts))
+	cmd.AddCommand(newCmdList(opts))
+	return cmd
 }
 
-func Exit(err error) {
-	if err != nil {
-		color.Red("ERROR: %v", err)
-		os.Exit(1)
+func printDebugRunOpts(opts RunOpts) {
+	logger := opts.Logger
+	logger.Debugf("working directory: %q", opts.WorkDir)
+	if opts.Workflow == nil {
+		logger.Debug("workflow file not available")
+		return
+	}
+
+	logger.Debugf("using workflow file: %q", opts.Workflow.File.Path)
+	if opts.Workflow.HasErrors {
+		logger.Warnf("workflow file %q has errors", opts.Workflow.File.Path)
 	}
 }
 
-func bootstrap(c *cli.Context) error {
-	level := log.LevelInfo
-	if scope.Debug {
-		level = log.LevelDebug
+// buildGlobalsFlagSet constructs and returns flag set with global flags.
+//
+// Although core flags were already processed by uflag before, it's still useful to validate flag values and
+// display then in help output.
+func buildGlobalsFlagSet(opts *cmdutil.BootstrapOpts) *pflag.FlagSet {
+	fset := pflag.NewFlagSet("globals", pflag.ExitOnError)
+	defaultLogFormat := log.FormatConsole
+	switch true {
+	case opts.JSON:
+		defaultLogFormat = log.FormatJSON
+	case opts.NoColor:
+		defaultLogFormat = log.FormatNoColor
 	}
 
-	noColor := c.Bool(FlagNoColor)
-	log.UseConsoleLogger(level, noColor)
-	return nil
+	// Log writer was already set by uflag, just add flag for docs.
+	fset.Var(log.NewFlagFormat(nil, defaultLogFormat), cmdutil.FlagLogFormat, "Set output log format")
+	fset.Var(log.NewFlagLevel(&opts.LogLevel), cmdutil.FlagLogLevel, "Set output log level")
+	fset.StringVar(&opts.WorkDir, cmdutil.FlagWorkDir, opts.WorkDir, "Working directory to use")
+	fset.BoolVar(&opts.NoCache, cmdutil.FlagNoCache, opts.NoCache, "Disable caches")
+	return fset
 }

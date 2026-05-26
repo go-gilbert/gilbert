@@ -4,20 +4,10 @@ import (
 	"os"
 
 	"github.com/go-gilbert/gilbert/internal/cmd"
-)
-
-var (
-	// These values will override by linker
-	version = "dev"
-	commit  = "local build"
+	"github.com/go-gilbert/gilbert/internal/log"
 )
 
 func main() {
-	app := cmd.NewCmdRoot(cmd.VersionInfo{
-		Version: version,
-		Commit:  commit,
-	})
-
-	err := app.Run(os.Args)
-	cmd.Exit(err)
+	exitCode := cmd.Main(log.DefaultIOStreams, os.Args)
+	os.Exit(exitCode)
 }

@@ -2,11 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "dbg: gilbert2 run build",
+      "name": "dbg: gilbert run build",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/cmd/gilbert2",
+      "program": "${workspaceFolder}/cmd/gilbert",
       "cwd": "${workspaceFolder}",
       "args": [
         "run",
