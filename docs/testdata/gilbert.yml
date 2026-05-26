@@ -59,7 +59,7 @@ tasks:
     steps:
       - task: test:subtask:child
         with:
-          message: "subtasks with message: ${{inputs.message}}"
+          msg: "subtasks with message: ${{inputs.message}}"
 
   test:subtask:child:
     inputs:
