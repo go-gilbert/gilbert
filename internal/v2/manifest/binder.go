@@ -63,7 +63,7 @@ func MapArgsToInputs(ctx context.Context, params MapArgsParams) (map[string]any,
 
 		// Fallback - read defaults
 		if spec.IsRequired() {
-			diags.Append(parameterRequiredDiagnostic(k, params.Values.Location))
+			diags = diags.Append(parameterRequiredDiagnostic(k, params.Values.Location))
 			continue
 		}
 
@@ -119,7 +119,7 @@ func MapArgsToInputs(ctx context.Context, params MapArgsParams) (map[string]any,
 			continue
 		}
 
-		diags.Append(parameterRequiredDiagnostic(k, params.Values.Location))
+		diags = diags.Append(parameterRequiredDiagnostic(k, params.Values.Location))
 		continue
 	}
 
@@ -137,7 +137,7 @@ func MapArgsToInputs(ctx context.Context, params MapArgsParams) (map[string]any,
 			Note:     "remove unnecessary parameter",
 			Err:      fmt.Errorf("unknown parameter %q", k),
 		}
-		diags.Append(diag)
+		diags = diags.Append(diag)
 	}
 
 	return dst, diags
