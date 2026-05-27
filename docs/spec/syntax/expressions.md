@@ -1,3 +1,7 @@
+---
+agent_note: See eval_context.d.ts for expression context variables.
+---
+
 # Gilbert Expression Syntax
 
 The Gilbert task runner supports expanding expressions.
@@ -37,7 +41,7 @@ Runs an [Expr language][expr] expression inside `${{...}}` and returns its value
 Assume given a following workflow file:
 
 ```yaml
-consts:
+const:
   is_prod: true
 ```
 
@@ -54,11 +58,28 @@ This type of expression always return string.
 
 Example:
 
-- **Expression:**: `"$(whoami)'s home dir is ${{env.HOME}}"`
-- **Result:**: `"root's home dir is /root"`
+- **Expression:** `"$(whoami)'s home dir is ${{env.HOME}}"`
+- **Result:** `"root's home dir is /root"`
 
 ## Available Context Variables
 
+List of variables available in language expressions:
+
+| Property  | Description                                                                                     | Example                |
+| --------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `project` | see [docs below](#project)                                                                      | `${{project.workDir}}` |
+| `consts`  | Holds values of constants declared in `const` section of `gilbert.yaml`                         | `${{consts.MY_CONST}}` |
+| `env`     | Shell environment variables                                                                     | `${{env.HOME}}`        |
+| `inputs`  | Holds values for input parameters.                                                              | `${{inputs.foobar}}`   |
+| `matrix`  | Matrix values given passed to a job. See `job.strategy.matrix` of `gilbert.yaml`                | `${{matrix.goos}}`     |
+| `event`   | Holds event args when action fires on signal. Available only in jobs defined inside `job.on.*`. | `${{event.error}}`     |
+
 ### `project`
 
-Contains
+Contains current working directory and a location from where task runner was started.
+
+| Property       | Description                                         |
+| -------------- | --------------------------------------------------- |
+| `workDir`      | Path to a current working directory.                |
+| `workspaceDir` | Path to a directory where `gilbert.yaml` is located |
+| `workflowFile` | Path to a current `gilbert.yaml`.                   |
