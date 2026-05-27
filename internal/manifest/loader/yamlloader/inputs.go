@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/goccy/go-yaml/ast"
+
 	"github.com/go-gilbert/gilbert/internal/manifest"
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
-	"github.com/goccy/go-yaml/ast"
 )
 
 var listTypeSchema = Struct(
@@ -159,6 +160,7 @@ var inputDefinitionSchema = Struct(
 						Offset:   offset,
 					}
 				}),
+				// TODO: add delimiter
 			),
 		),
 		func(_ context.Context, dst *manifest.InputDefinition, val *manifest.InputBinding) error {
