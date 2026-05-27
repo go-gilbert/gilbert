@@ -86,6 +86,21 @@ interface JobBase {
   if?: Expression<boolean>;
 
   /**
+   * Custom environment variables to set for a job.
+   *
+   * Example:
+   *
+   * ```yaml
+   * env:
+   *  FOO: "bar"
+   *  key: "${{inputs.myinput}}"
+   * ```
+   *
+   * @const
+   */
+  env?: Record<string, any>
+
+  /**
    * Enables matrix strategy.
    * Used to define variables whose combinations create separate job runs.
    * For example, node: [18, 20] and os: [ubuntu-latest, macos-latest] creates four runs.
@@ -278,6 +293,21 @@ interface Mixin {
   inputs?: Record<string, InputDefinition>
 
   /**
+   * Custom environment variables to use for a mixin.
+   *
+   * Example:
+   *
+   * ```yaml
+   * env:
+   *  FOO: "bar"
+   *  key: "${{inputs.myinput}}"
+   * ```
+   *
+   * @const
+   */
+  env?: Record<string, any>
+
+  /**
    * Sequence of jobs that will be executed when mixin is called.
    *
    * @const
@@ -300,6 +330,21 @@ interface Task {
    * @const
    */
   inputs?: Record<string, InputDefinition>
+
+  /**
+   * Custom environment variables to use for a task.
+   *
+   * Example:
+   *
+   * ```yaml
+   * env:
+   *  FOO: "bar"
+   *  key: "${{inputs.myinput}}"
+   * ```
+   *
+   * @const
+   */
+  env?: Record<string, any>
 
   /**
    * Sequence of jobs that will be executed when task is started.
