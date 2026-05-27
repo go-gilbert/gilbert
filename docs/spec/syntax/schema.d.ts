@@ -18,6 +18,7 @@ type DurationString = string
 
 /**
  * YAML string with expression, execution of which returns a type T.
+ * The `T` type carries a purely documentation role.
  *
  * Expression syntax is described in @./expressions.md
  *
@@ -261,3 +262,140 @@ interface InputDefinitionCommon {
  * Input parameter description can be documented with a comment block below input block.
  */
 type InputDefinition = InputDefinitionCommon & (ListInputDefinition | ScalarInputDefinition)
+
+/**
+ * Mixins allow to decople a set of jobs into a reusable block.
+ */
+interface Mixin {
+  /**
+   * List of input parameters accepted by mixin.
+   *
+   * NOTE: unlike tasks, mixins don't support using command-line flags.
+   * Input parameters for mixins should be explicitly passed via `with:` parameter in a job.
+   *
+   * @const
+   */
+  inputs?: Record<string, InputDefinition>
+
+  /**
+   * Sequence of jobs that will be executed when mixin is called.
+   *
+   * @const
+   */
+  steps: Job[]
+
+  /**
+   * Override a working directory for a mixin.
+   * @const
+   */
+  ["working-directory"]?: string
+}
+
+interface Task {
+  /**
+   * List of input parameters accepted by a task.
+   *
+   * Input values can be passed to a task via command-line flags.
+   *
+   * @const
+   */
+  inputs?: Record<string, InputDefinition>
+
+  /**
+   * Sequence of jobs that will be executed when task is started.
+   *
+   * @const
+   */
+  steps: Job[]
+
+  /**
+   * Override a working directory for a task.
+   * @const
+   */
+  ["working-directory"]?: string
+}
+
+interface WorkflowFile {
+  /**
+   * Workflow file version. Should be `2`.
+   * @const
+   */
+  version: 2
+
+  /**
+   * List of other workflow files to include and merge.
+   *
+   * @const
+   */
+  include: string[]
+
+  /**
+   * Set of plugins to import.
+   *
+   * Key is a namespace and value is import URL.
+   *
+   * For example, plugin with a following import, will expose its actions via `mydocker/` prefix:
+   * 
+   * ```yaml
+   * plugins:
+   *  mydocker: github://go-gilbert/gilbert-contrib/docker
+   * tasks:
+   *  foo:
+   *    steps:
+   *      - action: mydocker/run
+   *        with:
+   *          ...
+   * ```
+   *
+   * @const
+   */
+  plugins: Record<string, string>
+
+  /**
+   * List of predefined variables to be used in expressions.
+   *
+   * Values defined in this block are available as `${{consts.*}}`
+   *
+   * Value should not be an expression.
+   *
+   * @const
+   */
+  const: Record<string, any>
+
+  /**
+   * Global input parameters.
+   *
+   * @see [Task.inputs]
+   * @const
+   */
+  inputs: Record<string, InputDefinition>
+
+  /**
+   * Map of task name and its definition.
+   *
+   * Task description can be documented via a comment block below its name:
+   *
+   * ```yaml
+   * tasks:
+   *  # Build the project
+   *  build:
+   *    steps:
+   *      ...
+   * ```
+   *
+   * Documented task description will be present in `gilbert list` output.
+   *
+   * Task can be called by name using `gilbert run <taskname>`.
+   *
+   * Use `gilbert list` to display a list of available tasks.
+   * Use `gilbert run <taskname> --help` see task description and its parameters.
+   */
+  tasks: Record<string, Task>
+
+  /**
+   * Mixins are reusable pieces of pipeline which can accept inputs.
+   *
+   * Unlike tasks, they cannot be called from command-line.
+   */
+  mixins: Record<string, Mixin>
+}
