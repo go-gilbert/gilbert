@@ -154,13 +154,23 @@ type JobType = JobAction | JobMixin | JobTask
  */
 type Job = JobType & JobBase
 
-/**
- * Defines task or mixin input parameter.
- * Parameters are mapped to command-line flags.
- *
- * Input parameter description can be documented with a comment block below input block.
- */
-interface InputDefinition {
+interface ListInputDefinition {
+  /**
+   * @const
+   */
+  type: 'list'
+
+  /**
+   * Defines a type of element of a list.
+   *
+   * Should only be used when `type` is set to `list`.
+   *
+   * @const
+   */
+  items: 'string' | 'int' | 'bool' | 'date' | 'duration' | 'float' | 'list'
+}
+
+interface ScalarInputDefinition {
   /**
    * Input value type.
    *
@@ -170,16 +180,8 @@ interface InputDefinition {
    *
    * @const
    */
-  type: 'string' | 'int' | 'bool' | 'date' | 'duration' | 'float' | 'list'
-
-  /**
-   * Type of items of an array.
-   *
-   * Should only be used when `type` is set to `list`.
-   *
-   * @const
-   */
-  items?: 'string' | 'int' | 'bool' | 'date' | 'duration' | 'float' | 'list'
+  type: 'string' | 'int' | 'bool' | 'date' | 'duration' | 'float'
+  items: never
 
   /**
    * Date format used to parse a command-line flag value.
@@ -189,15 +191,16 @@ interface InputDefinition {
    * @const
    */
   dateFormat?: string
+}
 
+interface InputDefinitionCommon {
   /**
    * Fallback value used when input value not specified.
    *
    * Value type should correspond to `type`.
    * Note: use `optional` to use an empty value by default.
-   * @const
    */
-  default?: any
+  default?: Expression<any> | any
 
   /**
    * Whether a value is not required.
@@ -250,3 +253,11 @@ interface InputDefinition {
     delimiter?: string
   }
 }
+
+/**
+ * Defines task or mixin input parameter.
+ * Parameters are mapped to command-line flags.
+ *
+ * Input parameter description can be documented with a comment block below input block.
+ */
+type InputDefinition = InputDefinitionCommon & (ListInputDefinition | ScalarInputDefinition)
