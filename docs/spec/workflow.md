@@ -27,7 +27,7 @@ All top-level sections except `version` are optional unless a task needs them. U
 
 | Field | Required | Type | Expressions | Description |
 | --- | --- | --- | --- | --- |
-| `version` | [x] | string or number | No | Workflow format version. The supported value is `2`. |
+| `version` | Yes | string or number | No | Workflow format version. The supported value is `2`. |
 | `include` |  | list of strings | No | Other workflow files to load and merge into the current workflow. Paths are resolved relative to the file that declares them. |
 | `plugins` |  | map of string to string | No | Plugin imports. The map key is the action namespace exposed by the plugin. |
 | `const` |  | map of scalar values | No | Static values exposed to expressions as `consts.*`. |
@@ -103,7 +103,7 @@ Task inputs can be set from command-line flags, environment variables, defaults,
 
 | Field | Required | Type | Expressions | Description |
 | --- | --- | --- | --- | --- |
-| `type` | [x] | [input type](#input-types) | No | One of [`string`](#string), [`int`](#int), [`bool`](#bool), [`float`](#float), [`date`](#date), [`duration`](#duration), or [`list`](#list). |
+| `type` | Yes | [input type](#input-types) | No | One of [`string`](#string), [`int`](#int), [`bool`](#bool), [`float`](#float), [`date`](#date), [`duration`](#duration), or [`list`](#list). |
 | `items` | when `type: list` | [type schema](#type-schema) | No | Invalid otherwise. Defines the list element type. |
 | `dateFormat` |  | string | No | Date parsing layout. Only valid for [`date`](#date). Defaults to Go `time.RFC3339`. |
 | `default` |  | value or [expression](#expression-language) | Yes | Fallback value when no value is provided. Must match the input type after expansion. |
@@ -135,8 +135,6 @@ inputs:
 ```
 
 Nested complex item types are not supported. A list item type can be scalar, but not another list or dictionary.
-
-### Type Reference
 
 #### String
 
@@ -222,7 +220,7 @@ items:
 
 | Field | Required | Type | Expressions | Description |
 | --- | --- | --- | --- | --- |
-| `type` | [x] | [input type](#input-types) | No | Element type. Complex nested types such as [`list`](#list) are not supported. |
+| `type` | Yes | [input type](#input-types) | No | Element type. Complex nested types such as [`list`](#list) are not supported. |
 | `dateFormat` |  | string | No | Date parsing layout. Only valid when `type` is [`date`](#date). |
 
 ## Tasks And Mixins
@@ -250,7 +248,7 @@ mixins:
 | `inputs` |  | map of [input definitions](#input-definition) | Per definition | Values accepted by this task or mixin. |
 | `env` |  | map | No | Environment values scoped to the task or mixin. |
 | `working-directory` |  | string | No | Working directory for jobs in the group. Relative paths resolve from the current workflow working directory. |
-| `steps` | [x] | list of [jobs](#jobs) | Per job field | Jobs executed in order unless a job is asynchronous. |
+| `steps` | Yes | list of [jobs](#jobs) | Per job field | Jobs executed in order unless a job is asynchronous. |
 
 Tasks are command-line entry points. Mixins are reusable job groups and cannot be run directly from the command line.
 
@@ -323,7 +321,7 @@ steps:
 | Field | Required | Type | Expressions | Description |
 | --- | --- | --- | --- | --- |
 | `max-parallel` |  | positive integer | No | Maximum number of matrix jobs to run concurrently. Defaults to `1`. |
-| `matrix` | [x] | ordered map of string to list or expression returning list | Yes, in values | Each key becomes available under `matrix.<key>` during each job run. Matrix keys are literal. |
+| `matrix` | Yes | ordered map of string to list or expression returning list | Yes, in values | Each key becomes available under `matrix.<key>` during each job run. Matrix keys are literal. |
 | `exclude` |  | list of scalar maps | No | Excludes matrix rows that match all specified key/value pairs in an exclude rule. |
 
 `matrix` values may be literal arrays or expressions that evaluate to arrays. Empty matrix arrays are ignored with a warning. `exclude` values and the referenced matrix values must be scalar and comparable.
