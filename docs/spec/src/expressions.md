@@ -18,7 +18,7 @@ Example:
 - **Expression:** `"$(printf 2+2=%d 4)"`
 - **Result:** `"4"`
 
-### Language Expression
+### Value Expression
 
 TODO: find a better name for this type of expression.
 
@@ -35,6 +35,15 @@ Runs an [Expr language][expr] expression inside `${{...}}` and returns its value
 
 > [!NOTE]
 > Unlike shell expressions, this example returns a numeric value.
+
+### Mixed Expression
+
+A string which contains both shell, value expression and string literals.
+
+Returns a string.
+
+- **Expression:** `"Home of $(whoami) is ${{env.HOME}}"`
+- **Result:** `"Home of Alice is /Users/Alice"`
 
 ##### Accessing Context Variables
 
