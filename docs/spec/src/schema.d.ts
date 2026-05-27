@@ -372,7 +372,7 @@ interface WorkflowFile {
    *
    * @const
    */
-  include: string[]
+  include?: string[]
 
   /**
    * Set of plugins to import.
@@ -394,7 +394,7 @@ interface WorkflowFile {
    *
    * @const
    */
-  plugins: Record<string, string>
+  plugins?: Record<string, string>
 
   /**
    * List of predefined variables to be used in expressions.
@@ -405,7 +405,7 @@ interface WorkflowFile {
    *
    * @const
    */
-  const: Record<string, any>
+  const?: Record<string, any>
 
   /**
    * Global input parameters.
@@ -413,7 +413,7 @@ interface WorkflowFile {
    * @see [Task.inputs]
    * @const
    */
-  inputs: Record<string, InputDefinition>
+  inputs?: Record<string, InputDefinition>
 
   /**
    * Map of task name and its definition.
@@ -435,12 +435,12 @@ interface WorkflowFile {
    * Use `gilbert list` to display a list of available tasks.
    * Use `gilbert run <taskname> --help` see task description and its parameters.
    */
-  tasks: Record<string, Task>
+  tasks?: Record<string, Task>
 
   /**
    * Mixins are reusable pieces of pipeline which can accept inputs.
    *
    * Unlike tasks, they cannot be called from command-line.
    */
-  mixins: Record<string, Mixin>
+  mixins?: Record<string, Mixin>
 }

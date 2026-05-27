@@ -13,9 +13,10 @@
 
 - input binding delimiter
 
-**cobra**
+**schema**
 
-- Fix showing tasks list "Available Tasks" for "gilbert --help"
+- wire `InputDefinition.binding.delimiter` to yamlloader
+- support setting env
 
 **expr**
 
