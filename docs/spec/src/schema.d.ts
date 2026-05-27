@@ -71,7 +71,7 @@ interface JobBase {
   /**
    * Job execution timeout duration
    */
-  deadline?: DurationString
+  timeout?: DurationString
 
   /**
    * Whether to allow job to fail.
