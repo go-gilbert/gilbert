@@ -1,14 +1,12 @@
 {
   "name": "gilbert",
   "version": "2.0.0",
-  "description": "<p align=\"center\"><img src=\"docs/assets/gilbert.png\" width=\"256\"></p> <p align=\"center\">   <a href=\"https://goreportcard.com/report/github.com/go-gilbert/gilbert\"><img src=\"https://goreportcard.com/badge/github.com/go-gilbert/gilbert\" /></a>   <a href=\"https://opensource.org/licenses/mit-license\"><img src=\"https://img.shields.io/badge/license-MIT-brightgreen.svg\" /></a> </p>",
+  "description": "",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/go-gilbert/gilbert.git"

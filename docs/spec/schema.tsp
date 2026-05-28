@@ -2,7 +2,6 @@ import "@typespec/json-schema";
 
 using JsonSchema;
 
-@jsonSchema
 namespace Schemas;
 
 /** A YAML string parseable by Go's time.ParseDuration. */
@@ -228,6 +227,8 @@ model Task {
 }
 
 /** Gilbert workflow file. */
+@jsonSchema
+@id("gilbert.schema.json")
 model WorkflowFile {
   /** Workflow file version. Should be `2`. */
   version: 2;
