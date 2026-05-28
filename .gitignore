@@ -5,10 +5,13 @@
 *.so
 *.dylib
 
+# Node
+node_modules
+
 # Artifacts 
 *.exe
 
-# Arhives
+# Archives
 *.tar
 *.zip
 

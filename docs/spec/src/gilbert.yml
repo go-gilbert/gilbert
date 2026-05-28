@@ -1,0 +1,172 @@
+# This is an example file that accompanies the @./schema.d.ts file.
+version: 2
+
+include:
+  - include.yml
+
+plugins:
+  githubMod: github://go-gilbert/example-plugin@v1.0.0
+  httpMod: http://example.com/plugin.zip
+  localMod: ./my-plugin
+
+const:
+  foo: bar
+
+inputs:
+  # Is build a production release or not
+  release:
+    default: false
+    type: bool
+
+  # Examples of other inputs of types
+  timeout:
+    type: duration
+    default: 10s
+    binding:
+      env: JOB_TIMEOUT
+  timestamp:
+    type: date
+    optional: true
+    dateFormat: "2006-01-02 15:04:05"
+  items:
+    type: list
+    items:
+      type: int
+
+mixins:
+  hello:
+    inputs:
+      name:
+        type: string
+      greeting:
+        type: string
+        default: Hello
+    steps:
+      - action: debug/echo
+        with:
+          message: "${{inputs.greeting}}, ${{inputs.name}}!"
+      - action: debug/echo
+        delay: 300ms
+        with:
+          message: "Goodbye, ${{inputs.name}}"
+
+tasks:
+  test:subtask:
+    inputs:
+      message:
+        type: string
+    steps:
+      - task: test:subtask:child
+        with:
+          msg: "subtasks with message: ${{inputs.message}}"
+
+  test:subtask:child:
+    inputs:
+      msg:
+        type: string
+    steps:
+      - action: debug/echo
+        with:
+          message: "${{inputs.msg}}"
+
+  test:mixin:
+    steps:
+      - mixin: hello
+        working-directory: ..
+        with:
+          name: Bob
+          greeting: Howdy
+      - action: debug/echo
+        with:
+          message: "This is the end, ${{inputs.name}}"
+
+  # Task to debug task runner
+  test:
+    inputs:
+      # Test message content
+      message:
+        type: string
+
+      # Signal name
+      signal:
+        type: string
+        default: mysignal
+
+    steps:
+      - action: debug/signal
+        with:
+          signal: ${{inputs.signal}}
+        on:
+          mysignal:
+            - action: debug/echo
+              with:
+                message: "message: ${{inputs.message}}, data: ${{toJSON(event)}}"
+          error:
+            - action: debug/echo
+              with:
+                message: Error happened
+      - action: debug/echo
+        with:
+          message: next
+
+  # Build builds application
+  build:
+    inputs:
+      # App version
+      version:
+        type: string
+        default: $(git describe --tags --abbrev=0)
+    steps:
+      - action: go/build
+        if: ${{inputs.version != "invalid"}}
+        timeout: 30s
+        continue-on-error: false
+        env:
+          FOO: bar
+        strategy:
+          max-parallel: 2
+          matrix:
+            os: [windows, linux, darwin]
+            arch: [amd64, 386, arm64]
+          exclude:
+            - os: darwin
+              arch: 386
+            - arch: amd64
+              os: darwin
+        with:
+          package: .
+          os: ${{matrix.os}}
+          arch: ${{matrix.arch}}
+          cgo: false
+          buildvcs: false
+          tags:
+            - customtag
+            - '${{inputs.release ? "release" : "debug"}}'
+          package_vars:
+            "github.com/go-gilbert/gilbert/internal/legacy/build.Version": "${{inputs.version}}"
+            "github.com/go-gilbert/gilbert/internal/legacy/build.Channel": "stable"
+
+  # Starts dev server.
+  #
+  # Detailed description comes here.
+  start:
+    inputs:
+      configFile:
+        type: string
+        default: "dev.env"
+    steps:
+      - action: fs/watch
+        delay: 1s
+        async: true
+        with:
+          path: "./..."
+          debounceTime: 100ms
+          ignore:
+            - "*.log"
+        on:
+          change:
+            - action: go/run
+              async: true
+              with:
+                package: .
+                args: "-cfg=${{ inputs.configFile }}"

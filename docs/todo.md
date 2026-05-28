@@ -13,11 +13,13 @@
 
 - input binding delimiter
 
-**cobra**
+**schema**
 
-- Fix showing tasks list "Available Tasks" for "gilbert --help"
+- wire `InputDefinition.binding.delimiter` to yamlloader
+- support setting env
+- support binding to file
 
-**expr**
+**actions**
 
-- Support indents in DocumentInfo
-- Consider cel-go as it might support dynamic envs: https://github.com/google/cel-go
+- Add `node/npx`, will be used to run typespec schema gen.
+- Add `fs/watch` and other.

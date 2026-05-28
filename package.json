@@ -1,0 +1,24 @@
+{
+  "name": "gilbert",
+  "version": "2.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/go-gilbert/gilbert.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/go-gilbert/gilbert/issues"
+  },
+  "homepage": "https://github.com/go-gilbert/gilbert#readme",
+  "dependencies": {
+    "@typespec/compiler": "^1.12.0",
+    "@typespec/json-schema": "^1.12.0"
+  }
+}
