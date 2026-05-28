@@ -6,22 +6,22 @@
     "version": {
       "type": "number",
       "const": 2,
-      "description": "Workflow file version. Should be `2`."
+      "description": "Workflow file version. `2` is the only supported value; other values are invalid."
     },
     "include": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "List of other workflow files to include and merge."
+      "description": "List of other workflow files to include and merge.\nPaths resolve relative to the including file. A file cannot include\nitself. Duplicate task, mixin, and input names across included files are\nrejected."
     },
     "plugins": {
       "$ref": "#/$defs/RecordString",
-      "description": "Set of plugins to import.\nKey is a namespace and value is import URL."
+      "description": "Set of plugins to import.\nKey is a namespace and value is import URL.\n\nThe namespace becomes the action prefix. For example, a plugin declared as\n`docker:` exposes actions such as `docker/build` and `docker/run`."
     },
     "const": {
       "$ref": "#/$defs/RecordUnknown",
-      "description": "Predefined variables available to expressions as `${{ consts.* }}`.\nValues in this block should not be expressions."
+      "description": "Predefined variables available to expressions as `${{ consts.* }}`.\nExpressions are not expanded inside this block. Values are literal YAML\nscalars."
     },
     "inputs": {
       "type": "object",
@@ -40,11 +40,11 @@
     },
     "tasks": {
       "$ref": "#/$defs/RecordTask",
-      "description": "Map of task name and its definition."
+      "description": "Map of task name and its definition.\nTasks are command-line entry points and can be run with\n`gilbert run <name>`. Comments immediately above a task key are collected\nas the task description for list/help output."
     },
     "mixins": {
       "$ref": "#/$defs/RecordMixin",
-      "description": "Mixins are reusable pieces of pipeline which can accept inputs.\nUnlike tasks, they cannot be called from command-line."
+      "description": "Mixins are reusable pieces of pipeline which can accept inputs.\nUnlike tasks, they cannot be called from command-line. Mixins can be\ncalled from both tasks and other mixins."
     }
   },
   "required": [
@@ -69,7 +69,8 @@
       "properties": {
         "type": {
           "type": "string",
-          "const": "list"
+          "const": "list",
+          "description": "Declares this input as a list value."
         },
         "items": {
           "anyOf": [
@@ -96,13 +97,9 @@
             {
               "type": "string",
               "const": "float"
-            },
-            {
-              "type": "string",
-              "const": "list"
             }
           ],
-          "description": "Defines a type of element of a list.\nShould only be used when `type` is set to `list`."
+          "description": "Defines a type of element of a list.\nShould only be used when `type` is set to `list`.\n\nList item types must be scalar. Nested lists and dictionaries are not\nsupported."
         }
       },
       "required": [
@@ -146,11 +143,11 @@
               "const": "float"
             }
           ],
-          "description": "Input value type.\n\nBesides standard scalar values, special values are parseable from\ncommand-line flags or string values."
+          "description": "Input value type.\n\nBesides standard scalar values, special values are parseable from\ncommand-line flags or string values. `duration` values are parsed with\nGo's time.ParseDuration. `date` values are parsed with the Go time layout\nfrom `dateFormat`, or RFC3339 when `dateFormat` is omitted."
         },
         "dateFormat": {
           "type": "string",
-          "description": "Date format used to parse a command-line flag value.\nHas effect only when `type` is `date`."
+          "description": "Date format used to parse a command-line flag value.\nHas effect only when `type` is `date`.\nDefaults to Go time.RFC3339 when omitted."
         }
       },
       "required": [
@@ -181,11 +178,11 @@
       "type": "object",
       "properties": {
         "default": {
-          "description": "Fallback value used when input value is not specified.\nValue type should correspond to `type`."
+          "description": "Fallback value used when input value is not specified.\nThis value may be an expression. After expression expansion, the value\nmust match the declared `type`."
         },
         "optional": {
           "type": "boolean",
-          "description": "Whether a value is not required.\nHas no effect when `default` is set."
+          "description": "Whether a value is not required.\nHas no effect when `default` is set.\n\nWhen `optional` is true and there is no default, the input resolves to the\ndeclared type's zero value. Boolean inputs are optional by default."
         },
         "binding": {
           "$ref": "#/$defs/InputBinding",
@@ -210,7 +207,7 @@
               }
             ]
           },
-          "description": "List of input parameters accepted by a task.\nInput values can be passed to a task via command-line flags."
+          "description": "List of input parameters accepted by a task.\nInput values can come from explicit `with` values, command-line flags,\nenvironment variables, or defaults."
         },
         "env": {
           "$ref": "#/$defs/RecordUnknown",
@@ -259,7 +256,7 @@
               }
             ]
           },
-          "description": "List of input parameters accepted by mixin.\nUnlike tasks, mixins do not support command-line flags."
+          "description": "List of input parameters accepted by mixin.\nUnlike tasks, mixins do not support command-line flags. Mixins can be\ncalled from tasks and from other mixins, and their inputs should be passed\nexplicitly via `with`."
         },
         "env": {
           "$ref": "#/$defs/RecordUnknown",
@@ -290,14 +287,14 @@
       "required": [
         "steps"
       ],
-      "description": "Mixins allow a set of jobs to be reused as a block."
+      "description": "Mixins allow a set of jobs to be reused as a block.\nMixin inputs are set only through `with` from a calling task or mixin;\ncommand-line flag and environment bindings are ignored for mixins."
     },
     "InputBinding": {
       "type": "object",
       "properties": {
         "env": {
           "type": "string",
-          "description": "Environment variable name.\nIf input value and command-line flag are unspecified, this variable is used when present."
+          "description": "Environment variable name.\nIf input value and command-line flag are unspecified, this variable is used when present.\n\nTask input resolution order is: explicit `with` value, command-line flag,\nenvironment variable, then `default`. Bindings apply only to task inputs,\nnot mixin inputs."
         },
         "flag": {
           "type": "string",
@@ -305,7 +302,7 @@
         },
         "delimiter": {
           "type": "string",
-          "description": "Character used to split a string into a list when parsing an environment\nvariable or command-line value."
+          "description": "Character used to split a string into a list when parsing an environment\nvariable or command-line value.\n\nCurrent loader support is not implemented."
         }
       },
       "description": "Command-line and environment binding for an input value."
@@ -315,7 +312,7 @@
       "properties": {
         "action": {
           "type": "string",
-          "description": "Name of action to be executed."
+          "description": "Name of action to be executed.\nBuilt-in actions use `namespace/name` names such as `debug/echo` and\n`go/build`. Plugin actions use the namespace declared in `plugins`, for\nexample `docker/build`."
         }
       },
       "required": [
@@ -333,7 +330,7 @@
       "properties": {
         "mixin": {
           "type": "string",
-          "description": "Name of mixin to be executed."
+          "description": "Name of mixin to be executed.\nMixin inputs must be passed explicitly with `with`; command-line input\nbindings do not apply to mixin calls."
         }
       },
       "required": [
@@ -351,7 +348,7 @@
       "properties": {
         "task": {
           "type": "string",
-          "description": "Name of task to be executed."
+          "description": "Name of task to be executed.\nCalls another task from the current workflow, enabling nested task calls."
         }
       },
       "required": [
@@ -377,7 +374,7 @@
         },
         "working-directory": {
           "type": "string",
-          "description": "Path to a working directory where job will be executed."
+          "description": "Path to a working directory where job will be executed.\nRelative paths resolve from the current workflow working directory."
         },
         "timeout": {
           "type": "string",
@@ -389,19 +386,19 @@
         },
         "if": {
           "type": "string",
-          "description": "Whether to run a job.\nIf expression returns false, the job is skipped."
+          "description": "Whether to run a job.\nIf expression returns false, the job is skipped.\n\nThis field must be an expression. Static literal values are invalid."
         },
         "env": {
           "$ref": "#/$defs/RecordUnknown",
-          "description": "Custom environment variables to set for a job."
+          "description": "Custom environment variables to set for a job.\n\nThis block is literal. Expressions are not evaluated in keys or values."
         },
         "strategy": {
           "$ref": "#/$defs/Strategy",
-          "description": "Matrix execution strategy."
+          "description": "Matrix execution strategy.\nExpands this job into the Cartesian product of matrix values."
         },
         "with": {
           "$ref": "#/$defs/RecordUnknown",
-          "description": "Input parameters for action, mixin or task."
+          "description": "Input parameters for action, mixin or task.\nMap keys are literal. Expressions are allowed recursively in values."
         },
         "on": {
           "type": "object",
@@ -422,7 +419,7 @@
               ]
             }
           },
-          "description": "Defines a set of jobs to run when a certain hook is called.\nHooks are events produced by certain actions."
+          "description": "Defines a set of jobs to run when a certain hook is called.\nHooks are events produced by certain actions.\n\nThe runner also provides a built-in `error` hook for handling job\nfailures. Jobs inside hook lists receive the `event` expression context."
         }
       },
       "required": [
@@ -453,14 +450,14 @@
               }
             ]
           },
-          "description": "Matrix of different job configurations.\nVariables defined in a matrix become properties in the `matrix` expression context."
+          "description": "Matrix of different job configurations.\nVariables defined in a matrix become properties in the `matrix` expression context.\n\nEach key becomes available as `matrix.<key>` during each matrix job run.\nValues may be literal arrays or expressions that evaluate to arrays.\nEmpty arrays are ignored with a warning."
         },
         "exclude": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/RecordUnknown"
           },
-          "description": "List of combinations to exclude from job matrix."
+          "description": "List of combinations to exclude from job matrix.\nA rule matches only when all key/value pairs in the rule match the matrix\nrow. Exclude values and referenced matrix values must be scalar and\ncomparable."
         }
       },
       "required": [
