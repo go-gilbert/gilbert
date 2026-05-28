@@ -31,7 +31,7 @@ To write the generated schema into a custom directory, set the JSON Schema emitt
 npx tsp compile docs/spec/schema.tsp \
   --emit=@typespec/json-schema \
   --option @typespec/json-schema.file-type=json \
-  --option @typespec/json-schema.emitter-output-dir=./docs/spec/json-schema \
+  --option @typespec/json-schema.emitter-output-dir='{cwd}/docs/spec/json-schema' \
   --list-files
 ```
 
