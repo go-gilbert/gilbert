@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=./docs/spec/gilbert.schema.json
 version: 2
 
 const:

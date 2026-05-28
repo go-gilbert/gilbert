@@ -1,0 +1,472 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gilbert.schema.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 2,
+      "description": "Workflow file version. Should be `2`."
+    },
+    "include": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of other workflow files to include and merge."
+    },
+    "plugins": {
+      "$ref": "#/$defs/RecordString",
+      "description": "Set of plugins to import.\nKey is a namespace and value is import URL."
+    },
+    "const": {
+      "$ref": "#/$defs/RecordUnknown",
+      "description": "Predefined variables available to expressions as `${{ consts.* }}`.\nValues in this block should not be expressions."
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ListInputDefinition"
+          },
+          {
+            "$ref": "#/$defs/ScalarInputDefinition"
+          }
+        ]
+      },
+      "description": "Global input parameters."
+    },
+    "tasks": {
+      "$ref": "#/$defs/RecordTask",
+      "description": "Map of task name and its definition."
+    },
+    "mixins": {
+      "$ref": "#/$defs/RecordMixin",
+      "description": "Mixins are reusable pieces of pipeline which can accept inputs.\nUnlike tasks, they cannot be called from command-line."
+    }
+  },
+  "required": [
+    "version"
+  ],
+  "description": "Gilbert workflow file.",
+  "$defs": {
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {}
+    },
+    "ListInputDefinition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "list"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "string"
+            },
+            {
+              "type": "string",
+              "const": "int"
+            },
+            {
+              "type": "string",
+              "const": "bool"
+            },
+            {
+              "type": "string",
+              "const": "date"
+            },
+            {
+              "type": "string",
+              "const": "duration"
+            },
+            {
+              "type": "string",
+              "const": "float"
+            },
+            {
+              "type": "string",
+              "const": "list"
+            }
+          ],
+          "description": "Defines a type of element of a list.\nShould only be used when `type` is set to `list`."
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/InputDefinitionCommon"
+        }
+      ],
+      "description": "Input definition for list values."
+    },
+    "ScalarInputDefinition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "string"
+            },
+            {
+              "type": "string",
+              "const": "int"
+            },
+            {
+              "type": "string",
+              "const": "bool"
+            },
+            {
+              "type": "string",
+              "const": "date"
+            },
+            {
+              "type": "string",
+              "const": "duration"
+            },
+            {
+              "type": "string",
+              "const": "float"
+            }
+          ],
+          "description": "Input value type.\n\nBesides standard scalar values, special values are parseable from\ncommand-line flags or string values."
+        },
+        "dateFormat": {
+          "type": "string",
+          "description": "Date format used to parse a command-line flag value.\nHas effect only when `type` is `date`."
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/InputDefinitionCommon"
+        }
+      ],
+      "description": "Input definition for scalar values."
+    },
+    "RecordTask": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "$ref": "#/$defs/Task"
+      }
+    },
+    "RecordMixin": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "$ref": "#/$defs/Mixin"
+      }
+    },
+    "InputDefinitionCommon": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "description": "Fallback value used when input value is not specified.\nValue type should correspond to `type`."
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether a value is not required.\nHas no effect when `default` is set."
+        },
+        "binding": {
+          "$ref": "#/$defs/InputBinding",
+          "description": "Controls how input value is parsed from command-line flags and environment variables.\nWorks only for tasks. Has no effect in mixins."
+        }
+      },
+      "description": "Fields common to all input definitions."
+    },
+    "Task": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ListInputDefinition"
+              },
+              {
+                "$ref": "#/$defs/ScalarInputDefinition"
+              }
+            ]
+          },
+          "description": "List of input parameters accepted by a task.\nInput values can be passed to a task via command-line flags."
+        },
+        "env": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Custom environment variables to use for a task."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActionJob"
+              },
+              {
+                "$ref": "#/$defs/MixinJob"
+              },
+              {
+                "$ref": "#/$defs/TaskJob"
+              }
+            ]
+          },
+          "description": "Sequence of jobs that will be executed when task is started."
+        },
+        "working-directory": {
+          "type": "string",
+          "description": "Override a working directory for a task."
+        }
+      },
+      "required": [
+        "steps"
+      ],
+      "description": "Task definition."
+    },
+    "Mixin": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ListInputDefinition"
+              },
+              {
+                "$ref": "#/$defs/ScalarInputDefinition"
+              }
+            ]
+          },
+          "description": "List of input parameters accepted by mixin.\nUnlike tasks, mixins do not support command-line flags."
+        },
+        "env": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Custom environment variables to use for a mixin."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActionJob"
+              },
+              {
+                "$ref": "#/$defs/MixinJob"
+              },
+              {
+                "$ref": "#/$defs/TaskJob"
+              }
+            ]
+          },
+          "description": "Sequence of jobs that will be executed when mixin is called."
+        },
+        "working-directory": {
+          "type": "string",
+          "description": "Override a working directory for a mixin."
+        }
+      },
+      "required": [
+        "steps"
+      ],
+      "description": "Mixins allow a set of jobs to be reused as a block."
+    },
+    "InputBinding": {
+      "type": "object",
+      "properties": {
+        "env": {
+          "type": "string",
+          "description": "Environment variable name.\nIf input value and command-line flag are unspecified, this variable is used when present."
+        },
+        "flag": {
+          "type": "string",
+          "description": "Overrides the command-line flag name assigned to an input.\nBy default, each input gets a command-line flag with the same name as the input."
+        },
+        "delimiter": {
+          "type": "string",
+          "description": "Character used to split a string into a list when parsing an environment\nvariable or command-line value."
+        }
+      },
+      "description": "Command-line and environment binding for an input value."
+    },
+    "ActionJob": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Name of action to be executed."
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/JobBase"
+        }
+      ],
+      "description": "Job that executes an action."
+    },
+    "MixinJob": {
+      "type": "object",
+      "properties": {
+        "mixin": {
+          "type": "string",
+          "description": "Name of mixin to be executed."
+        }
+      },
+      "required": [
+        "mixin"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/JobBase"
+        }
+      ],
+      "description": "Job that executes a mixin."
+    },
+    "TaskJob": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "Name of task to be executed."
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/JobBase"
+        }
+      ],
+      "description": "Job that executes a task."
+    },
+    "JobBase": {
+      "type": "object",
+      "properties": {
+        "async": {
+          "type": "boolean",
+          "description": "Whether to execute job concurrently.\nWhen true, the next job will start without waiting for the current one to finish."
+        },
+        "delay": {
+          "type": "string",
+          "description": "Duration of time to wait before starting a job."
+        },
+        "working-directory": {
+          "type": "string",
+          "description": "Path to a working directory where job will be executed."
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Job execution timeout duration."
+        },
+        "continue-on-error": {
+          "type": "boolean",
+          "description": "Whether to allow job to fail."
+        },
+        "if": {
+          "type": "string",
+          "description": "Whether to run a job.\nIf expression returns false, the job is skipped."
+        },
+        "env": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Custom environment variables to set for a job."
+        },
+        "strategy": {
+          "$ref": "#/$defs/Strategy",
+          "description": "Matrix execution strategy."
+        },
+        "with": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Input parameters for action, mixin or task."
+        },
+        "on": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActionJob"
+                },
+                {
+                  "$ref": "#/$defs/MixinJob"
+                },
+                {
+                  "$ref": "#/$defs/TaskJob"
+                }
+              ]
+            }
+          },
+          "description": "Defines a set of jobs to run when a certain hook is called.\nHooks are events produced by certain actions."
+        }
+      },
+      "required": [
+        "with"
+      ],
+      "description": "Contains fields common to all job types."
+    },
+    "Strategy": {
+      "type": "object",
+      "properties": {
+        "max-parallel": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Maximum number of matrix jobs to run concurrently.\n\nDefault: 1."
+        },
+        "matrix": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "description": "Matrix of different job configurations.\nVariables defined in a matrix become properties in the `matrix` expression context."
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecordUnknown"
+          },
+          "description": "List of combinations to exclude from job matrix."
+        }
+      },
+      "required": [
+        "matrix"
+      ],
+      "description": "Matrix execution strategy."
+    }
+  }
+}

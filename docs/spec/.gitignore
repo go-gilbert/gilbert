@@ -1,0 +1,3 @@
+# Ignore json schema file produced by TypeSpec.
+# It is replaced by a schema patcher script with 'gilbert.schema.json' file.
+WorkflowFile.json

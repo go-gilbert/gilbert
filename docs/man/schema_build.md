@@ -43,7 +43,7 @@ docs/spec/json-schema/WorkflowFile.json
 
 `WorkflowFile` is the only TypeSpec model decorated with `@jsonSchema`, so helper types are emitted into the same JSON Schema document under `$defs`. This keeps the schema unified and avoids external `*.json` references.
 
-## YAML Language Server Compatibility
+## Post-Processing
 
 TypeSpec emits map-like records with `unevaluatedProperties`:
 
@@ -56,28 +56,18 @@ TypeSpec emits map-like records with `unevaluatedProperties`:
 }
 ```
 
-This is valid JSON Schema 2020-12, but YAML language server support is weaker for this keyword. In practice, it may show hover information for top-level properties like `tasks` and `inputs`, but fail to provide hover/completion for arbitrary nested keys inside those maps.
+This is valid JSON Schema 2020-12, but YAML language servers have weak support for `unevaluatedProperties` and fail to provide hover/completion for arbitrary nested keys inside those maps. The `additionalProperties` keyword is handled better by YAML language servers.
 
-YAML language server handles `additionalProperties` better for map-like objects:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": {
-    "$ref": "#/$defs/Task"
-  }
-}
-```
-
-After generating the schema, copy each `unevaluatedProperties` value to `additionalProperties`. Keeping both fields preserves the original 2020-12 semantics while making the schema more useful to YAML language server.
-
-Example post-processing command:
+To fix this, run the post-processing script to replace `unevaluatedProperties` with `additionalProperties` throughout the schema:
 
 ```sh
-node -e 'const fs=require("fs"); const p="tsp-output/@typespec/json-schema/gilbert.schema.json"; const doc=JSON.parse(fs.readFileSync(p,"utf8")); function walk(x){ if(!x||typeof x!=="object") return; if(Object.prototype.hasOwnProperty.call(x,"unevaluatedProperties") && !Object.prototype.hasOwnProperty.call(x,"additionalProperties")) x.additionalProperties=x.unevaluatedProperties; for(const v of Object.values(x)) walk(v); } walk(doc); fs.writeFileSync(p, JSON.stringify(doc,null,4)+"\n");'
+node tools/post-process-schema.mjs <inputFile> [outputFile]
 ```
 
-Then reference it from YAML:
+- `<inputFile>`: the generated JSON Schema file
+- `[outputFile]`: optional output path; if omitted, writes to stdout
+
+After generating and patching the schema, reference it from YAML:
 
 ```yaml
 # yaml-language-server: $schema=http://localhost:8000/json-schema/gilbert.schema.json
