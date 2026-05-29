@@ -16,6 +16,7 @@ Reference material:
 ```yaml
 version: "2"
 include: []
+env: {}
 plugins: {}
 const: {}
 inputs: {}
@@ -29,6 +30,7 @@ All top-level sections except `version` are optional unless a task needs them. U
 | --- | --- | --- | --- | --- |
 | `version` | Yes | string or number | No | Workflow format version. The supported value is `2`. |
 | `include` |  | list of strings | No | Other workflow files to load and merge into the current workflow. Paths are resolved relative to the file that declares them. |
+| `env` |  | map of string to [scalar or expression](#scalar-or-expression) | Yes, in values | Environment variables to apply to all tasks. Map keys are literal. |
 | `plugins` |  | map of string to string | No | Plugin imports. The map key is the action namespace exposed by the plugin. |
 | `const` |  | map of scalar values | No | Static values exposed to expressions as `consts.*`. |
 | `inputs` |  | map of [input definitions](#input-definition) | Per definition | Global input definitions. |
@@ -78,6 +80,18 @@ const:
 ```
 
 Constants are literal YAML scalars. Expressions are not expanded inside `const`.
+
+## Environment
+
+`env` defines environment variables. It is available at the workflow, task, mixin, and job levels.
+
+```yaml
+env:
+  GOFLAGS: -mod=readonly
+  RELEASE: ${{ inputs.release }}
+```
+
+Environment variable names are literal map keys. Values may be primitive YAML scalars or expressions that return scalar values: string, number, or boolean. Expressions that return objects or lists are invalid in `env` values.
 
 ## Inputs
 
@@ -135,6 +149,12 @@ inputs:
 ```
 
 Nested complex item types are not supported. A list item type can be scalar, but not another list or dictionary.
+
+### Scalar Or Expression
+
+A scalar or expression value is either a primitive YAML scalar or an expression that returns a scalar value. Valid scalar values are strings, numbers, and booleans.
+
+This form is used by `env` values. Map keys remain literal; only values may use expressions.
 
 #### String
 
@@ -246,7 +266,7 @@ mixins:
 | Field | Required | Type | Expressions | Description |
 | --- | --- | --- | --- | --- |
 | `inputs` |  | map of [input definitions](#input-definition) | Per definition | Values accepted by this task or mixin. |
-| `env` |  | map | No | Environment values scoped to the task or mixin. |
+| `env` |  | map of string to [scalar or expression](#scalar-or-expression) | Yes, in values | Environment values scoped to the task or mixin. Map keys are literal. |
 | `working-directory` |  | string | No | Working directory for jobs in the group. Relative paths resolve from the current workflow working directory. |
 | `steps` | Yes | list of [jobs](#jobs) | Per job field | Jobs executed in order unless a job is asynchronous. |
 
@@ -293,7 +313,7 @@ Exactly one target field must be set.
 | `timeout` |  | [duration string](#duration) | No | Maximum execution time for this job. |
 | `continue-on-error` |  | bool | No | When true, task execution continues after this job fails. |
 | `if` |  | [expression](#expression-language) | Required expression | Conditional expression. If it evaluates to false, the job is skipped. Static literal values are invalid here. |
-| `env` |  | map | No | Environment values scoped to this job. |
+| `env` |  | map of string to [scalar or expression](#scalar-or-expression) | Yes, in values | Environment values scoped to this job. Map keys are literal. |
 | `strategy` |  | [strategy object](#matrix-strategy) | Per strategy field | Matrix execution strategy. |
 | `with` |  | map | Yes, recursively in values | Arguments passed to the action, mixin, or task. Map keys are literal. |
 | `on` |  | map of string to job list | Per hook job field | Event hooks fired by this job or by the runner. Hook names are literal. |
@@ -457,6 +477,7 @@ Common dynamic value positions include:
 
 - input `default`
 - job `if`
+- `env` values
 - job `with` values
 - matrix values
 - nested arrays and maps inside dynamic values

@@ -186,7 +186,7 @@ interface ListInputDefinition {
    *
    * @const
    */
-  items: 'string' | 'int' | 'bool' | 'date' | 'duration' | 'float' | 'list'
+  items: 'string' | 'int' | 'bool' | 'date' | 'duration' | 'float'
 }
 
 interface ScalarInputDefinition {

@@ -40,6 +40,15 @@ alias AnyValue = unknown;
 alias AnyRecord = Record<AnyValue>;
 
 /**
+ * Primitive YAML scalar or an expression returning a scalar value.
+ * Valid runtime values are strings, numbers, and booleans.
+ */
+alias ScalarOrExpression = Expression | string | int64 | float64 | boolean;
+
+/** YAML object with string keys and scalar or scalar-expression values. */
+alias ScalarExpressionRecord = Record<ScalarOrExpression>;
+
+/**
  * Contains fields common to all job types.
  */
 model JobBase {
@@ -75,9 +84,10 @@ model JobBase {
   /**
    * Custom environment variables to set for a job.
    *
-   * This block is literal. Expressions are not evaluated in keys or values.
+   * Keys are literal. Values may be primitive YAML scalars or expressions that
+   * return scalar values.
    */
-  env?: AnyRecord;
+  env?: ScalarExpressionRecord;
 
   /**
    * Matrix execution strategy.
@@ -282,8 +292,12 @@ model Mixin {
    */
   inputs?: Record<InputDefinition>;
 
-  /** Custom environment variables to use for a mixin. */
-  env?: AnyRecord;
+  /**
+   * Custom environment variables to use for a mixin.
+   * Keys are literal. Values may be primitive YAML scalars or expressions that
+   * return scalar values.
+   */
+  env?: ScalarExpressionRecord;
 
   /** Sequence of jobs that will be executed when mixin is called. */
   steps: Job[];
@@ -301,8 +315,12 @@ model Task {
    */
   inputs?: Record<InputDefinition>;
 
-  /** Custom environment variables to use for a task. */
-  env?: AnyRecord;
+  /**
+   * Custom environment variables to use for a task.
+   * Keys are literal. Values may be primitive YAML scalars or expressions that
+   * return scalar values.
+   */
+  env?: ScalarExpressionRecord;
 
   /** Sequence of jobs that will be executed when task is started. */
   steps: Job[];
@@ -325,6 +343,13 @@ model WorkflowFile {
    * rejected.
    */
   include?: string[];
+
+  /**
+   * Environment variables to apply to all tasks.
+   * Keys are literal. Values may be primitive YAML scalars or expressions that
+   * return scalar values.
+   */
+  env?: ScalarExpressionRecord;
 
   /**
    * Set of plugins to import.
