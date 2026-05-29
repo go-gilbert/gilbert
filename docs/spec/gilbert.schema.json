@@ -15,6 +15,30 @@
       },
       "description": "List of other workflow files to include and merge.\nPaths resolve relative to the including file. A file cannot include\nitself. Duplicate task, mixin, and input names across included files are\nrejected."
     },
+    "env": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "description": "Environment variables to apply to all tasks.\nKeys are literal. Values may be primitive YAML scalars or expressions that\nreturn scalar values."
+    },
     "plugins": {
       "$ref": "#/$defs/RecordString",
       "description": "Set of plugins to import.\nKey is a namespace and value is import URL.\n\nThe namespace becomes the action prefix. For example, a plugin declared as\n`docker:` exposes actions such as `docker/build` and `docker/run`."
@@ -210,8 +234,28 @@
           "description": "List of input parameters accepted by a task.\nInput values can come from explicit `with` values, command-line flags,\nenvironment variables, or defaults."
         },
         "env": {
-          "$ref": "#/$defs/RecordUnknown",
-          "description": "Custom environment variables to use for a task."
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "description": "Custom environment variables to use for a task.\nKeys are literal. Values may be primitive YAML scalars or expressions that\nreturn scalar values."
         },
         "steps": {
           "type": "array",
@@ -259,8 +303,28 @@
           "description": "List of input parameters accepted by mixin.\nUnlike tasks, mixins do not support command-line flags. Mixins can be\ncalled from tasks and from other mixins, and their inputs should be passed\nexplicitly via `with`."
         },
         "env": {
-          "$ref": "#/$defs/RecordUnknown",
-          "description": "Custom environment variables to use for a mixin."
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "description": "Custom environment variables to use for a mixin.\nKeys are literal. Values may be primitive YAML scalars or expressions that\nreturn scalar values."
         },
         "steps": {
           "type": "array",
@@ -389,8 +453,28 @@
           "description": "Whether to run a job.\nIf expression returns false, the job is skipped.\n\nThis field must be an expression. Static literal values are invalid."
         },
         "env": {
-          "$ref": "#/$defs/RecordUnknown",
-          "description": "Custom environment variables to set for a job.\n\nThis block is literal. Expressions are not evaluated in keys or values."
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "description": "Custom environment variables to set for a job.\n\nKeys are literal. Values may be primitive YAML scalars or expressions that\nreturn scalar values."
         },
         "strategy": {
           "$ref": "#/$defs/Strategy",
