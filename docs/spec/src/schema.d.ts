@@ -27,6 +27,11 @@ type DurationString = string
  */
 type Expression<T> = string
 
+/**
+ * Primitive value or an expression which can return a scalar value.
+ */
+type ScalarOrExpression = Expression<string | number | boolean> | string | number | boolean
+
 interface JobAction {
   /**
    * Name of action to be executed.
@@ -95,10 +100,8 @@ interface JobBase {
    *  FOO: "bar"
    *  key: "${{inputs.myinput}}"
    * ```
-   *
-   * @const
    */
-  env?: Record<string, any>
+  env?: Record<string, ScalarOrExpression>
 
   /**
    * Enables matrix strategy.
@@ -302,10 +305,8 @@ interface Mixin {
    *  FOO: "bar"
    *  key: "${{inputs.myinput}}"
    * ```
-   *
-   * @const
    */
-  env?: Record<string, any>
+  env?: Record<string, ScalarOrExpression>
 
   /**
    * Sequence of jobs that will be executed when mixin is called.
@@ -341,10 +342,8 @@ interface Task {
    *  FOO: "bar"
    *  key: "${{inputs.myinput}}"
    * ```
-   *
-   * @const
    */
-  env?: Record<string, any>
+  env?: Record<string, ScalarOrExpression>
 
   /**
    * Sequence of jobs that will be executed when task is started.
@@ -373,6 +372,11 @@ interface WorkflowFile {
    * @const
    */
   include?: string[]
+
+  /**
+   * Environment variables to apply to all tasks.
+   */
+  env?: Record<string, ScalarOrExpression>
 
   /**
    * Set of plugins to import.

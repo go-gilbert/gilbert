@@ -1,3 +1,5 @@
+/** gilbert.yaml workflow file. Generated from src/schema.d.ts **/
+
 import "@typespec/json-schema";
 
 using JsonSchema;
