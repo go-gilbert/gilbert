@@ -137,6 +137,16 @@ var inputDefinitionSchema = Struct(
 						Offset:   offset,
 					}
 				}),
+				Field("delimiter", String(),
+					func(_ context.Context, dst *manifest.InputBinding, val string) error {
+						if val == "" {
+							return errors.New("empty value name")
+						}
+
+						dst.Delimiter = val
+						return nil
+					},
+				),
 				Field("flag", String(),
 					func(_ context.Context, dst *manifest.InputBinding, val string) error {
 						val = strings.TrimSpace(val)
@@ -160,7 +170,6 @@ var inputDefinitionSchema = Struct(
 						Offset:   offset,
 					}
 				}),
-				// TODO: add delimiter
 			),
 		),
 		func(_ context.Context, dst *manifest.InputDefinition, val *manifest.InputBinding) error {
