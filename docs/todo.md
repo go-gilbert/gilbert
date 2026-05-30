@@ -15,7 +15,6 @@
 
 **schema**
 
-- wire `InputDefinition.binding.delimiter` to yamlloader
 - support setting env
 - support binding to file
 

@@ -12,6 +12,48 @@ import (
 	"github.com/go-gilbert/gilbert/pkg/yamltree"
 )
 
+type scalarOrExprVisitor struct{}
+
+// ScalarOrExpression returns a visitor for scalar YAML node or an expression.
+func ScalarOrExpression() yamltree.ValueVisitor[*manifest.LazyValue] {
+	return scalarOrExprVisitor{}
+}
+
+func (vis scalarOrExprVisitor) VisitItem(ctx context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*manifest.LazyValue, parsetypes.Diagnostics) {
+	switch t := node.(type) {
+	case *ast.StringNode:
+		// allow expressions
+		v, _, diags := lazyFromStringNode(opts, t, nil)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &manifest.LazyValue{
+			Value:    v.Optimize(),
+			Location: &v.BindingSpec.Location,
+		}, nil
+	case ast.ScalarNode:
+		v := t.GetValue()
+		rng, offset := yamltree.GetNodeRange(node)
+		return &manifest.LazyValue{
+			Value: manifest.AnySpec{
+				LiteralSpec: &manifest.LiteralSpec{
+					Value: v,
+				},
+			},
+			Location: &manifest.ReferenceLocation{
+				FileName: opts.FileName,
+				Range:    rng,
+				Offset:   offset,
+			},
+		}, nil
+	}
+
+	return nil, parsetypes.Diagnostics{
+		yamltree.NewErrDiagnosticFromNode(opts.FileName, node, errors.New("expected expression or scalar value")),
+	}
+}
+
 type lazyArrayVisitor struct{}
 
 func (l lazyArrayVisitor) VisitItem(_ context.Context, opts *yamltree.TraverseOpts, node ast.Node) (*manifest.LazyValue, parsetypes.Diagnostics) {

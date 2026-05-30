@@ -3,9 +3,11 @@ package yamlloader
 import (
 	"errors"
 	"fmt"
+	"maps"
+
+	"github.com/hashicorp/go-set/v3"
 
 	"github.com/go-gilbert/gilbert/internal/manifest"
-	"github.com/hashicorp/go-set/v3"
 )
 
 type includeDecl struct {
@@ -97,6 +99,17 @@ func (j *yamlJobFile) appendConsts(newItems map[string]any) error {
 	}
 
 	copyMapUniq(j.result.Consts, newItems)
+	return nil
+}
+
+func (j *yamlJobFile) appendEnv(newItems map[string]*manifest.LazyValue) error {
+	if len(j.result.Env) == 0 {
+		j.result.Env = newItems
+		return nil
+	}
+
+	// TODO: throw warning about duplicate env declaration
+	maps.Copy(j.result.Env, newItems)
 	return nil
 }
 

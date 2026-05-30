@@ -198,6 +198,7 @@ type JobFile struct {
 	Plugins PluginImports
 	Consts  map[string]any
 	Inputs  Inputs
+	Env     map[string]*LazyValue
 	Tasks   JobGroups
 	Mixins  JobGroups
 }

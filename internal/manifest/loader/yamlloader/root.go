@@ -7,9 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/goccy/go-yaml/ast"
+
 	"github.com/go-gilbert/gilbert/internal/manifest"
 	. "github.com/go-gilbert/gilbert/pkg/yamltree"
-	"github.com/goccy/go-yaml/ast"
 )
 
 const supportedManifestVersion = "2"
@@ -75,6 +76,12 @@ var jobFileSchema = Struct(
 		Map(AnyScalar()),
 		func(_ context.Context, dst *yamlJobFile, val map[string]any) error {
 			return dst.appendConsts(val)
+		},
+	),
+	Field("env", Map(ScalarOrExpression()),
+		func(_ context.Context, dst *yamlJobFile, val map[string]*manifest.LazyValue) error {
+			dst.appendEnv(val)
+			return nil
 		},
 	),
 	Field(
