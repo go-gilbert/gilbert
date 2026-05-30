@@ -36,6 +36,9 @@ type Scope struct {
 	// Globals is global execution information (environment variables, project, etc).
 	Globals Globals
 
+	// Environment holds scope-local environment variables.
+	Environment map[string]string
+
 	// Inputs is job parameter values.
 	Inputs map[string]any
 
@@ -77,6 +80,31 @@ func (s *Scope) Fork() *Scope {
 	}
 
 	return newScope
+}
+
+// GetEnv searches and returns environment variable value by traversing scope chain and globals.
+func (s *Scope) GetEnv(key string) (string, bool) {
+	// Environment variables can be overriden per scope.
+	// First, traverse a chain and use globals only as a fallback.
+	sk := s
+	for {
+		if sk == nil {
+			break
+		}
+
+		env := sk.Environment
+		if len(env) > 0 {
+			v, ok := env[key]
+			if ok {
+				return v, true
+			}
+		}
+
+		sk = sk.Parent
+	}
+
+	v, ok := s.Globals.Env[key]
+	return v, ok
 }
 
 // WithMatrixValues sets job matrix values, overwriting existing value.

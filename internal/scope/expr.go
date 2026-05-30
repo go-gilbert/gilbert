@@ -58,16 +58,25 @@ var (
 		v, ok := scope.Consts[key]
 		return v, ok
 	}
+
+	envLookupFunc valueLookupFunc = func(scope *Scope, key string) (any, bool) {
+		// Env vars are overridable, thus needs to be proxied.
+		if v, ok := scope.GetEnv(key); ok {
+			return v, true
+		}
+
+		return nil, false
+	}
 )
 
 // exprEnvironment is expr lang evaluation environment created from a scope.
 type exprEnvironment struct {
-	Inputs  *valueProxy       `expr:"inputs"`
-	Consts  *valueProxy       `expr:"consts"`
-	Project ProjectInfo       `expr:"project"`
-	Env     map[string]string `expr:"env"`
-	Matrix  map[string]any    `expr:"matrix"`
-	Event   map[string]any    `expr:"event"`
+	Inputs  *valueProxy    `expr:"inputs"`
+	Consts  *valueProxy    `expr:"consts"`
+	Env     *valueProxy    `expr:"env"`
+	Project ProjectInfo    `expr:"project"`
+	Matrix  map[string]any `expr:"matrix"`
+	Event   map[string]any `expr:"event"`
 }
 
 func newExprEnvironment(s *Scope) *exprEnvironment {
@@ -78,9 +87,9 @@ func newExprEnvironment(s *Scope) *exprEnvironment {
 	return &exprEnvironment{
 		Inputs:  newValueProxy(s, inputsLookupFunc),
 		Consts:  newValueProxy(s, constsLookupFunc),
+		Env:     newValueProxy(s, envLookupFunc),
 		Matrix:  s.MatrixValues,
 		Project: s.Globals.Project,
-		Env:     s.Globals.Env,
 		Event:   s.EventData,
 	}
 }
