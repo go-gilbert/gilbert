@@ -35,6 +35,18 @@ type LazyValue struct {
 	Value    AnySpec
 }
 
+func (v *LazyValue) GetLocation() *parsetypes.Location {
+	if v == nil || v.Location == nil {
+		return nil
+	}
+
+	return &parsetypes.Location{
+		FileName: v.Location.FileName,
+		Offset:   v.Location.Offset,
+		Range:    v.Location.Range,
+	}
+}
+
 func (v *LazyValue) Expand(ctx context.Context, opts expr.EvalParams) (any, error) {
 	return v.Value.Expand(ctx, opts)
 }

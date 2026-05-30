@@ -8,9 +8,50 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-gilbert/gilbert/internal/scope"
 	"github.com/go-gilbert/gilbert/pkg/expr"
 	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
+
+// AppendLazyEnvVarsToScope materializes and appends lazy-evaluated environment variables to a given scope.
+func AppendLazyEnvVarsToScope(ctx context.Context, dst *scope.Scope, src EnvVars) parsetypes.Diagnostics {
+	if len(src) == 0 {
+		return nil
+	}
+
+	ep := expr.EvalParams{
+		CommandProcessor: scope.NewCommandRunner(dst),
+		Env:              dst,
+	}
+
+	if dst.Environment == nil {
+		dst.Environment = make(map[string]string, len(src))
+	}
+
+	var diags parsetypes.Diagnostics
+	for k, lv := range src {
+		v, err := expandAsString(ctx, ep, lv)
+		if err != nil {
+			if err != nil {
+				diags = append(diags, parsetypes.NewErrorDiagnostics(err, lv.GetLocation())...)
+				continue
+			}
+
+			dst.Environment[k] = v
+		}
+	}
+
+	return diags
+}
+
+func expandAsString(ctx context.Context, ep expr.EvalParams, lv *LazyValue) (string, error) {
+	raw, err := lv.Expand(ctx, ep)
+	if err != nil {
+		return "", err
+	}
+
+	return parsetypes.AnyToString(raw)
+}
 
 type MapArgsParams struct {
 	// Values is source raw values.

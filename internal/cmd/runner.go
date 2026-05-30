@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/go-gilbert/gilbert/internal/actions"
@@ -23,13 +25,23 @@ type taskRunConfig struct {
 
 func startTaskRunner(cmd *cobra.Command, cfg taskRunConfig) error {
 	ctx := cmd.Context()
+	sh := createShell(cmd, cfg.logger, &cfg.bootstapOpts)
+
+	// Expand expressions in `env` block and append to scope environment vars.
+	diags := manifest.AppendLazyEnvVarsToScope(ctx, cfg.scope.Root, cfg.jobFile.Env)
+	if len(diags) > 0 {
+		sh.Reporter.PrintDiagnostics(diags)
+		if diags.HasError() {
+			return errors.New("failed to expand environment variables declared in workflow file")
+		}
+	}
 
 	r := engine.NewRunner(engine.Config{
 		Logger:                cfg.logger,
 		JobFile:               cfg.jobFile,
 		RootScope:             cfg.scope.Root,
 		ActionHandlerProvider: actions.Provider,
-		Shell:                 createShell(cmd, cfg.logger, &cfg.bootstapOpts),
+		Shell:                 sh,
 		CmdProcessorFactory: func(s *scope.Scope) expr.CommandProcessor {
 			return scope.NewCommandRunner(s)
 		},
