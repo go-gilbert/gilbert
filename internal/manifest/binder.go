@@ -32,13 +32,11 @@ func AppendLazyEnvVarsToScope(ctx context.Context, dst *scope.Scope, src EnvVars
 	for k, lv := range src {
 		v, err := expandAsString(ctx, ep, lv)
 		if err != nil {
-			if err != nil {
-				diags = append(diags, parsetypes.NewErrorDiagnostics(err, lv.GetLocation())...)
-				continue
-			}
-
-			dst.Environment[k] = v
+			diags = append(diags, parsetypes.NewErrorDiagnostics(err, lv.GetLocation())...)
+			continue
 		}
+
+		dst.Environment[k] = v
 	}
 
 	return diags
