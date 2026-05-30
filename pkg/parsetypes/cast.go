@@ -39,6 +39,8 @@ func AnyToString(v any) (string, error) {
 		return strconv.FormatFloat(float64(t), 'g', -1, 32), nil
 	case float64:
 		return strconv.FormatFloat(t, 'g', -1, 64), nil
+	case fmt.Stringer:
+		return t.String(), nil
 	default:
 		return "", fmt.Errorf("value of type %T cannot be converted to string", v)
 	}
