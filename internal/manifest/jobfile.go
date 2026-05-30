@@ -103,7 +103,10 @@ type JobArgs struct {
 	Values   map[string]*LazyValue
 }
 
-type SignalHooks = map[string][]Job
+type (
+	SignalHooks = map[string][]Job
+	EnvVars     = map[string]*LazyValue
+)
 
 type Job struct {
 	// Location contains information about where job is defined.
@@ -120,6 +123,9 @@ type Job struct {
 
 	// ContinueOnError defines whether task execution should continue if job failed.
 	ContinueOnError bool
+
+	// Env is custom environment variables for a job.
+	Env EnvVars
 
 	// Strategy sets up matrix execution strategy.
 	Strategy ExecStrategy
@@ -190,6 +196,7 @@ type JobGroup struct {
 	Location *ReferenceLocation
 	Inputs   Inputs
 	WorkDir  string
+	Env      EnvVars
 	Jobs     []Job
 }
 
@@ -198,7 +205,7 @@ type JobFile struct {
 	Plugins PluginImports
 	Consts  map[string]any
 	Inputs  Inputs
-	Env     map[string]*LazyValue
+	Env     EnvVars
 	Tasks   JobGroups
 	Mixins  JobGroups
 }

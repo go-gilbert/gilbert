@@ -79,7 +79,7 @@ var jobFileSchema = Struct(
 		},
 	),
 	Field("env", Map(ScalarOrExpression()),
-		func(_ context.Context, dst *yamlJobFile, val map[string]*manifest.LazyValue) error {
+		func(_ context.Context, dst *yamlJobFile, val manifest.EnvVars) error {
 			dst.appendEnv(val)
 			return nil
 		},

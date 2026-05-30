@@ -39,6 +39,14 @@ var jobGroupSchema = Struct(
 		},
 	),
 	Field(
+		"env",
+		Map(ScalarOrExpression()),
+		func(_ context.Context, dst *manifest.JobGroup, v manifest.EnvVars) error {
+			dst.Env = v
+			return nil
+		},
+	),
+	Field(
 		"steps",
 		List(jobSchema),
 		func(_ context.Context, dst *manifest.JobGroup, v []manifest.Job) error {
@@ -147,6 +155,12 @@ var jobSchema = Struct(
 		),
 		func(_ context.Context, dst *manifest.Job, v *manifest.LazyValue) error {
 			dst.Condition = v
+			return nil
+		},
+	),
+	Field("env", Map(ScalarOrExpression()),
+		func(_ context.Context, dst *manifest.Job, val manifest.EnvVars) error {
+			dst.Env = val
 			return nil
 		},
 	),
