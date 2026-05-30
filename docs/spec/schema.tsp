@@ -63,7 +63,10 @@ model JobBase {
 
   /**
    * Path to a working directory where job will be executed.
-   * Relative paths resolve from the current workflow working directory.
+   * Relative paths resolve from the directory where the workflow file is located.
+   *
+   * This value takes precedence over a working directory declared in a
+   * subtask or mixin.
    */
   `working-directory`?: string;
 
@@ -302,7 +305,12 @@ model Mixin {
   /** Sequence of jobs that will be executed when mixin is called. */
   steps: Job[];
 
-  /** Override a working directory for a mixin. */
+  /**
+   * Override a working directory for a mixin.
+   * Relative paths resolve from the directory where the workflow file is located.
+   *
+   * This value can be overridden by a caller job.
+   */
   `working-directory`?: string;
 }
 
@@ -325,7 +333,10 @@ model Task {
   /** Sequence of jobs that will be executed when task is started. */
   steps: Job[];
 
-  /** Override a working directory for a task. */
+  /**
+   * Override a working directory for a task.
+   * Relative paths resolve from the directory where the workflow file is located.
+   */
   `working-directory`?: string;
 }
 

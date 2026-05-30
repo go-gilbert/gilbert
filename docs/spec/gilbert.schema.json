@@ -276,7 +276,7 @@
         },
         "working-directory": {
           "type": "string",
-          "description": "Override a working directory for a task."
+          "description": "Override a working directory for a task.\nRelative paths resolve from the directory where the workflow file is located."
         }
       },
       "required": [
@@ -345,7 +345,7 @@
         },
         "working-directory": {
           "type": "string",
-          "description": "Override a working directory for a mixin."
+          "description": "Override a working directory for a mixin.\nRelative paths resolve from the directory where the workflow file is located.\n\nThis value can be overridden by a caller job."
         }
       },
       "required": [
@@ -438,7 +438,7 @@
         },
         "working-directory": {
           "type": "string",
-          "description": "Path to a working directory where job will be executed.\nRelative paths resolve from the current workflow working directory."
+          "description": "Path to a working directory where job will be executed.\nRelative paths resolve from the directory where the workflow file is located.\n\nThis value takes precedence over a working directory declared in a\nsubtask or mixin."
         },
         "timeout": {
           "type": "string",

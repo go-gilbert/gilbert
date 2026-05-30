@@ -267,7 +267,7 @@ mixins:
 | --- | --- | --- | --- | --- |
 | `inputs` |  | map of [input definitions](#input-definition) | Per definition | Values accepted by this task or mixin. |
 | `env` |  | map of string to [scalar or expression](#scalar-or-expression) | Yes, in values | Environment values scoped to the task or mixin. Map keys are literal. |
-| `working-directory` |  | string | No | Working directory for jobs in the group. Relative paths resolve from the current workflow working directory. |
+| `working-directory` |  | string | No | Working directory for jobs in the group. Relative paths resolve from the directory where the workflow file is located. A mixin working directory can be overridden by the caller job. |
 | `steps` | Yes | list of [jobs](#jobs) | Per job field | Jobs executed in order unless a job is asynchronous. |
 
 Tasks are command-line entry points. Mixins are reusable job groups and cannot be run directly from the command line.
@@ -309,7 +309,7 @@ Exactly one target field must be set.
 | --- | --- | --- | --- | --- |
 | `async` |  | bool | No | When true, the runner starts the next job without waiting for this job to finish. |
 | `delay` |  | [duration string](#duration) | No | Time to wait before starting the job. |
-| `working-directory` |  | string | No | Working directory for this job. |
+| `working-directory` |  | string | No | Working directory for this job. Relative paths resolve from the directory where the workflow file is located. This value takes precedence over a working directory declared in a called subtask or mixin. |
 | `timeout` |  | [duration string](#duration) | No | Maximum execution time for this job. |
 | `continue-on-error` |  | bool | No | When true, task execution continues after this job fails. |
 | `if` |  | [expression](#expression-language) | Required expression | Conditional expression. If it evaluates to false, the job is skipped. Static literal values are invalid here. |
