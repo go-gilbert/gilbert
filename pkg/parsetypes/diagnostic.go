@@ -3,6 +3,8 @@ package parsetypes
 import (
 	"errors"
 	"fmt"
+
+	"github.com/go-gilbert/gilbert/pkg/parsetypes"
 )
 
 type DiagnosticSeverity uint8
@@ -94,6 +96,26 @@ func HasErrorDiagnostics(diags Diagnostics) bool {
 	}
 
 	return diags.HasError()
+}
+
+// NewErrorDiagnostics constructs diagnostics for a given entity from error.
+//
+// Returns an original error if it is a diagnostic.
+func NewErrorDiagnostics(err error, loc *Location) Diagnostics {
+	diag, ok := IsDiagnosticsError(err)
+	if !ok {
+		diag = parsetypes.Diagnostics{
+			&parsetypes.Diagnostic{
+				FileName: loc.FileName,
+				Severity: parsetypes.DiagnosticSeverityError,
+				Range:    loc.Range,
+				Offset:   loc.Offset,
+				Err:      err,
+			},
+		}
+	}
+
+	return diag
 }
 
 // IsDiagnosticsError checks whether error is diagnostics and returns them.
