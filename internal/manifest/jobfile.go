@@ -108,7 +108,18 @@ type (
 	EnvVars     = map[string]*LazyValue
 )
 
+// CommonRunParams holds common run options present in all runnables (tasks, jobs, mixins).
+type CommonRunParams struct {
+	// WorkDir is custom working directory where job will be executed.
+	WorkDir string
+
+	// Env is custom environment variables for a job.
+	Env EnvVars
+}
+
 type Job struct {
+	CommonRunParams
+
 	// Location contains information about where job is defined.
 	Location ReferenceLocation
 
@@ -124,9 +135,6 @@ type Job struct {
 	// ContinueOnError defines whether task execution should continue if job failed.
 	ContinueOnError bool
 
-	// Env is custom environment variables for a job.
-	Env EnvVars
-
 	// Strategy sets up matrix execution strategy.
 	Strategy ExecStrategy
 
@@ -140,9 +148,6 @@ type Job struct {
 	//
 	// When execution strategy is defined, block is applied to a whole job block.
 	Condition *LazyValue
-
-	// WorkDir is custom working directory where job will be executed.
-	WorkDir string
 
 	// Args contains arguments passed to action or mixin.
 	Args JobArgs
@@ -192,11 +197,11 @@ type JobGroups = map[string]*JobGroup
 // Acts as a base for tasks and mixins.
 type JobGroup struct {
 	DocHeader
+	CommonRunParams
+
 	Type     JobGroupType
 	Location *ReferenceLocation
 	Inputs   Inputs
-	WorkDir  string
-	Env      EnvVars
 	Jobs     []Job
 }
 
