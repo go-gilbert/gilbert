@@ -128,7 +128,7 @@ func (s *Scope) WithWorkDir(wd string) *Scope {
 
 	newWd := wd
 	if !filepath.IsAbs(newWd) {
-		newWd = filepath.Join(s.Globals.Project.WorkDir, newWd)
+		newWd = filepath.Join(s.Globals.Project.WorkspaceDir, newWd)
 	}
 
 	s.Globals.Project.WorkDir = filepath.Clean(newWd)
