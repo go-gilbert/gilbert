@@ -53,6 +53,7 @@ type forkContext struct {
 	kind manifest.JobKind
 }
 
+// forkScope creates a new scope child with its local env vars and working directory.
 func (r *Runner) forkScope(ctx context.Context, parent *scope.Scope, params manifest.CommonRunParams, fk forkContext) (*scope.Scope, error) {
 	s := parent.Fork().WithWorkDir(params.WorkDir)
 	diags := manifest.AppendLazyEnvVarsToScope(ctx, s, params.Env)
