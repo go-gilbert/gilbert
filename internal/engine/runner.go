@@ -48,6 +48,28 @@ func NewRunner(cfg Config) *Runner {
 	}
 }
 
+type forkContext struct {
+	name fmt.Stringer
+	kind manifest.JobKind
+}
+
+func (r *Runner) forkScope(ctx context.Context, parent *scope.Scope, params manifest.CommonRunParams, fk forkContext) (*scope.Scope, error) {
+	s := parent.Fork().WithWorkDir(params.WorkDir)
+	diags := manifest.AppendLazyEnvVarsToScope(ctx, s, params.Env)
+	r.shell.Reporter.PrintDiagnostics(diags)
+	if diags.HasError() {
+		return nil, fmt.Errorf("failed to expand environment variables for %s %q", fk.kind, fk.name)
+	}
+
+	return s, nil
+}
+
+type stringer string
+
+func (s stringer) String() string {
+	return string(s)
+}
+
 // RunTaskWithScope starts a runner with a given task and scope.
 //
 // Note: passed scope should have the same root as used by runner.
@@ -62,7 +84,17 @@ func (r *Runner) RunTaskWithScope(ctx context.Context, name string, s *scope.Sco
 	}
 
 	r.shell.Reporter.OnTaskStart(TaskStartEvent{TaskName: name})
-	return r.runJobGroup(ctx, t.Jobs, s)
+
+	// initialize task scope with local env vars and work dir
+	taskScope, err := r.forkScope(ctx, r.rootScope, t.CommonRunParams, forkContext{
+		name: stringer(name),
+		kind: manifest.JobKindTask,
+	})
+	if err != nil {
+		return err
+	}
+
+	return r.runJobGroup(ctx, t.Jobs, taskScope)
 }
 
 func (r *Runner) runJobGroup(ctx context.Context, jobs []manifest.Job, s *scope.Scope) error {
@@ -137,7 +169,15 @@ func (r *Runner) runJob(ctx context.Context, j manifest.Job, taskScope *scope.Sc
 		return r.runJobMatrix(ctx, j, taskScope)
 	}
 
-	return r.handleJob(ctx, j, taskScope)
+	jobScope, err := r.forkScope(ctx, taskScope, j.CommonRunParams, forkContext{
+		name: j.Handler,
+		kind: j.Kind,
+	})
+	if err != nil {
+		return err
+	}
+
+	return r.handleJob(ctx, j, jobScope)
 }
 
 func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *scope.Scope) error {
@@ -176,8 +216,17 @@ func (r *Runner) runJobMatrix(ctx context.Context, j manifest.Job, taskScope *sc
 			continue
 		}
 
-		// TODO: support fail-fast?
+		// env vars may refer to matrix values, thus use separate scope per matrix job.
 		jobScope := taskScope.Fork().WithMatrixValues(labels, values)
+		jobScope, err := r.forkScope(ctx, jobScope, j.CommonRunParams, forkContext{
+			name: j.Handler,
+			kind: j.Kind,
+		})
+		if err != nil {
+			return err
+		}
+
+		// TODO: support fail-fast?
 		g.Go(func() error {
 			if matCtx.Err() != nil {
 				return nil
@@ -226,19 +275,13 @@ func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope
 		return fmt.Errorf("%s %q doesn't exist", kind, name)
 	}
 
-	// Scratch scope with different workdir to evaluate expressions.
-	exprScope := jobScope
-	if j.WorkDir != "" {
-		exprScope = jobScope.Fork().WithWorkDir(j.WorkDir)
-	}
-
 	inputs, diags := manifest.MapArgsToInputs(ctx, manifest.MapArgsParams{
 		Values:  j.Args,
 		Spec:    group.Inputs,
 		EnvVars: jobScope.Globals.Env,
 		EvalParams: expr.EvalParams{
-			CommandProcessor: r.cmdProcBuilder(exprScope),
-			Env:              exprScope,
+			CommandProcessor: r.cmdProcBuilder(jobScope),
+			Env:              jobScope,
 		},
 	})
 	r.shell.Reporter.PrintDiagnostics(diags)
@@ -253,10 +296,24 @@ func (r *Runner) runSubtask(ctx context.Context, j manifest.Job, jobScope *scope
 		})
 	}
 
-	// Build a new scope which doesn't reference parent variables.
-	// Change work dir if necessary.
-	s := jobScope.Root.Fork().WithWorkDir(j.WorkDir)
+	// job working directory takes precedense.
+	// use task/mixin workdir if runJob didn't change it before
+	s := jobScope.Fork()
+	if j.WorkDir == "" {
+		s = s.WithWorkDir(group.WorkDir)
+	}
+
+	// Remove locals and prepare inputs.
 	s.Inputs = inputs
+	s.MatrixValues = nil
+	s.EventData = nil
+
+	// append task/mixin env vars
+	diags = manifest.AppendLazyEnvVarsToScope(ctx, s, group.Env)
+	r.shell.Reporter.PrintDiagnostics(diags)
+	if diags.HasError() {
+		return fmt.Errorf("failed to expand environment variables for %s %q", kind, group.Name)
+	}
 
 	err := r.runJobGroup(ctx, group.Jobs, s)
 	if err != nil {
