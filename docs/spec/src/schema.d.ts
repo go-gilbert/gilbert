@@ -70,6 +70,9 @@ interface JobBase {
 
   /**
    * Path to a working directory where job will be executed.
+   * Relative paths are resolved from a directory where workflow file is located.
+   *
+   * Note: This value takes precedense over a working directory declared in subtask or mixin.
    */
   ["working-directory"]?: string
 
@@ -317,6 +320,10 @@ interface Mixin {
 
   /**
    * Override a working directory for a mixin.
+   * Relative paths are resolved from a directory where workflow file is located.
+   *
+   * Note: this value can be overriden by a caller job.
+   *
    * @const
    */
   ["working-directory"]?: string
@@ -354,6 +361,8 @@ interface Task {
 
   /**
    * Override a working directory for a task.
+   * Relative paths are resolved from a directory where workflow file is located.
+   *
    * @const
    */
   ["working-directory"]?: string
